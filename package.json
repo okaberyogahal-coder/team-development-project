@@ -1,0 +1,39 @@
+{
+  "name": "mirai-life",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test:plaza": "tsx --test tests/plaza/*.test.ts",
+    "test": "npm run test:plaza",
+    "dev:plaza": "tsx server/plaza/index.ts",
+    "load:plaza": "tsx scripts/plaza-load.ts",
+    "test:browser": "playwright test",
+    "dev:lan": "node scripts/dev-lan.mjs"
+  },
+  "dependencies": {
+    "livekit-client": "^2.15.6",
+    "livekit-server-sdk": "^2.19.1",
+    "next": "^14.2.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/ws": "^8.18.2",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.16",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "tsx": "^4.23.15",
+    "typescript": "^5.6.3"
+  }
+}

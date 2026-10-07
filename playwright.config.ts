@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'./tests/browser',workers:1,timeout:30000,use:{baseURL:'http://localhost:3002',viewport:{width:1440,height:1000},launchOptions:{executablePath:'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'}},webServer:{command:'npm run dev:plaza',url:'http://localhost:3005/health',reuseExistingServer:false,env:{PLAZA_PORT:'3005',PLAZA_ALLOWED_ORIGINS:'',LIVEKIT_URL:'',LIVEKIT_API_KEY:'',LIVEKIT_API_SECRET:''}},reporter:'list'});
