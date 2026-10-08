@@ -11,8 +11,8 @@ test('入場・アバター移動・部屋変更・退出を2ブラウザで確�
  try{
   await other.goto('/plaza');await other.getByLabel('広場での名前').fill('たろう');await other.getByRole('button',{name:'広場に入る'}).click();
   await expect(page.getByRole('button',{name:/参加者/})).toContainText('2人');
-  const person=page.locator('.plaza-person.is-self');const before=await person.getAttribute('style');
-  await page.locator('.plaza-space-heading h2').click();await page.keyboard.down('ArrowRight');await expect.poll(()=>person.getAttribute('style')).not.toBe(before);await page.keyboard.up('ArrowRight');
+  const person=page.locator('.plaza-person.is-self');await expect(person).toHaveAttribute('data-world-x',/\d/);const before=Number(await person.getAttribute('data-world-x'));
+  await page.locator('.plaza-space-heading h2').click();await page.keyboard.down('ArrowRight');await expect.poll(async()=>Number(await person.getAttribute('data-world-x'))).toBeGreaterThan(before+5);await page.keyboard.up('ArrowRight');
   await page.screenshot({path:'/tmp/melife-plaza-lobby.png',fullPage:true});
   await page.getByRole('button',{name:'交流カフェに入る'}).click();await expect(page.locator('.plaza-space-heading h2')).toHaveText('交流カフェ');
   await expect(page.getByText('ビデオ通話は準備中です',{exact:true})).toBeVisible();
@@ -30,11 +30,11 @@ test('キー長押しの繰り返し入力でも通信制限で切断しない',
  await page.locator('.plaza-space-heading h2').click();
  await page.evaluate(async()=>{for(let i=0;i<60;i++){document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',repeat:i>0,bubbles:true}));await new Promise(r=>setTimeout(r,20));}document.body.dispatchEvent(new KeyboardEvent('keyup',{key:'ArrowRight',bubbles:true}));});
  expect(await page.evaluate(()=>(window as any).__plazaCloseCount)).toBe(0);
- await expect(page.getByRole('status')).toContainText('オンライン');await expect(page.getByRole('status')).not.toContainText('再接続');await page.getByRole('button',{name:'退出する ↗'}).click();
+ await expect(page.locator('.plaza-live-status')).toContainText('オンライン');await expect(page.locator('.plaza-live-status')).not.toContainText('再接続');await page.getByRole('button',{name:'退出する ↗'}).click();
 });
 test('LANのIPアドレスから参加したアバターとlocalhostの参加者が同じ部屋を共有する',async({browser,page})=>{
  const {networkInterfaces}=await import('node:os');const {lanConfig}=await import('../../scripts/lan-config.mjs');
- const config=lanConfig(networkInterfaces());test.skip(!config.urls.length,'LANアドレスなし');
+ const config=lanConfig(networkInterfaces(),Number(new URL(test.info().project.use.baseURL!).port));test.skip(!config.urls.length,'LANアドレスなし');
  await page.goto('/plaza');await page.getByLabel('広場での名前').fill('このPC');await page.getByRole('button',{name:'広場に入る'}).click();await expect(page.getByRole('button',{name:/参加者/})).toContainText('1人');
  const context=await browser.newContext();await context.addInitScript(isolate);const other=await context.newPage();
  try{
@@ -45,3 +45,5 @@ test('LANのIPアドレスから参加したアバターとlocalhostの参加者
   await other.getByRole('button',{name:'退出する ↗'}).click();await page.getByRole('button',{name:'退出する ↗'}).click();
  }finally{await context.close();}
 });
+
+test.afterEach(async({page})=>{const exit=page.getByRole('button',{name:'退出する ↗'});if(await exit.isVisible()){await exit.click();await expect(page.getByRole('button',{name:'広場に入る'})).toBeVisible();}});
