@@ -13,6 +13,12 @@ test('入場・アバター移動・部屋変更・退出を2ブラウザで確�
   await expect(page.getByRole('button',{name:/参加者/})).toContainText('2人');
   const person=page.locator('.plaza-person.is-self');await expect(person).toHaveAttribute('data-world-x',/\d/);const before=Number(await person.getAttribute('data-world-x'));
   await page.locator('.plaza-space-heading h2').click();await page.keyboard.down('ArrowRight');await expect.poll(async()=>Number(await person.getAttribute('data-world-x'))).toBeGreaterThan(before+5);await page.keyboard.up('ArrowRight');
+  const remote=other.locator('.plaza-person').filter({hasText:'はな'});
+  await expect.poll(async()=>Number(await remote.getAttribute('data-world-x'))).toBeGreaterThan(before+5);
+  const right=Number(await person.getAttribute('data-world-x'));const screenRight=(await person.boundingBox())!.x;
+  await page.keyboard.down('ArrowLeft');await expect.poll(async()=>Number(await person.getAttribute('data-world-x'))).toBeLessThan(right-5);await page.keyboard.up('ArrowLeft');
+  await expect.poll(async()=>(await person.boundingBox())!.x).toBeLessThan(screenRight);
+  await expect.poll(async()=>Math.abs(Number(await remote.getAttribute('data-world-x'))-Number(await person.getAttribute('data-world-x')))).toBeLessThan(2);
   await page.screenshot({path:'/tmp/melife-plaza-lobby.png',fullPage:true});
   await page.getByRole('button',{name:'交流カフェに入る'}).click();await expect(page.locator('.plaza-space-heading h2')).toHaveText('交流カフェ');
   await expect(page.getByText('ビデオ通話は準備中です',{exact:true})).toBeVisible();

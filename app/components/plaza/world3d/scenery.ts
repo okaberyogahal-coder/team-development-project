@@ -14,7 +14,7 @@ export function createScenery(roomId:RoomId,assets:Assets){
   add('sphere','#a9cf9d',[-0.3,1.7,0.22],[0.48,0.63,0.48],g);
   add('sphere','#91c4a0',[0.3,1.5,0.2],[0.5,0.6,0.48],g);
  };
- const plant=(x:number,z:number)=>{add('cylinder','#d5a67e',[x,0.17,z],[0.2,0.34,0.2]);add('sphere','#87b996',[x,0.45,z],[0.3,0.32,0.3]);};
+ const plant=(x:number,z:number,height=0)=>{add('cylinder','#d5a67e',[x,height+0.17,z],[0.2,0.34,0.2]);return add('sphere','#87b996',[x,height+0.45,z],[0.3,0.32,0.3]);};
  const bench=(x:number,z:number)=>{
   add('box','#c99a6b',[x,0.42,z],[1.15,0.12,0.4]);add('box','#d9b181',[x,0.74,z-0.19],[1.15,0.35,0.08]);
   for(const dx of [-0.43,0.43])add('box','#a98768',[x+dx,0.2,z],[0.09,0.4,0.3]);
@@ -39,7 +39,7 @@ export function createScenery(roomId:RoomId,assets:Assets){
   for(const h of [{id:'cafe' as const,x:90,y:195},{id:'hobby' as const,x:700,y:195},{id:'learning' as const,x:90,y:460},{id:'sharing' as const,x:700,y:460}]){
    const room=roomById(h.id);const p=toWorld({x:h.x+102,y:h.y+40});const g=new Group();g.position.set(p.x,0,p.z);group.add(g);
    add('box','#fff1d8',[0,0.8,0],[3.4,1.6,1.8],g);
-   const roof=add('cone',room.color,[0,1.85,0],[2.65,1.15,1.65],g);roof.rotation.y=Math.PI/4;
+   const roof=add('roof',room.color,[0,1.9,0],[3.85,1.1,2.25],g);roof.name=`${h.id}-roof`;
    add('box','#d8bd8d',[0,0.65,0.92],[0.62,1.3,0.12],g);
    add('sphere','#fff3cb',[0.19,0.65,1.01],[0.035,0.035,0.035],g);
    for(const x of [-1.03,1.03]){
@@ -64,7 +64,7 @@ export function createScenery(roomId:RoomId,assets:Assets){
   }
   add('cylinder',room.color,[0,0.025,0],[4.1,0.04,2.8]);
   add('cylinder','#b99670',[0,0.55,-0.6],[0.35,1.1,0.35]);
-  add('cylinder','#e9c798',[0,1.12,-0.6],[1.85,0.16,1.3]);plant(0,-0.6);
+  add('cylinder','#e9c798',[0,1.12,-0.6],[1.85,0.16,1.3]);plant(0,-0.6,1.2).name='table-plant';
   for(const [x,z] of [[-2.4,-1.3],[-2.4,0.7],[2.4,-1.3],[2.4,0.7]]){
    add('box',room.color,[x,0.46,z],[0.65,0.18,0.7]);add('box',room.color,[x,0.8,z-0.28],[0.65,0.6,0.12]);
    for(const dx of [-0.23,0.23])add('box','#b5936d',[x+dx,0.2,z],[0.08,0.4,0.5]);

@@ -1,6 +1,12 @@
-import {BoxGeometry,BufferGeometry,ConeGeometry,CylinderGeometry,Mesh,MeshStandardMaterial,SphereGeometry,TorusGeometry} from 'three';
+import {BoxGeometry,BufferGeometry,ConeGeometry,CylinderGeometry,Float32BufferAttribute,Mesh,MeshStandardMaterial,SphereGeometry,TorusGeometry} from 'three';
 
-export type Shape='box'|'sphere'|'cylinder'|'cone'|'ring';
+export type Shape='box'|'sphere'|'cylinder'|'cone'|'ring'|'roof';
+function roofGeometry(){
+ const geometry=new BufferGeometry();
+ geometry.setAttribute('position',new Float32BufferAttribute([-.5,-.5,-.5,.5,-.5,-.5,.5,-.5,.5,-.5,-.5,.5,-.5,.5,0,.5,.5,0],3));
+ geometry.setIndex([0,3,4,1,5,2,0,5,1,0,4,5,3,5,4,3,2,5,0,2,3,0,1,2]);
+ const flat=geometry.toNonIndexed();geometry.dispose();flat.computeVertexNormals();return flat;
+}
 export function createAssets(){
  const geometries=new Map<Shape,BufferGeometry>();
  const materials=new Map<string,MeshStandardMaterial>();
@@ -9,7 +15,7 @@ export function createAssets(){
   geometry(name:Shape){
    let value=geometries.get(name);
    if(!value){
-    value=name==='box'?new BoxGeometry(1,1,1):name==='sphere'?new SphereGeometry(1,16,12):name==='cylinder'?new CylinderGeometry(1,1,1,20):name==='cone'?new ConeGeometry(1,1,4):new TorusGeometry(1,0.07,8,32);
+    value=name==='roof'?roofGeometry():name==='box'?new BoxGeometry(1,1,1):name==='sphere'?new SphereGeometry(1,16,12):name==='cylinder'?new CylinderGeometry(1,1,1,20):name==='cone'?new ConeGeometry(1,1,4):new TorusGeometry(1,0.07,8,32);
     geometries.set(name,value);
    }
    return value;

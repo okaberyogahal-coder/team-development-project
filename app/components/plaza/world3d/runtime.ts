@@ -1,4 +1,4 @@
-import {Color,DirectionalLight,Group,HemisphereLight,OrthographicCamera,PCFSoftShadowMap,Scene,SRGBColorSpace,Vector3,WebGLRenderer} from 'three';
+import {ACESFilmicToneMapping,Color,DirectionalLight,Group,HemisphereLight,OrthographicCamera,PCFShadowMap,Scene,SRGBColorSpace,Vector3,WebGLRenderer} from 'three';
 import type {Participant,Position,RoomId} from '../../../../shared/plaza/types';
 import {createAssets} from './assets';
 import {createAvatar} from './avatar';
@@ -12,7 +12,7 @@ export function createRuntime(host:HTMLElement,roomId:RoomId,onFrame:(frame:Fram
  const assets=createAssets();const scene=new Scene();scene.background=new Color('#e5edd9');
  const camera=new OrthographicCamera(-11,11,8,-8,0.1,100);camera.position.set(0,22,18);camera.lookAt(0,0.1,0);
  const people=new Group();scene.add(people);
- const walkers=new Map<string,Walker>();let renderer:WebGLRenderer|undefined,observer:ResizeObserver|undefined;
+ const walkers=new Map<string,Walker>();let renderer:WebGLRenderer|undefined,observer:ResizeObserver|undefined,sun:DirectionalLight|undefined;
  let disposed=false,width=1,height=1,previous=0,start=0;
  let scenery:ReturnType<typeof createScenery>;
  const point=new Vector3();
@@ -22,8 +22,9 @@ export function createRuntime(host:HTMLElement,roomId:RoomId,onFrame:(frame:Fram
   renderer?.setAnimationLoop(null);observer?.disconnect();
   document.removeEventListener('visibilitychange',visibility);
   renderer?.domElement.removeEventListener('webglcontextlost',lost);
+  sun?.shadow.dispose();assets.dispose();
   renderer?.dispose();renderer?.forceContextLoss();renderer?.domElement.remove();
-  assets.dispose();walkers.clear();scene.clear();
+  walkers.clear();scene.clear();
  };
  const failure=()=>{if(disposed)return;dispose();onFailure();};
  const lost=(event:Event)=>{event.preventDefault();failure();};
@@ -49,12 +50,13 @@ export function createRuntime(host:HTMLElement,roomId:RoomId,onFrame:(frame:Fram
  try{
   renderer=new WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
   renderer.outputColorSpace=SRGBColorSpace;
+  renderer.toneMapping=ACESFilmicToneMapping;renderer.toneMappingExposure=0.85;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,1.5));
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=PCFSoftShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=PCFShadowMap;
   renderer.domElement.setAttribute('role','img');renderer.domElement.setAttribute('aria-label',`${roomId==='lobby'?'ミライフ広場':({'cafe':'交流カフェ','hobby':'趣味の部屋','learning':'学びの部屋','sharing':'経験共有の部屋'}[roomId])}の3Dマップ`);
   renderer.domElement.addEventListener('webglcontextlost',lost);host.appendChild(renderer.domElement);
-  scene.add(new HemisphereLight('#fff8e5','#aac59d',2.5));
-  const sun=new DirectionalLight('#fff0d5',3);sun.position.set(-8,16,9);sun.castShadow=true;
+  scene.add(new HemisphereLight('#fff8e5','#aac59d',2));
+  sun=new DirectionalLight('#fff0d5',2.5);sun.position.set(-8,16,9);sun.castShadow=true;
   sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-13;sun.shadow.camera.right=13;sun.shadow.camera.top=13;sun.shadow.camera.bottom=-13;
   sun.shadow.camera.near=0.1;sun.shadow.camera.far=45;sun.shadow.bias=-0.001;sun.shadow.normalBias=0.035;scene.add(sun);
   scenery=createScenery(roomId,assets);scene.add(scenery.group);

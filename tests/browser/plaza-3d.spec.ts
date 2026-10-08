@@ -67,4 +67,72 @@ test('入力中とフォーカス喪失時は歩行が止まる',async({page})=>
  expect(Math.abs(Number(await person.getAttribute('data-world-x'))-stopped)).toBeLessThan(1);
 });
 
+test('再接続中のキー入力を復帰後へ持ち越さない',async({page})=>{
+ await page.addInitScript(()=>{const Original=window.WebSocket;window.WebSocket=class extends Original{constructor(url:string|URL,protocols?:string|string[]){super(url,protocols);(window as any).__plazaSocket=this;}};});
+ await enter(page);const self=page.locator('.plaza-person.is-self');await expect(self).toHaveAttribute('data-world-x',/\d/);
+ await page.keyboard.down('ArrowRight');await expect.poll(async()=>Number(await self.getAttribute('data-world-x'))).toBeGreaterThan(510);
+ await page.evaluate(()=>(window as any).__plazaSocket.close());
+ await expect(page.locator('.plaza-map')).toHaveClass(/plaza-map-disabled/);
+ await page.keyboard.down('ArrowLeft');await page.keyboard.up('ArrowLeft');await page.keyboard.up('ArrowRight');
+ await expect(page.locator('.plaza-live-status')).toContainText('オンライン');
+ await page.waitForTimeout(350);const stopped=Number(await self.getAttribute('data-world-x'));
+ await page.waitForTimeout(350);expect(Math.abs(Number(await self.getAttribute('data-world-x'))-stopped)).toBeLessThan(1);
+});
+
 test.afterEach(async({page})=>{const exit=page.getByRole('button',{name:'退出する ↗'});if(await exit.isVisible()){await exit.click();await expect(page.getByRole('button',{name:'広場に入る'})).toBeVisible();}});
+
+test('3Dファイルの読込失敗でも広場を2Dで開ける',async({page})=>{
+ await page.route(/WorldCanvas.*\.js/,route=>route.abort());
+ await enter(page);
+ await expect(page.getByRole('button',{name:'2Dで表示'})).toBeVisible();
+ await page.getByRole('button',{name:'2Dで表示'}).click();
+ await expect(page.locator('.plaza-map-svg')).toBeVisible();
+});
+
+test('退出と再入場を繰り返しても描画と操作が重複しない',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
+ await enter(page);
+ for(let i=0;i<5;i++){
+  await expect(page.locator('.plaza-world3d canvas')).toHaveCount(1);
+  await expect(page.locator('.plaza-person.is-self')).toHaveAttribute('data-world-x',/\d/);
+  await page.getByRole('button',{name:'退出する ↗'}).click();
+  await expect(page.locator('.plaza-world3d canvas')).toHaveCount(0);
+  await page.getByLabel('広場での名前').fill(`再入場${i}`);
+  await page.getByRole('button',{name:'広場に入る'}).click();
+ }
+ await expect(page.locator('.plaza-world3d canvas')).toHaveCount(1);expect(errors).toEqual([]);
+});
+
+test('50人の3D表示を30秒計測する',async({page})=>{
+ test.setTimeout(60000);
+ await page.addInitScript(()=>{
+  const Original=window.WebSocket;const translated=new WeakSet<Event>();let self:any=null;
+  window.WebSocket=class extends Original{
+   constructor(url:string|URL,protocols?:string|string[]){
+    super(url,protocols);
+    this.addEventListener('message',event=>{
+     if(translated.has(event))return;
+     const message=JSON.parse(event.data);if(message.type==='welcome')self=message.self;
+     if(!self || !['welcome','state'].includes(message.type))return;
+     const phase=performance.now()/1000;
+     message.participants=[self,...Array.from({length:49},(_,i)=>({...self,id:`perf-${i}`,name:`参加者${i+1}`,x:100+(i%7)*130+Math.sin(phase+i)*12,y:100+Math.floor(i/7)*80,avatar:['coral','sky','mint','violet','sun'][i%5],facing:phase+i}))];
+     message.total=50;message.rooms=message.rooms.map((r:any)=>r.id==='lobby'?{...r,count:50}:r);
+     event.stopImmediatePropagation();const replacement=new MessageEvent('message',{data:JSON.stringify(message)});translated.add(replacement);this.dispatchEvent(replacement);
+    });
+   }
+  };
+ });
+ await enter(page,'負荷確認');await expect(page.locator('.plaza-person-3d')).toHaveCount(50);
+ await expect(page.getByRole('img',{name:'ミライフ広場の3Dマップ'})).toBeVisible();
+ await expect(page.locator('.plaza-person.is-self')).toHaveAttribute('data-world-x',/\d/);
+ const result=await page.evaluate(()=>new Promise<{fps:number;frames:number;duration:number}>(resolve=>{
+  const started=performance.now();let frames=0;
+  // Projection attributes are written only after the real Three.js render finishes.
+  const observer=new MutationObserver(records=>{frames+=records.length;});
+  observer.observe(document.querySelector('.plaza-person.is-self')!,{attributes:true,attributeFilter:['data-world-x']});
+  setTimeout(()=>{observer.disconnect();const duration=performance.now()-started;resolve({fps:frames*1000/duration,frames,duration});},30000);
+ }));
+ console.log('50-person rendering:',JSON.stringify(result));
+ expect(result.fps).toBeGreaterThanOrEqual(30);
+ await page.screenshot({path:'/tmp/melife-3d-50-people.png',fullPage:true});
+});

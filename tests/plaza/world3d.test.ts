@@ -4,7 +4,7 @@ import {toWorld,interpolatePosition,facingToRotation} from '../../app/components
 import {createAssets} from '../../app/components/plaza/world3d/assets';
 import {createScenery} from '../../app/components/plaza/world3d/scenery';
 import {createAvatar} from '../../app/components/plaza/world3d/avatar';
-import {Mesh} from 'three';
+import {Mesh,Raycaster,Vector3} from 'three';
 
 test('shared coordinates map to the floor without reversing movement',()=>{
  assert.deepEqual(toWorld({x:500,y:350}),{x:0,y:0,z:0});
@@ -42,6 +42,23 @@ test('all avatar colors support walking, idle, and reconnect appearance',()=>{
   assert.equal((shirt.material as any).opacity,0.45);
   avatar.setConnected(true);assert.equal((shirt.material as any).opacity,1);
  }
+ assets.dispose();
+});
+
+test('house roofs cover their rectangular walls and table plants sit on the tabletop',()=>{
+ const assets=createAssets();const lobby=createScenery('lobby',assets);
+ const roof=lobby.group.getObjectByName('cafe-roof') as Mesh;
+ assert.ok(roof);assert.equal(roof.rotation.y,0);
+ roof.geometry.computeBoundingBox();
+ const bounds=roof.geometry.boundingBox!;
+ assert.ok((bounds.max.x-bounds.min.x)*roof.scale.x>=3.4);
+ assert.ok((bounds.max.z-bounds.min.z)*roof.scale.z>=1.8);
+ lobby.group.updateMatrixWorld(true);
+ const origin=roof.localToWorld(new Vector3(0,3,0));
+ const hit=new Raycaster(origin,new Vector3(0,-1,0)).intersectObject(roof)[0];
+ assert.ok(hit && hit.point.y>2.4,'the roof slopes must face outwards and cover the house from above');
+ const room=createScenery('cafe',assets);
+ assert.ok(room.group.getObjectByName('table-plant')!.position.y>1.2);
  assets.dispose();
 });
 test('interpolation stops at its target and ignores negative elapsed time',()=>{
