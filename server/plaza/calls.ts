@@ -19,7 +19,7 @@ export class LiveKitCalls implements CallGateway {
  constructor(private url:string,private key:string,private secret:string,private prefix:string) {
   const parsed=new URL(url);
   if(parsed.protocol!=='wss:' || !parsed.hostname.endsWith('.livekit.cloud')) throw Error('LIVEKIT_URL must be a LiveKit Cloud wss URL');
-  this.api=new RoomServiceClient(url.replace('wss:','https:'),key,secret,{requestTimeout:5});
+  this.api=new RoomServiceClient(url.replace('wss:','https:'),key,secret,{requestTimeout:20});
  }
  private room(id:RoomId){return `${this.prefix}-${id}`;}
  async initialize(){

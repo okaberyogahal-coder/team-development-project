@@ -15,4 +15,9 @@ async function main(){
  const shutdown=()=>{if(closing)return;closing=true;void server.close().finally(()=>process.exit(0));};
  process.on('SIGINT',shutdown);process.on('SIGTERM',shutdown);
 }
-main().catch(()=>{console.error('Plaza server could not start. Check port, allowed origins and LiveKit Cloud settings.');process.exitCode=1;});
+main().catch((error)=>{
+ console.error('Plaza server could not start. Check port, allowed origins and LiveKit Cloud settings.');
+ if(error instanceof Error) console.error(`${error.name}: ${error.message}`);
+ else console.error(String(error));
+ process.exitCode=1;
+});

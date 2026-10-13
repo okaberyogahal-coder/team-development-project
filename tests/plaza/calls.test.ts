@@ -12,3 +12,7 @@ test('ロビーの資格発行とself-hosted接続先を拒否する',async()=>{
  assert.throws(()=>new LiveKitCalls('ws://localhost:7880','a','b','test'));
  const calls=new LiveKitCalls('wss://test.livekit.cloud','a','b','test');await assert.rejects(calls.issue({id:'p',name:'a',avatar:'sky',roomId:'lobby',x:0,y:0,facing:0,connected:true,visit:1},1),/NO_CALL/);
 });
+test('LiveKit Cloudの初期化に十分なリクエストタイムアウトを使う',()=>{
+ const calls=new LiveKitCalls('wss://test.livekit.cloud','a','b','test');
+ assert.ok((calls as unknown as {api:{rpc:{requestTimeout:number}}}).api.rpc.requestTimeout>=20);
+});
