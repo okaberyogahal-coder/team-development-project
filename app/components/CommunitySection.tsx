@@ -1,52 +1,12 @@
+import Image from "next/image";
+
 export function CommunitySection() {
   return (
-    <section className="bg-orange-50 px-5 py-20 lg:px-8" id="community">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <div>
-          <p className="inline-flex rounded-full bg-white px-5 py-2 text-sm font-black text-orange-500 shadow-sm">
-            世代交流
-          </p>
-          <h2 className="mt-5 text-4xl font-black leading-tight tracking-normal text-slate-900 sm:text-5xl">
-            教える人と、
-            <br />
-            教わる人を決めない。
-          </h2>
-          <p className="mt-6 max-w-xl text-lg font-medium leading-9 text-slate-600">
-            若い世代からデジタル技術を学んだり、シニア世代から仕事や人生の経験を学んだり。
-            誰もが先生にも、生徒にもなれる場所です。
-          </p>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2">
-          <article className="rounded-[34px] bg-white p-7 shadow-xl shadow-orange-100 ring-1 ring-orange-100 transition hover:-translate-y-1">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-black text-blue-600">学生・若者</p>
-                <h3 className="mt-2 text-2xl font-black text-slate-900">
-                  シニアの経験から学ぶ
-                </h3>
-              </div>
-              <div className="text-6xl">👨‍🎓</div>
-            </div>
-            <p className="mt-5 rounded-3xl bg-blue-50 p-5 font-bold leading-7 text-slate-600">
-              仕事の話、人生の選び方、趣味の深め方を聞いて、新しい視点を見つけます。
-            </p>
-          </article>
-
-          <article className="rounded-[34px] bg-white p-7 shadow-xl shadow-orange-100 ring-1 ring-orange-100 transition hover:-translate-y-1">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-black text-green-600">シニア</p>
-                <h3 className="mt-2 text-2xl font-black text-slate-900">
-                  若い世代からデジタルを学ぶ
-                </h3>
-              </div>
-              <div className="text-6xl">👵</div>
-            </div>
-            <p className="mt-5 rounded-3xl bg-green-50 p-5 font-bold leading-7 text-slate-600">
-              AI、スマートフォン、写真編集など、生活が楽しくなる技術に挑戦します。
-            </p>
-          </article>
+    <section className="home-section home-community" id="community">
+      <div className="home-container home-community-grid">
+        <div className="home-community-art"><span className="home-community-spark" aria-hidden="true">✳</span><div className="home-picture-frame"><Image src="/images/milife-future.jpg" alt="園芸やパソコンを一緒に学び、世代をこえて手を取り合って未来へ進む人たち" width={1888} height={1337} sizes="(min-width: 1024px) 45vw, 90vw" /></div><p className="home-sticker home-sticker-pink">ちがう世代。だから、おもしろい。</p></div>
+        <div className="home-community-copy"><p className="home-eyebrow">LEARN FROM EACH OTHER</p><h2>今日は先生。<br />明日は、<span className="home-marker">生徒。</span></h2><p>スマートフォンの便利な使い方を教えたら、<br className="home-desktop-break" />今度は、長年育ててきた庭の話を聞いてみる。<br />年齢で、教える人と教わる人を決めない。<br /><strong>それが、ミライフの学び合いです。</strong></p>
+          <div className="home-exchange-notes"><article><span aria-hidden="true">📱</span><div><h3>「その写真、もっと素敵に撮れるよ！」</h3><p>若い世代のデジタルの知識を、暮らしの楽しみに。</p></div></article><article><span aria-hidden="true">🪴</span><div><h3>「植物が元気に育つコツ、知ってる？」</h3><p>積み重ねた経験や生活の知恵を、誰かの学びに。</p></div></article></div>
         </div>
       </div>
     </section>

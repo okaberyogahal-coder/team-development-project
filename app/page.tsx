@@ -6,9 +6,11 @@ import { Footer } from "./components/Footer";
 import { Header } from "./components/Header";
 import { HeroSection } from "./components/HeroSection";
 
+import "./home.css";
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#f7fcff] text-slate-800">
+    <main className="home-page">
       <Header />
       <HeroSection />
       <FeatureGrid />

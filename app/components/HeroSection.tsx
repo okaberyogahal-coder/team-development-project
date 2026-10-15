@@ -1,47 +1,25 @@
-import { HeroIllustration } from "./HeroIllustration";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
-    <section id="about" className="overflow-hidden px-5 py-16 sm:py-20 lg:px-8">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
-        <div>
-          <p className="inline-flex rounded-full bg-orange-100 px-5 py-2 text-sm font-black text-orange-500">
-            明るい未来へ、人生をアップデート
-          </p>
-
-          <h1 className="mt-6 text-5xl font-black leading-[1.12] tracking-normal text-slate-900 sm:text-6xl lg:text-7xl">
-            何歳からでも、
-            <br />
-            <span className="text-blue-600">新しい未来</span>へ
-            <br />
-            挑戦できる。
-          </h1>
-
-          <p className="mt-7 max-w-2xl text-lg font-medium leading-9 text-slate-600 sm:text-xl">
-            学ぶ。体験する。誰かとつながる。
-            <br />
-            ミライフは、世代や場所を超えて新しい自分に出会える
-            人生アップデート空間です。
-          </p>
-
-          <div className="mt-9 flex flex-wrap gap-4">
-            <a
-              className="rounded-full bg-blue-600 px-7 py-4 text-base font-black text-white shadow-xl shadow-blue-200 transition hover:-translate-y-1 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200"
-              href="/plaza"
-            >
-              ミライフをはじめる
-            </a>
-            <a
-              className="rounded-full border-2 border-blue-100 bg-white px-7 py-4 text-base font-black text-blue-600 shadow-sm transition hover:-translate-y-1 hover:bg-sky-50 focus:outline-none focus:ring-4 focus:ring-blue-100"
-              href="#community"
-            >
-              ミライフについて
-            </a>
-          </div>
+    <section id="about" className="home-hero">
+      <div className="home-hero-confetti" aria-hidden="true"><span>✦</span><span>✳</span><span>●</span></div>
+      <div className="home-container home-hero-grid">
+        <div className="home-hero-copy">
+          <p className="home-sticker">毎日に、あたらしいワクワクを。</p>
+          <h1>いくつになっても、<br /><span className="home-marker">「はじめて」は</span><br />おもしろい。</h1>
+          <p className="home-hero-description">あなたの得意が、誰かのきっかけに。<br />誰かとの出会いが、次の一歩に。<br /><strong>世代をこえて学び合う、ミライフ。</strong></p>
+          <div className="home-hero-actions"><a className="home-button home-button-blue" href="/signup">アカウントを作成 <span aria-hidden="true">→</span></a><a className="home-hero-more" href="#features">どんなことができる？ <span aria-hidden="true">↓</span></a></div>
+          <p className="home-fine-print">18歳以上の方が対象です · PCブラウザー推奨</p>
         </div>
-
-        <HeroIllustration />
+        <div className="home-hero-art">
+          <div className="home-picture-frame"><Image src="/images/milife-world.jpg" alt="未来の街で若者とシニアがパソコンや園芸を通して学び合う、ミライフの世界" width={800} height={450} sizes="(min-width: 1024px) 56vw, 94vw" priority /></div>
+          <span className="home-art-sticker">誰もが先生。<br /><strong>誰もが生徒！</strong></span>
+          <div className="home-hero-tags" aria-label="ミライフの楽しみ方"><span>📖 学んで</span><span>🌱 教えて</span><span>💬 つながろう</span></div>
+          <p className="home-art-caption">2127年の学び合いを描く、未来創造展の作品です。</p>
+        </div>
       </div>
+      <div className="home-ribbon"><p><span>学ぶって、たのしい。</span><b aria-hidden="true">✦</b><span>教えるって、うれしい。</span><b aria-hidden="true">✦</b><span>つながるって、おもしろい。</span></p></div>
     </section>
   );
 }

@@ -8,54 +8,10 @@ export type Feature = {
 };
 
 export const features: Feature[] = [
-  {
-    icon: "📘",
-    title: "学ぶ",
-    description: "新しい知識やスキルを、自分のペースで楽しく学べます。",
-    color: "bg-blue-50",
-    accent: "text-blue-600",
-    ring: "ring-blue-100",
-  },
-  {
-    icon: "🎨",
-    title: "体験する",
-    description: "趣味や興味のある分野に、オンラインで気軽に挑戦できます。",
-    color: "bg-green-50",
-    accent: "text-green-600",
-    ring: "ring-green-100",
-  },
-  {
-    icon: "💬",
-    title: "交流する",
-    description: "世代や場所を超えて、人と人があたたかくつながれます。",
-    color: "bg-pink-50",
-    accent: "text-pink-600",
-    ring: "ring-pink-100",
-  },
-  {
-    icon: "💻",
-    title: "スキル習得",
-    description: "仕事や将来に役立つデジタルスキルを身につけられます。",
-    color: "bg-sky-50",
-    accent: "text-sky-600",
-    ring: "ring-sky-100",
-  },
-  {
-    icon: "🤝",
-    title: "経験を共有",
-    description: "仕事経験、趣味、人生の知恵を次の世代へ伝えられます。",
-    color: "bg-orange-50",
-    accent: "text-orange-500",
-    ring: "ring-orange-100",
-  },
-  {
-    icon: "✨",
-    title: "AI未来ナビ",
-    description: "興味や目標から、次に挑戦できそうなことを提案します。",
-    color: "bg-violet-50",
-    accent: "text-violet-600",
-    ring: "ring-violet-100",
-  },
+  { icon: "📘", title: "学ぶ", description: "趣味、デジタル、仕事、生活の知恵。自分のペースで、新しい知識や体験に出会えます。", color: "bg-blue-50", accent: "text-blue-700", ring: "ring-blue-100" },
+  { icon: "🌱", title: "教える", description: "料理のコツも、仕事の経験も、あなたの得意なことが誰かの新しい一歩になります。", color: "bg-yellow-50", accent: "text-yellow-800", ring: "ring-yellow-100" },
+  { icon: "💬", title: "つながる", description: "アバターで広場を歩き、共通の興味を持つ仲間と世代をこえて交流できます。", color: "bg-rose-50", accent: "text-rose-700", ring: "ring-rose-100" },
+  { icon: "✨", title: "未来ナビ", description: "興味や学びたいことをもとに、次の挑戦や学び合う相手を提案する案内役です。", color: "bg-cyan-50", accent: "text-cyan-800", ring: "ring-cyan-100" },
 ];
 
 export const flowSteps = [
