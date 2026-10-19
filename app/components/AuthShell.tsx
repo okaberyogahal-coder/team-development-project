@@ -20,7 +20,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="auth-artwork">
             <span className="auth-artwork-spark" aria-hidden="true">✦</span>
-            <Image src="/images/milife-future.jpg" alt="若者とシニアが学び合い、黄色い矢印に乗って一緒に未来へ進むミライフの世界" width={1888} height={1337} priority sizes="(min-width: 1024px) 38vw, 80vw" />
+            <Image src="/images/milife-auth-welcome.jpg" alt="明るい学びの空間で、若者とシニアが笑顔で迎え合う様子" width={1448} height={1086} priority sizes="(min-width: 1024px) 38vw, 80vw" />
             <span className="auth-artwork-sticker">いっしょなら、<br /><strong>もっと楽しい！</strong></span>
           </div>
           <div className="auth-value-tags" aria-label="ミライフでできること"><span>📖 学ぶ</span><span>🌱 教える</span><span>💬 つながる</span></div>

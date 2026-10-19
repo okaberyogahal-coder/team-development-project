@@ -2,7 +2,7 @@ import { flowSteps } from "../data/home";
 
 export function FlowSection() {
   return (
-    <section className="home-section home-flow" id="flow">
+    <section className="home-section home-flow" id="flow" data-scroll-reveal>
       <div className="home-container">
         <div className="home-section-heading"><p className="home-sticker home-sticker-white">小さな一歩からで、大丈夫。</p><h2>やってみる。<span className="home-marker">世界がひろがる。</span></h2><p>知る、試す、話してみる。その先に、また次の「やってみたい」。</p></div>
         <ol className="home-flow-grid">{flowSteps.map((step, index) => <li key={step.label}>

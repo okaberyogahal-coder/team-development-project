@@ -22,6 +22,18 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+.home-brand-logo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.home-brand-logo-image {
+  display: block;
+  width: clamp(145px, 14vw, 190px);
+  height: auto;
+}
+
 :root { --milife-blue: #0754c9; }
 .hero-world {
   background-color: #e5faff;

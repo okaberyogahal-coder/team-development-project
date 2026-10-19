@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function HeroSection() {
   return (
-    <section id="about" className="home-hero">
+    <section id="about" className="home-hero" data-scroll-reveal>
       <div className="home-hero-confetti" aria-hidden="true"><span>✦</span><span>✳</span><span>●</span></div>
       <div className="home-container home-hero-grid">
         <div className="home-hero-copy">

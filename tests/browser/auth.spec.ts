@@ -40,6 +40,20 @@ test('ログインは表示切替と未接続の案内を提供する', async ({
   await expect(page.getByRole('alert').filter({ hasText: '認証サービス' })).toBeVisible();
 });
 
+test('ログインとアカウント作成でロゴをヘッダーサイズに収める', async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    for (const route of ['/login', '/signup']) {
+      await page.goto(route);
+      const logo = page.locator('.auth-header .home-brand-logo-image');
+      await expect(logo).toBeVisible();
+      const logoWidth = await logo.evaluate(image => image.getBoundingClientRect().width);
+      expect(logoWidth).toBeGreaterThanOrEqual(140);
+      expect(logoWidth).toBeLessThanOrEqual(200);
+    }
+  }
+});
+
 for (const width of [1440, 390]) {
   test(`画面幅${width}で横にはみ出さず表示できる`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });

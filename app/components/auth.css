@@ -182,10 +182,22 @@
   .auth-steps { padding-bottom: 12px; }
   .auth-demo-note { margin-top: 8px; padding-top: 5px; padding-bottom: 5px; }
   .signup-form { margin-top: 12px; }
-  .auth-account-fields, .auth-profile-fields, .auth-learning-fields { gap: 9px; }
-  .auth-topic-pair > fieldset { padding: 8px; }
+  .auth-account-fields { gap: 9px; }
+  .auth-profile-fields { gap: 4px; }
+  .auth-learning-fields { gap: 5px; }
+  .auth-topic-pair > fieldset { padding: 4px 6px; }
+  .auth-topic-pair .auth-topic-options { gap: 4px; }
+  .auth-topic-pair .topic-chip { min-height: 30px; }
+  .auth-learning-fields .auth-custom-topic input { min-height: 32px; padding-top: 6px; padding-bottom: 6px; }
+  .auth-profile-fields > .auth-avatars, .auth-profile-fields > .auth-topics { padding-top: 4px; padding-bottom: 4px; }
+  .auth-profile-fields > .auth-avatars > legend, .auth-profile-fields > .auth-topics > legend { margin-bottom: 5px; }
+  .auth-profile-fields > .auth-topics .auth-custom-topic { margin-top: 5px; }
+  .auth-profile-fields > .auth-avatars .auth-field-hint { margin-top: 4px; }
+  .auth-profile-fields .auth-avatars > div { gap: 6px; }
+  .auth-profile-fields .auth-topics .topic-chip { min-height: 31px; }
+  .auth-profile-fields .auth-topics .auth-custom-topic input { min-height: 32px; padding-top: 6px; padding-bottom: 6px; }
   .auth-page .form-field input { min-height: 42px; padding-top: 8px; padding-bottom: 8px; }
-  .auth-page .avatar-choice { min-height: 46px; font-size: 26px; }
+  .auth-page .avatar-choice { min-height: 40px; font-size: 26px; }
   .auth-value-tags { margin-top: 18px; }
   .auth-intro h2 { font-size: 34px; margin-top: 18px; }
   .auth-artwork { margin-top: 18px; }

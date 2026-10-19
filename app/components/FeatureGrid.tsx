@@ -4,7 +4,7 @@ const notes = ["あたらしい自分に出会う", "あなたの経験が、宝
 
 export function FeatureGrid() {
   return (
-    <section className="home-section home-features" id="features">
+    <section className="home-section home-features" id="features" data-scroll-reveal>
       <div className="home-container">
         <div className="home-section-heading"><p className="home-sticker home-sticker-pink">できること、いろいろ！</p><h2>あなたの「好き」が、<br className="home-mobile-break" /><span className="home-marker">ここから広がる。</span></h2><p>ミライフは、知識や経験を分かち合うオンラインの学び合い空間。<br className="home-desktop-break" />学びたい気持ちも、教えたい気持ちも、どちらも大歓迎です。</p></div>
         <div className="home-feature-grid">{features.map((feature, index) => <article className={`home-feature-card home-feature-${index + 1}`} key={feature.title}>

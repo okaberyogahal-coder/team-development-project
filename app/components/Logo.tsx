@@ -1,17 +1,18 @@
-export function Logo({ href = "/" }: { href?: string }) {
+import Image from "next/image";
+
+export function Logo({ href = "/", priority = false }: { href?: string; priority?: boolean }) {
   return (
-    <a aria-label="ミライフ トップへ" className="flex items-end gap-2" href={href}>
-      <span className="text-3xl font-black tracking-normal sm:text-4xl">
-        <span className="text-blue-600">ミ</span>
-        <span className="text-sky-500">ラ</span>
-        <span className="text-rose-500">イ</span>
-        <span className="text-yellow-500">フ</span>
-      </span>
-      <span className="pb-1 text-[11px] font-black leading-tight text-blue-600 sm:text-xs">
-        ME
-        <br />
-        LIFE
-      </span>
+    <a aria-label="ミライフ トップへ" className="home-brand-logo" href={href}>
+      <Image
+        className="home-brand-logo-image"
+        src="/images/milife-logo-matte.png"
+        alt=""
+        aria-hidden="true"
+        width={2172}
+        height={724}
+        sizes="(min-width: 1320px) 190px, (min-width: 541px) 14vw, 145px"
+        priority={priority}
+      />
     </a>
   );
 }
