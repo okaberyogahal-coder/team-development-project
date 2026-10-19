@@ -13,7 +13,7 @@ export function Header() {
       <div className="home-header-inner">
         <Logo />
         <nav aria-label="メインメニュー">{navItems.map(item => <a href={item.href} key={item.href}>{item.label}</a>)}</nav>
-        <div className="home-header-actions"><a className="home-login-link" href="/login">ログイン</a><a className="home-button home-button-blue home-button-small" href="/signup">新規登録 <span aria-hidden="true">↗</span></a></div>
+        <div className="home-header-actions"><a className="home-login-link" href="/login">ログイン</a><a className="home-button home-button-blue home-button-small" href="/plaza">ワールドに入る</a></div>
       </div>
     </header>
   );

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ミライフ ワールド</title>
+  <style>
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#17251f;font-family:system-ui,sans-serif}
+    #unity-canvas{width:100%;height:100%;display:block;outline:none}
+    #loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:#eef5ef;color:#213d35}
+    #loading[hidden]{display:none}h1{font-size:24px;margin:0 0 14px}p{line-height:1.8}progress{width:min(320px,75vw);height:12px;accent-color:#497a60;margin:auto}
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="0" aria-label="ミライフの3Dワールド"></canvas>
+  <div id="loading" role="status"><h1>ミライフへようこそ</h1><p id="status">ワールドを読み込んでいます…</p><progress id="progress" max="1" value="0"></progress><p>初回は読み込みに時間がかかる場合があります。</p></div>
+  <script src="Build/{{{ LOADER_FILENAME }}}"></script>
+  <script>
+    const canvas = document.getElementById('unity-canvas');
+    const loading = document.getElementById('loading');
+    function showError(message) {
+      loading.hidden = false;
+      document.getElementById('status').textContent = 'ワールドを起動できませんでした。ページを再読み込みしてください。';
+      document.getElementById('progress').hidden = true;
+      document.body.dataset.unityState = 'error';
+      console.error(message);
+    }
+    document.body.dataset.unityState = 'loading';
+    if (typeof createUnityInstance !== 'function') {
+      showError('Unity loader could not be loaded.');
+    } else {
+      createUnityInstance(canvas, {
+        arguments: [],
+        dataUrl: 'Build/{{{ DATA_FILENAME }}}',
+        frameworkUrl: 'Build/{{{ FRAMEWORK_FILENAME }}}',
+        codeUrl: 'Build/{{{ CODE_FILENAME }}}',
+        streamingAssetsUrl: 'StreamingAssets',
+        companyName: {{{ JSON.stringify(COMPANY_NAME) }}},
+        productName: {{{ JSON.stringify(PRODUCT_NAME) }}},
+        productVersion: {{{ JSON.stringify(PRODUCT_VERSION) }}},
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+      }, value => { document.getElementById('progress').value = value; }).then(instance => {
+        window.unityInstance = instance;
+        loading.hidden = true;
+        document.body.dataset.unityState = 'ready';
+      }).catch(showError);
+    }
+  </script>
+</body>
+</html>

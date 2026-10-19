@@ -9,7 +9,7 @@ export function HeroSection() {
           <p className="home-sticker">毎日に、あたらしいワクワクを。</p>
           <h1>いくつになっても、<br /><span className="home-marker">「はじめて」は</span><br />おもしろい。</h1>
           <p className="home-hero-description">あなたの得意が、誰かのきっかけに。<br />誰かとの出会いが、次の一歩に。<br /><strong>世代をこえて学び合う、ミライフ。</strong></p>
-          <div className="home-hero-actions"><a className="home-button home-button-blue" href="/signup">アカウントを作成 <span aria-hidden="true">→</span></a><a className="home-hero-more" href="#features">どんなことができる？ <span aria-hidden="true">↓</span></a></div>
+          <div className="home-hero-actions"><a className="home-button home-button-blue" href="/plaza">ワールドに入る</a><a className="home-hero-more" href="/signup">アカウントを作成 <span aria-hidden="true">→</span></a></div>
           <p className="home-fine-print">18歳以上の方が対象です · PCブラウザー推奨</p>
         </div>
         <div className="home-hero-art">

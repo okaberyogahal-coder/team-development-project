@@ -38,6 +38,13 @@
 
 ## 実装・検証に関するファイル
 
+### Unity 素材の共有・サイト接続
+
+[Unity 共有手順](../unity/README.md)
+
+メンバーから受け取った2本のZIPの取り込み先、Unityでの初期設定、
+Gitで共有するファイル、Webビルドとサイト接続の残作業をまとめている。
+
 ### 4. メタバース設計
 
 [metaverse-design.md](./metaverse-design.md)
