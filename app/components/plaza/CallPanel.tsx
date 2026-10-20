@@ -1,4 +1,5 @@
 'use client';
+import {Icon} from "../Icon";
 import {useEffect,useRef} from 'react';
 import {Participant,Track,TrackPublication} from 'livekit-client';
 import {canRetryCall} from './call-state';
@@ -15,13 +16,13 @@ function Tile({person,local}:{person:Participant;local:boolean}){
 }
 export function CallPanel({call,configured,inLobby,onRetry}:{call:ReturnType<typeof useRoomCall>;configured:boolean;inLobby:boolean;onRetry:()=>void}){
  return <section className="plaza-call-panel"><div className="plaza-section-caption">CONVERSATION <span>{inLobby?'ロビーでは通話しません':'この部屋でおしゃべり'}</span></div>
-  {inLobby?<div className="plaza-call-empty"><span>☕</span><strong>話したい部屋を選んでみよう</strong><p>同じ部屋に入った人同士で<br/>音声・ビデオ通話ができます。</p></div>:!configured?<div className="plaza-call-empty"><span>🎥</span><strong>ビデオ通話は準備中です</strong><p>部屋の移動はお試しいただけます。<br/>通話は接続設定後に利用できます。</p></div>:<>
+  {inLobby?<div className="plaza-call-empty"><span><Icon name="coffee" /></span><strong>話したい部屋を選んでみよう</strong><p>同じ部屋に入った人同士で<br/>音声・ビデオ通話ができます。</p></div>:!configured?<div className="plaza-call-empty"><span><Icon name="video" /></span><strong>ビデオ通話は準備中です</strong><p>部屋の移動はお試しいただけます。<br/>通話は接続設定後に利用できます。</p></div>:<>
    {call.participants.length?<div className="plaza-video-grid">{call.participants.map(p=><Tile key={p.identity} person={p} local={p===call.room?.localParticipant}/>)}</div>:<div className="plaza-call-empty"><strong>{call.status==='connecting'?'通話に接続しています…':'通話に参加してみよう'}</strong></div>}
    {call.error && <p className="plaza-error" role="alert">{call.error}</p>}
    {canRetryCall(configured,inLobby,call.status,call.hasCredentials) && <button className="plaza-secondary" onClick={onRetry}>通話に再接続</button>}
    {call.audioBlocked && <button className="plaza-secondary" onClick={call.startAudio}>音声を開始する</button>}
   </>}
-  <div className="plaza-call-controls"><button onClick={call.toggleMic} disabled={inLobby || !configured || call.status!=='connected' || call.busy} aria-pressed={call.micEnabled}><span>{call.micEnabled?'🎙':'🔇'}</span>マイク {call.micEnabled?'ON':'OFF'}</button><button onClick={call.toggleCamera} disabled={inLobby || !configured || call.status!=='connected' || call.busy} aria-pressed={call.cameraEnabled}><span>▣</span>カメラ {call.cameraEnabled?'ON':'OFF'}</button></div>
+  <div className="plaza-call-controls"><button onClick={call.toggleMic} disabled={inLobby || !configured || call.status!=='connected' || call.busy} aria-pressed={call.micEnabled}><span><Icon name={call.micEnabled?'mic':'mic-off'} /></span>マイク {call.micEnabled?'ON':'OFF'}</button><button onClick={call.toggleCamera} disabled={inLobby || !configured || call.status!=='connected' || call.busy} aria-pressed={call.cameraEnabled}><span><Icon name="video" /></span>カメラ {call.cameraEnabled?'ON':'OFF'}</button></div>
   <p className="plaza-call-note">カメラ・マイクは自分でオンにできます。</p>
  </section>;
 }

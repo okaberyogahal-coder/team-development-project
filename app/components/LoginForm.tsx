@@ -1,4 +1,5 @@
 "use client";
+import { Icon } from "./Icon";
 import { useState } from "react";
 import { PasswordField } from "./PasswordField";
 
@@ -9,7 +10,7 @@ export function LoginForm() {
 
   return (
     <div className="auth-form-screen login-screen">
-      <div className="auth-login-hello" aria-hidden="true">Hello again! <span>✦</span></div>
+      <div className="auth-login-hello" aria-hidden="true">Hello again! <span><Icon name="spark-pink" /></span></div>
       <div className="auth-form-title">
         <p className="auth-title-kicker">今日も、あたらしいワクワクを。</p>
         <h1 className="form-heading">おかえりなさい。</h1>

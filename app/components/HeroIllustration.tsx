@@ -1,10 +1,12 @@
+import { Icon } from "./Icon";
+import type { IconName } from "../../shared/icons";
 function Person({
   className,
   face,
   label,
 }: {
   className: string;
-  face: string;
+  face: IconName;
   label: string;
 }) {
   return (
@@ -12,7 +14,7 @@ function Person({
       className={`absolute rounded-[28px] bg-white p-4 text-center shadow-xl shadow-blue-100/70 ring-1 ring-blue-50 ${className}`}
     >
       <div className="text-5xl" role="img" aria-label={label}>
-        {face}
+        <Icon name={face} />
       </div>
       <p className="mt-2 text-xs font-black text-slate-600">{label}</p>
     </div>
@@ -40,12 +42,12 @@ export function HeroIllustration() {
 
         <div className="absolute bottom-7 left-1/2 h-36 w-[78%] -translate-x-1/2 rounded-[100%] bg-green-200/80" />
         <div className="absolute bottom-24 left-1/2 h-20 w-20 -translate-x-1/2 rounded-[24px] bg-green-500 text-center text-5xl leading-[5rem] shadow-lg">
-          🌳
+          <Icon name="tree" />
         </div>
 
-        <Person className="bottom-28 left-6" face="👩‍💻" label="デジタルを教える" />
-        <Person className="bottom-16 right-8" face="👵" label="経験を伝える" />
-        <Person className="bottom-8 left-24 hidden sm:block" face="👨‍🎓" label="一緒に学ぶ" />
+        <Person className="bottom-28 left-6" face="person-young" label="デジタルを教える" />
+        <Person className="bottom-16 right-8" face="person-senior" label="経験を伝える" />
+        <Person className="bottom-8 left-24 hidden sm:block" face="person-student" label="一緒に学ぶ" />
 
         <div className="absolute right-8 top-28 rounded-[22px] bg-white px-4 py-3 text-sm font-black text-green-700 shadow-lg">
           スマホの使い方を学ぶ

@@ -62,7 +62,8 @@ for (const width of [1440, 390]) {
       await expect(page.locator('h1')).toBeVisible();
       if (route === '/') {
         for (const picture of await page.locator('main img').all()) {
-          await picture.scrollIntoViewIfNeeded();
+          // Decorative images can be hidden by the mobile layout.
+          if (await picture.isVisible()) await picture.scrollIntoViewIfNeeded();
           await expect.poll(() => picture.evaluate(image => (image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
         }
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));

@@ -1,4 +1,5 @@
 'use client';
+import {Icon} from "../Icon";
 import {useEffect,useRef,useState} from 'react';
 import {AVATARS} from '../../../shared/plaza/world';
 import type {AvatarId} from '../../../shared/plaza/types';
@@ -26,7 +27,7 @@ export function JoinForm({onJoin,status,error,onCancel}:{onJoin:(name:string,ava
    <span className="plaza-eyebrow">MIRAI LIFE COMMUNITY</span>
    <h1>ここで会おう。<br/><span>新しい誰かと。</span></h1>
    <p>好きなこと、知っていること。<br/>小さな会話から、次の挑戦がはじまります。</p>
-   <div className="plaza-welcome-notes"><span>🌿 自分のペースで歩こう</span><span>☕ 部屋に入っておしゃべり</span><span>🎥 カメラはオンでもオフでも</span></div>
+   <div className="plaza-welcome-notes"><span><Icon name="leaves" /> 自分のペースで歩こう</span><span><Icon name="coffee" /> 部屋に入っておしゃべり</span><span><Icon name="video" /> カメラはオンでもオフでも</span></div>
    <div className="plaza-entry-note"><span className="plaza-dot"/>PCテスト版 · ロビー＋4つの交流ルーム</div>
   </div>
   <form className="plaza-join-card" onSubmit={e=>{e.preventDefault();stop();onJoin(name.trim(),avatar);}}>

@@ -1,4 +1,5 @@
 'use client';
+import {Icon} from "../../Icon";
 import {useEffect,useRef} from 'react';
 import type {Participant,RoomId} from '../../../../shared/plaza/types';
 import {ROOMS,roomById} from '../../../../shared/plaza/world';
@@ -24,6 +25,6 @@ export default function WorldCanvas({roomId,participants,selfId,onRoom,disabled,
  return <div className="plaza-world3d">
   <div className="plaza-world3d-canvas" ref={host}/>
   {participants.filter(p=>p.roomId===roomId).map(p=><div key={p.id} ref={element=>{if(element)labels.current.set(p.id,element);else labels.current.delete(p.id);}} className={`plaza-person plaza-person-3d ${p.id===selfId?'is-self':''}`} style={{visibility:'hidden',opacity:p.connected?1:0.45}}><span>{p.name}{p.id===selfId?'（あなた）':''}</span></div>)}
-  {destinations.map(r=><button key={r.id} ref={element=>{if(element)doors.current.set(r.id,element);else doors.current.delete(r.id);}} className="plaza-map-door plaza-door-3d" style={{visibility:'hidden'}} aria-label={r.id==='lobby'?'ロビーへ →':`${r.name}に入る`} disabled={disabled} onClick={()=>onRoom(r.id)}>{r.id==='lobby'?'ロビーへ →':<>{r.icon} {r.name}<span>入る →</span></>}</button>)}
+  {destinations.map(r=><button key={r.id} ref={element=>{if(element)doors.current.set(r.id,element);else doors.current.delete(r.id);}} className="plaza-map-door plaza-door-3d" style={{visibility:'hidden'}} aria-label={r.id==='lobby'?'ロビーへ →':`${r.name}に入る`} disabled={disabled} onClick={()=>onRoom(r.id)}>{r.id==='lobby'?'ロビーへ →':<><Icon name={r.icon} /> {r.name}<span>入る →</span></>}</button>)}
  </div>;
 }

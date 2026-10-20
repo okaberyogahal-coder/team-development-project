@@ -1,11 +1,13 @@
 "use client";
+import { Icon } from "./Icon";
+import type { IconName } from "../../shared/icons";
 import { useRef, useState } from "react";
 import { PasswordField } from "./PasswordField";
 
 const steps = ["アカウント", "プロフィール", "学び・得意", "完了"];
-const avatars = ["🌱", "🐱", "🐻", "🐰", "🐧", "🦊"];
+const avatars: IconName[] = ["sprout", "cat", "bear", "rabbit", "penguin", "fox"];
 const topics = ["料理", "園芸", "写真", "AI・デジタル", "語学", "仕事・人生経験", "音楽", "ものづくり"];
-const topicIcons = ["🍳", "🌿", "📷", "💻", "🌏", "💼", "🎵", "🎨"];
+const topicIcons: IconName[] = ["cooking", "leaves", "camera", "laptop", "globe", "briefcase", "music", "palette"];
 
 type TopicPickerProps = {
   label: string;
@@ -23,7 +25,7 @@ function TopicPicker({ label, selected, onChange, custom, onCustomChange, id }: 
       <div className="auth-topic-options">
         {topics.map((topic, index) => (
           <button type="button" key={topic} aria-pressed={selected.includes(topic)} className={`topic-chip ${selected.includes(topic) ? "selected" : ""}`} onClick={() => onChange(selected.includes(topic) ? selected.filter(value => value !== topic) : [...selected, topic])}>
-            <span aria-hidden="true">{topicIcons[index]}</span>{topic}
+            <span aria-hidden="true"><Icon name={topicIcons[index]} /></span>{topic}
           </button>
         ))}
       </div>
@@ -73,18 +75,18 @@ export function SignupForm() {
       <ol aria-label="登録の進み具合" className="auth-steps">
         {steps.map((label, index) => (
           <li key={label} aria-current={index === step ? "step" : undefined} className={`auth-step ${index < step ? "complete" : ""} ${index === step ? "current" : ""}`}>
-            <span>{index < step ? "✓" : index + 1}</span><p>{label}</p>
+            <span>{index < step ? <Icon name="check" /> : index + 1}</span><p>{label}</p>
           </li>
         ))}
       </ol>
       <div className="auth-form-title">
-        <div className="auth-title-kicker"><span className="auth-mini-star" aria-hidden="true">✦</span> はじめよう、あたらしい毎日 <span className="auth-step-count">{step + 1} / 4</span></div>
+        <div className="auth-title-kicker"><span className="auth-mini-star" aria-hidden="true"><Icon name="spark" /></span> はじめよう、あたらしい毎日 <span className="auth-step-count">{step + 1} / 4</span></div>
         <h1 ref={heading} tabIndex={-1} className="form-heading">{["アカウントを作成", "あなたらしさを、教えてね。", "好きなことから、つながろう。", "ミライフへようこそ！"][step]}</h1>
         {step < 3 && <p className="auth-form-description">{["新しい学びも、出会いも。まずはここから。", "広場で呼ばれたい名前と、お気に入りの姿を選ぼう。", "学ぶのも、教えるのも。今のあなたの「好き」でOK！"][step]}</p>}
       </div>
       {step === 3 ? (
         <div className="auth-complete">
-          <div className="auth-complete-avatar"><span aria-hidden="true">{avatar}</span><span className="auth-complete-star" aria-hidden="true">✦</span></div>
+          <div className="auth-complete-avatar"><span aria-hidden="true"><Icon name={avatar} /></span><span className="auth-complete-star" aria-hidden="true"><Icon name="spark-pink" /></span></div>
           <p className="auth-complete-name">{nickname}さん、はじめの一歩、おめでとう！</p>
           <p>学びたいこと、教えたいこと。<br />ミライフ広場で、新しい出会いを見つけよう。</p>
           <div className="auth-demo-note"><strong>入力体験が完了しました。</strong><p>アカウントはまだ作成されていません。</p><p>入力内容は保存されていません。</p></div>
@@ -122,7 +124,7 @@ export function SignupForm() {
               </div>}
               {step === 1 && <div className="auth-profile-fields">
                 <div className="form-field"><label htmlFor="nickname">ニックネーム <span className="auth-required">必須</span></label><input id="nickname" aria-label="ニックネーム" required maxLength={20} value={nickname} onChange={event => setNickname(event.target.value)} placeholder="広場で呼ばれたい名前（20文字以内）" autoComplete="nickname" /></div>
-                <fieldset className="auth-avatars"><legend>アバターを選ぶ <span>あなたのお気に入りは？</span></legend><div>{avatars.map((item, index) => <button key={item} type="button" aria-label={`アバター ${index + 1}`} aria-pressed={avatar === item} onClick={() => setAvatar(item)} className={`avatar-choice ${avatar === item ? "selected" : ""}`}><span aria-hidden="true">{item}</span>{avatar === item && <span className="avatar-check" aria-hidden="true">✓</span>}</button>)}</div><p className="auth-field-hint">登録画面のイメージです。広場のアバターには反映されません。</p></fieldset>
+                <fieldset className="auth-avatars"><legend>アバターを選ぶ <span>あなたのお気に入りは？</span></legend><div>{avatars.map((item, index) => <button key={item} type="button" aria-label={`アバター ${index + 1}`} aria-pressed={avatar === item} onClick={() => setAvatar(item)} className={`avatar-choice ${avatar === item ? "selected" : ""}`}><span aria-hidden="true"><Icon name={item} /></span>{avatar === item && <span className="avatar-check" aria-hidden="true"><Icon name="check-white" /></span>}</button>)}</div><p className="auth-field-hint">登録画面のイメージです。広場のアバターには反映されません。</p></fieldset>
                 <TopicPicker id="interests" label="興味のある分野" selected={interests} onChange={setInterests} custom={interestText} onCustomChange={setInterestText} />
               </div>}
               {step === 2 && <div className="auth-learning-fields">

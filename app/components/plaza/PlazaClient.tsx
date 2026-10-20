@@ -1,4 +1,5 @@
 'use client';
+import {Icon} from "../Icon";
 import {useState} from 'react';
 import {Logo} from '../Logo';
 import {usePlazaConnection} from '../../hooks/usePlazaConnection';
@@ -18,8 +19,8 @@ export function PlazaClient(){
   <header className="plaza-header"><Logo href="/"/><div className="plaza-header-title">みんなの交流空間 <span>PC TEST</span></div><ConnectionStatus status={plaza.status} total={plaza.total}/>{entered?<button className="plaza-exit" onClick={exit}>退出する ↗</button>:<a className="plaza-back" href="/">トップページへ ↗</a>}</header>
   {!entered?<div className="plaza-entry"><JoinForm onJoin={plaza.join} status={plaza.status} error={plaza.error} onCancel={exit}/><footer className="plaza-entry-footer">何歳からでも、新しい未来へ。 <span>MIRAI LIFE</span></footer></div>:<>
    <div className="plaza-workspace">
-    <aside className="plaza-sidebar"><div className="plaza-sidebar-heading"><span className="plaza-eyebrow">YOUR COMMUNITY</span><h1>ミライフ広場</h1><p>今日はどんな出会いがあるかな。</p></div><RoomPicker roomId={room.id} rooms={plaza.rooms} onChange={plaza.changeRoom} disabled={plaza.status!=='joined' || plaza.changing}/><div className="plaza-sidebar-bottom"><span>🌱</span><strong>「こんにちは」からはじめよう</strong><p>教える人も、教わる人も。<br/>ここではみんなが主役です。</p></div></aside>
-    <section className="plaza-center" aria-label="交流空間"><div className="plaza-space-heading"><div><span className="plaza-eyebrow">{room.id==='lobby'?'THE PLAZA':'COMMUNITY ROOM'}</span><h2>{room.name}</h2><p>{room.description}</p></div><button className="plaza-people-button" onClick={()=>setShowPeople(!showPeople)}>♧ {plaza.participants.length}人 <span>参加者</span></button></div>
+    <aside className="plaza-sidebar"><div className="plaza-sidebar-heading"><span className="plaza-eyebrow">YOUR COMMUNITY</span><h1>ミライフ広場</h1><p>今日はどんな出会いがあるかな。</p></div><RoomPicker roomId={room.id} rooms={plaza.rooms} onChange={plaza.changeRoom} disabled={plaza.status!=='joined' || plaza.changing}/><div className="plaza-sidebar-bottom"><span><Icon name="sprout" /></span><strong>「こんにちは」からはじめよう</strong><p>教える人も、教わる人も。<br/>ここではみんなが主役です。</p></div></aside>
+    <section className="plaza-center" aria-label="交流空間"><div className="plaza-space-heading"><div><span className="plaza-eyebrow">{room.id==='lobby'?'THE PLAZA':'COMMUNITY ROOM'}</span><h2>{room.name}</h2><p>{room.description}</p></div><button className="plaza-people-button" onClick={()=>setShowPeople(!showPeople)}><Icon name="people" /> {plaza.participants.length}人 <span>参加者</span></button></div>
      {plaza.error && <div className="plaza-notice" role="alert"><span>{plaza.error}</span><button onClick={plaza.dismissError} aria-label="案内を閉じる">×</button></div>}
      <WorldMap roomId={room.id} participants={plaza.participants} selfId={plaza.self!.id} onMove={plaza.move} onRoom={plaza.changeRoom} disabled={plaza.status!=='joined' || plaza.changing}/>
      <div className="plaza-bottom-bar"><div className="plaza-self-summary"><Avatar avatar={plaza.self!.avatar} size={32}/><div><strong>{plaza.self!.name}</strong><span>あなたのアバター</span></div></div><span className="plaza-map-caption">{plaza.changing?'部屋を移動しています…':room.id==='lobby'?'気になる部屋を選んで、会話をはじめよう。':'同じ部屋の人と、ゆっくりおしゃべり。'}</span><span className="plaza-small-tag">{room.id==='lobby'?'FREE SPACE':'ROOM '+(plaza.rooms.findIndex(r=>r.id===room.id))}</span></div>
