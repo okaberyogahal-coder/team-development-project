@@ -1,0 +1,132 @@
+# PostgreSQL 基盤
+
+このブランチは永続化の基盤を追加する。ログイン画面・登録画面・Unity・旧広場の通信は、まだ DB に接続しない。認証済み本人と所有権を照合する API は次の実装対象であり、DB のユーザーを作るだけではログインできない。
+
+## 構成
+
+- PostgreSQL 17。開発用は Docker Compose、本番は PostgreSQL 接続を提供するマネージドサービスへ切り替える。Supabase は候補で、契約やクラウド上の作成は未実施。
+- Prisma 7.10.1 と `pg` ドライバー。Node.js 22.12 以上の 22.x、または 24 以上を使用する。
+- `prisma/schema.prisma` がモデル定義、`prisma/migrations/` が適用順序を含む変更履歴。CHECK 制約・予約トリガーは第2マイグレーションに手書きで保持する。
+- 全アプリテーブルは `app` スキーマに配置し、PUBLIC のスキーマ権限を取り消す。Supabase の公開 API 対象スキーマへ追加しない。サーバー側の接続を通して扱う。
+- `server/db/client.ts` の `getDatabase()` は Next.js サーバー専用。初回アクセス時だけ接続を作り、開発時の再読み込みでも共有する。各 Node プロセスの接続プールは最大5、接続待ちは5秒。
+- CLI とテストは `server/db/connection.ts` のファクトリーを使い、終了時に `$disconnect()` する。接続文字列・クエリー・個人データは自動ログ出力しない。
+
+## データの関係
+
+```mermaid
+erDiagram
+    User ||--o{ AuthIdentity : identities
+    User ||--o| UserProfile : public_profile
+    User ||--o| LearningPreferences : private_preferences
+    UserProfile ||--o{ Qualification : self_reported
+    User ||--o{ PolicyConsent : policy_versions
+    User ||--o{ MediaAsset : owns
+    User ||--o{ LearningMaterial : authors
+    MediaAsset o|--o{ LearningMaterial : media
+    User ||--o{ MaterialProgress : private_history
+    LearningMaterial ||--o{ MaterialProgress : learning
+    User ||--o{ Lecture : teaches
+    Lecture ||--o{ LectureSession : dates
+    LectureSession ||--o{ LectureBooking : reservations
+    User ||--o{ LectureBooking : books
+```
+
+| 保存対象 | 設計上の区別 |
+|---|---|
+| User / AuthIdentity | 永続 userId と認証事業者の subject を分離。広場の participantId は保存しない。パスワード・認証トークンは保存しない |
+| UserProfile | 表示名・任意の自己申告年齢・教えたいこと・学びたいこと。表示名の重複は許可。年齢入力を本人確認・保護者確認に流用しない |
+| LearningPreferences | 非公開の興味・目標・得意なことと AI 年齢利用許可。プロフィール公開と AI 年齢利用を独立させる |
+| Qualification / PolicyConsent | 自己申告の資格、同意した規約の識別子と版。資格は運営認定を意味しない |
+| MediaAsset / LearningMaterial | ファイル本体はオブジェクトストレージ。DB には保存キー・種別・状態・サイズと教材情報を保持。署名付き URL は永続保存しない |
+| MaterialProgress | 本人による受講完了と時刻・参照版・題名スナップショット。教材の論理削除後も履歴を残し、完了を自動判定しない |
+| Lecture / LectureSession / LectureBooking | 講座内容・開催日時・予約を分離。予約不要の動画教材と混同しない。開催回の定員は受講者数で、広場の同時接続枠とは別 |
+
+日時は `timestamptz` で保持し、表示時に日本時間などへ変換する。メールは空白を除いて小文字化した値だけを保存できる。ユーザーは既定で `PENDING`。認証・未成年の保護者確認方式が確定するまで自動で `ACTIVE` にしない。
+
+## ローカルの初回起動
+
+Docker Desktop を起動し、プロジェクトルートで実行する。
+
+```powershell
+npm.cmd ci
+# .env.local が存在しない場合だけコピーする。既存の接続設定は上書きしない。
+Copy-Item .env.example .env.local
+npm.cmd run db:up
+npm.cmd run db:deploy
+npm.cmd run db:check
+npm.cmd run db:seed
+```
+
+`.env.example` の認証情報は、localhost 限定の開発コンテナー用。本番では使わない。開発用 DB の既定ポートは5434、テスト用は5435。変更時は Compose の `POSTGRES_PORT` / `POSTGRES_TEST_PORT` と対応 URL の両方を変更する。
+
+`db:seed` はローカルの `melife` / `melife_test` にだけ実行可能。`demo@example.invalid` のデモプロフィールを冪等に作成し、認証情報は作らない。既存レコードを書き換えない。
+
+```powershell
+npm.cmd run db:studio   # DB を手元で確認
+npm.cmd run db:stop     # データを残して開発用 DB を停止
+```
+
+データは名前付きボリュームへ保存する。`docker compose down -v` はデータを消すため、日常の停止には使わない。
+
+## スキーマ変更と検証
+
+```powershell
+npm.cmd run db:migrate -- --name describe_change
+npm.cmd run db:generate
+npm.cmd run db:test:up
+npm.cmd run test:db
+npm.cmd test
+npx.cmd tsc --noEmit --incremental false
+npm.cmd run build
+```
+
+`db:migrate` は開発用。新しい SQL の破壊的変更や手書きトリガーへの影響をレビューし、マイグレーションを Git へ登録する。既に適用した SQL は編集せず、後続マイグレーションで変更する。本番で `db:migrate` / `db push` / `migrate reset` は実行しない。
+
+`test:db` は明示的な `DATABASE_TEST_URL` を必須とし、localhost の末尾 `_test` の DB だけを許可する。開発用 URL と同じ接続先も拒否する。専用 DB にマイグレーションを適用し、作成した検証データだけを後片付けする。テストコンテナーは tmpfs を使用し、再作成でデータが消える。
+
+実 DB テストでは、初回マイグレーション、制約、メール／認証IDの重複、プロフィール保存の原子性、メディアの所有者整合、教材削除後の履歴、同時予約、取消後の枠解放、締切、定員変更を検証する。
+
+予約トリガーは開催回の行を更新して書き込みを直列化する。定員を超える予約、講師本人・未有効アカウントの新規予約、締切（開始30分前）以降の新規予約を拒否する。締切はロック取得後の DB 時計で判定する。スナップショット分離で競合したトランザクションは失敗させ、古い人数で確定しない。将来の API では競合を制限回数だけ再試行し、満員・締切・重複・権限エラーを利用者向けの応答へ変換する。
+
+予約済み開催回の開始・終了・講座参照の変更、および予約数より少ない定員への変更を拒否する。日程変更の通知・予約の移行方式が未決のため、暗黙に変更しない。新しい開催回を作り直す方法も含め、API 実装時に設計する。
+
+## 公開環境への切り替え
+
+1. PostgreSQL の本番用 DB を用意し、開発・検証とは分離する。アプリと DB のリージョンを近づける。
+2. マイグレーション用の所有者接続を `DIRECT_URL` に設定する。必要なスキーマ作成・テーブル・関数作成権限を持つ直接接続またはセッションモード接続を使う。
+3. インストールとビルドは `npm ci` → `npm run build`。接続情報なしでも Prisma Client 生成・静的ページのビルドは可能。本番で実データに触れるときは `DATABASE_URL` が必要。
+4. デプロイ工程で、同時実行を制御した1ジョブから `npm run db:deploy` を実行する。適用済みマイグレーションは再実行されない。プレビュー環境には本番と別の DB を使う。
+5. アプリには専用の制限されたログインロールを作り、その接続を `DATABASE_URL` に設定する。スーパーユーザー・DB所有者・BYPASSRLS 権限は付けない。マイグレーションでスキーマを作った後、必要な権限を同じマイグレーション所有者から次で付与する。
+
+```powershell
+psql $env:DIRECT_URL -v ON_ERROR_STOP=1 -v runtime_role=melife_app -f prisma/grant-runtime-role.sql
+```
+
+6. `db:status` と `db:check` で適用状況と実行ロールの接続を確認し、その後アプリを切り替える。接続情報をコンソールへ表示しない。DB プロバイダー指定の TLS と証明書検証を使用する。証明書検証を無効化する設定は追加していない。実行時にプーラーを使う場合も、マイグレーションは別接続とする。プール上限5はプロセスごとなので、同時起動数を含めて DB 側の接続上限と調整する。
+7. バックアップと復元試験を用意し、認証・所有権チェックを持つ API と接続してから公開する。Supabase の公開キーを Prisma の接続情報の代わりにしない。`app` スキーマはサーバー専用で、行単位の閲覧制御を行う公開 API は今回提供しない。
+
+## バックアップ
+
+本番はプロバイダーの自動バックアップを設定し、復元先を別途用意して復元を試す。ローカルの確認例では、PowerShell のバイナリーリダイレクトを避けてコピーする。
+
+```powershell
+New-Item -ItemType Directory -Force backups
+docker compose exec -T db pg_dump -U melife -d melife -Fc -f /tmp/melife.dump
+docker compose cp db:/tmp/melife.dump backups/melife.dump
+docker compose exec -T db pg_restore --list /tmp/melife.dump
+```
+
+`backups/` は Git 対象外。保管・暗号化・保持期間・復元目標は公開運用前に決める。DB バックアップは動画ファイル本体のバックアップを含まない。
+
+## 公開前に残る依存関係の更新
+
+2026-10-20 のオンライン `npm audit` で、元から使用している Next.js 14.2.35 に critical を含む指摘を確認した。DB 用に追加した Prisma / pg は今回の指摘対象ではない。今回の変更には Next.js のメジャー更新を含めていないため、一般公開前に対応版への移行と画面・認証の回帰確認を別途実施する。
+
+## 今回確定しない範囲
+
+- 認証事業者の選定、セッション管理、保護者確認、メール送信、ログイン画面の接続。
+- 年齢の自動更新・必須化、プロフィールの閲覧範囲、履歴の保持期限とアカウント削除手順。
+- メディア検証・公開停止・署名付き URL 発行。DB は所有者と参照の整合を保つが、公開処理はメディアの READY 状態・種別・認証本人を API 側で検証する必要がある。
+- 教師／会場の予定重複、講座会場と広場枠の調整、講座取消通知、出席と本人完了の業務条件。
+- 高頻度のアバター位置・音声・映像の永続化。これらを毎フレーム DB に保存しない。
+- Unity の編集、クラウド契約、デプロイ、実 AI への個人データ送信。

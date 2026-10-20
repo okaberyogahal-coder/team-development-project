@@ -2,10 +2,14 @@
   "name": "mirai-life",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "^22.12.0 || >=24.0.0"
+  },
   "scripts": {
     "build:unity": "node scripts/build-unity.mjs",
     "dev": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
     "test:plaza": "tsx --test tests/plaza/*.test.ts",
@@ -13,20 +17,37 @@
     "dev:plaza": "tsx server/plaza/index.ts",
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
-    "dev:lan": "node scripts/dev-lan.mjs"
+    "dev:lan": "node scripts/dev-lan.mjs",
+    "db:up": "docker compose up -d db --wait",
+    "db:stop": "docker compose stop db",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:status": "prisma migrate status",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio",
+    "db:check": "tsx scripts/db-check.ts",
+    "db:test:up": "docker compose --profile test up -d db-test --wait",
+    "test:db": "prisma generate && tsx scripts/test-database.ts"
   },
   "dependencies": {
+    "@next/env": "14.2.35",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
     "livekit-client": "^2.15.6",
     "livekit-server-sdk": "^2.19.1",
     "next": "^14.2.16",
+    "pg": "8.23.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "server-only": "0.0.1",
     "three": "0.186.1",
     "ws": "^8.22.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
     "@types/node": "^20.17.6",
+    "@types/pg": "8.23.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/three": "0.186.0",
@@ -35,6 +56,7 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "^14.2.16",
     "postcss": "^8.4.47",
+    "prisma": "7.10.1",
     "tailwindcss": "^3.4.14",
     "tsx": "^4.23.15",
     "typescript": "^5.6.3"
