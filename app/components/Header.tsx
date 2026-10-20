@@ -10,7 +10,7 @@ export function Header() {
         <nav aria-label="メインメニュー">{homeNavItems.map(item => <a href={item.href} key={item.href}>{item.label}</a>)}</nav>
         <div className="home-header-actions">
           <a className="home-login-link" href="/login">ログイン</a>
-          <a className="home-button home-button-blue home-button-small" href="/plaza">ワールドに入る</a>
+          <a className="home-button home-button-blue home-button-small" href="/signup">アカウントを作成</a>
           <MobileMenu />
         </div>
       </div>

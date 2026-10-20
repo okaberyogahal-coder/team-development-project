@@ -1,11 +1,11 @@
 "use client";
 import { Icon } from "./Icon";
 import type { IconName } from "../../shared/icons";
+import { createDemoProfile, saveDemoProfile } from "../../shared/demo-profile";
 import { useRef, useState } from "react";
 import { PasswordField } from "./PasswordField";
 
 const steps = ["アカウント", "プロフィール", "学び・得意", "完了"];
-const avatars: IconName[] = ["sprout", "cat", "bear", "rabbit", "penguin", "fox"];
 const topics = ["料理", "園芸", "写真", "AI・デジタル", "語学", "仕事・人生経験", "音楽", "ものづくり"];
 const topicIcons: IconName[] = ["cooking", "leaves", "camera", "laptop", "globe", "briefcase", "music", "palette"];
 
@@ -46,7 +46,6 @@ export function SignupForm() {
   const [terms, setTerms] = useState(false);
   const [privacy, setPrivacy] = useState(false);
   const [nickname, setNickname] = useState("");
-  const [avatar, setAvatar] = useState(avatars[0]);
   const [interests, setInterests] = useState<string[]>([]);
   const [learn, setLearn] = useState<string[]>([]);
   const [teach, setTeach] = useState<string[]>([]);
@@ -86,22 +85,29 @@ export function SignupForm() {
       </div>
       {step === 3 ? (
         <div className="auth-complete">
-          <div className="auth-complete-avatar"><span aria-hidden="true"><Icon name={avatar} /></span><span className="auth-complete-star" aria-hidden="true"><Icon name="spark-pink" /></span></div>
+          <div className="auth-complete-avatar"><span aria-hidden="true"><Icon name="sprout" /></span><span className="auth-complete-star" aria-hidden="true"><Icon name="spark-pink" /></span></div>
           <p className="auth-complete-name">{nickname}さん、はじめの一歩、おめでとう！</p>
           <p>学びたいこと、教えたいこと。<br />ミライフ広場で、新しい出会いを見つけよう。</p>
-          <div className="auth-demo-note"><strong>入力体験が完了しました。</strong><p>アカウントはまだ作成されていません。</p><p>入力内容は保存されていません。</p></div>
-          <a href="/plaza" className="primary-button">ミライフ広場を体験する <span aria-hidden="true">↗</span></a>
+          <div className="auth-demo-note"><strong>体験プロフィールを作成しました。</strong><p>次は3Dアバターを作りましょう。</p><p>名前と外見はこのブラウザだけに保存されます。実際のアカウント登録・認証は行っていません。</p></div>
+          <a href="/avatar" className="primary-button">3Dアバターを作成する <span aria-hidden="true">↗</span></a>
           <a href="/" className="auth-text-link">トップページへ戻る</a>
         </div>
       ) : (
         <>
-          <p className="auth-demo-note"><strong>画面体験版</strong> 入力内容は送信・保存されません。実際のパスワードは入力しないでください。</p>
+          <p className="auth-demo-note"><strong>画面体験版</strong> 登録から入場までの体験用です。名前と外見だけをこのブラウザに保存します。メール・パスワードは送信・保存しません。</p>
           <form className="signup-form" onSubmit={event => {
             event.preventDefault();
             if (step === 0 && password !== confirmation) { setError("パスワードが一致しません。もう一度確認してください。"); return; }
             if (step === 0 && (!adult || !terms || !privacy)) { setError("年齢確認と各同意を確認してください。"); return; }
-            if (step === 1 && !nickname.trim()) { setError("ニックネームを入力してください。"); return; }
-            if (step === 2) { setPassword(""); setConfirmation(""); }
+            if (step === 1) {
+              try { setNickname(createDemoProfile(nickname, 'validation').nickname); }
+              catch { setError("ニックネームを入力してください。< と > のみの名前は使えません。"); return; }
+            }
+            if (step === 2) {
+              try { saveDemoProfile(window.localStorage, createDemoProfile(nickname, crypto.randomUUID())); }
+              catch { setError("このブラウザに保存できません。ブラウザの保存設定を確認してください。"); return; }
+              setPassword(""); setConfirmation(""); setEmail("");
+            }
             move(step + 1);
           }}>
             <div className="signup-fields">
@@ -119,12 +125,12 @@ export function SignupForm() {
                     <label className="check-label"><input type="checkbox" required checked={terms} onChange={event => setTerms(event.target.checked)} /><span>利用規約に同意します<span className="auth-consent-caption">（体験用）</span></span></label>
                     <label className="check-label"><input type="checkbox" required checked={privacy} onChange={event => setPrivacy(event.target.checked)} /><span>プライバシーポリシーに同意します<span className="auth-consent-caption">（体験用）</span></span></label>
                   </div>
-                  <details className="auth-disclosure"><summary>利用規約・プライバシーポリシーについて</summary><p>正式な利用規約・プライバシーポリシーは準備中です。チェックは操作体験用で、アカウントは作成されません。認証・保存機能の提供前に正式な内容を掲載します。</p></details>
+                  <details className="auth-disclosure"><summary>利用規約・プライバシーポリシーについて</summary><p>正式な利用規約・プライバシーポリシーは準備中です。チェックは操作体験用です。実際のアカウント認証は行わず、体験プロフィールをこのブラウザに保存します。正式提供前に正式な内容を掲載します。</p></details>
                 </fieldset>
               </div>}
               {step === 1 && <div className="auth-profile-fields">
                 <div className="form-field"><label htmlFor="nickname">ニックネーム <span className="auth-required">必須</span></label><input id="nickname" aria-label="ニックネーム" required maxLength={20} value={nickname} onChange={event => setNickname(event.target.value)} placeholder="広場で呼ばれたい名前（20文字以内）" autoComplete="nickname" /></div>
-                <fieldset className="auth-avatars"><legend>アバターを選ぶ <span>あなたのお気に入りは？</span></legend><div>{avatars.map((item, index) => <button key={item} type="button" aria-label={`アバター ${index + 1}`} aria-pressed={avatar === item} onClick={() => setAvatar(item)} className={`avatar-choice ${avatar === item ? "selected" : ""}`}><span aria-hidden="true"><Icon name={item} /></span>{avatar === item && <span className="avatar-check" aria-hidden="true"><Icon name="check-white" /></span>}</button>)}</div><p className="auth-field-hint">登録画面のイメージです。広場のアバターには反映されません。</p></fieldset>
+                <div className="auth-demo-note"><strong>次に、3Dアバターを作成します。</strong><p>Unity Worldと同じキャラクターで、服・髪型・帽子・眼鏡を選べます。作成した姿のまま広場へ入れます。</p></div>
                 <TopicPicker id="interests" label="興味のある分野" selected={interests} onChange={setInterests} custom={interestText} onCustomChange={setInterestText} />
               </div>}
               {step === 2 && <div className="auth-learning-fields">

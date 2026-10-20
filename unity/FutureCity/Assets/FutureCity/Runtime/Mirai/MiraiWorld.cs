@@ -128,6 +128,8 @@ namespace FutureCity
             clickMarker.SetActive(false);
             ApplyAvatarColor();
             SetPanel(Panel.Intro);
+            webProfile = gameObject.AddComponent<WebProfileBridge>();
+            webProfile.Init(this);
         }
 
         GameObject BuildMarker(string name, float height, Mat color)
@@ -191,6 +193,8 @@ namespace FutureCity
             bool over = false;
             foreach (var r in uiRectsLast) if (r.Contains(gp)) { over = true; break; }
             PointerOverUI = UIOpen || over;
+
+            if (creatingWebAvatar) return;
 
             // 擬似アップロード（未送信 → 送信中 → 検証中 → 利用可能）
             if (uploadStart > 0f)
@@ -637,6 +641,7 @@ namespace FutureCity
             W = Screen.width / s;
             H = Screen.height / s;
 
+            if (creatingWebAvatar) { DrawWebAvatarCreation(); FinishFrame(); return; }
             if (panel == Panel.Intro) { DrawIntro(); FinishFrame(); return; }
 
             DrawWorldLabels(s);
@@ -829,7 +834,7 @@ namespace FutureCity
         }
 
         // ---- パネルの枠
-        Rect Frame(string title, Color accent, float w, float h, string backLabel = "閉じる")
+        Rect Frame(string title, Color accent, float w, float h, string backLabel = "閉じる", bool showBack = true)
         {
             w = Mathf.Min(w, W - 30f);
             h = Mathf.Min(h, H - 30f);
@@ -837,7 +842,7 @@ namespace FutureCity
             Box(r, sPanel);
             GUI.DrawTexture(new Rect(r.x + 26f, r.y + 26f, 10f, 44f), Solid(accent));
             GUI.Label(new Rect(r.x + 48f, r.y + 22f, w - 320f, 54f), $"<b>{title}</b>", sTitle);
-            if (Btn(new Rect(r.xMax - 226f, r.y + 20f, 200f, 58f), $"{backLabel}（Esc）")) Back();
+            if (showBack && Btn(new Rect(r.xMax - 226f, r.y + 20f, 200f, 58f), $"{backLabel}（Esc）")) Back();
             return new Rect(r.x + 30f, r.y + 96f, w - 60f, h - 120f);
         }
 

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('TOPからUnityワールドを開き、TOPへ戻れる', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('link', { name: 'ワールドに入る', exact: true }).first().click();
+  await page.getByRole('link', { name: 'ワールドを体験', exact: true }).first().click();
   await expect(page).toHaveURL(/\/plaza$/);
   await expect(page.getByTitle('ミライフ Unityワールド')).toBeVisible();
   await expect(page.getByTitle('ミライフ Unityワールド')).toHaveAttribute('src', '/unity/FutureCity/index.html');
@@ -30,4 +30,13 @@ test('Unityワールド本体がブラウザー内で起動する', async ({ pag
   await page.keyboard.press('Escape');
   expect(errors).toEqual([]);
   await page.screenshot({ path: '/private/tmp/melife-unity-world.png' });
+});
+
+// Unity must begin loading before client-side profile hydration.
+test('初期HTMLからUnityを読み込み、再読み込み時の空画面を防ぐ', async ({ request }) => {
+  for (const route of ['/plaza', '/avatar']) {
+    const response = await request.get(route);
+    expect(response.ok()).toBe(true);
+    expect(await response.text()).toMatch(/<iframe[^>]+src="\/unity\/FutureCity\/index.html/);
+  }
 });

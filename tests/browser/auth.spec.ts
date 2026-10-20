@@ -27,7 +27,10 @@ test('登録の入力確認と戻る操作、体験完了まで進める', async
   await page.getByRole('button', { name: '次へ' }).click();
   await page.getByRole('button', { name: '入力を完了する' }).click();
   await expect(page.getByRole('heading', { name: 'ミライフへようこそ！' })).toBeVisible();
-  await expect(page.getByText('アカウントはまだ作成されていません。')).toBeVisible();
+  await expect(page.getByText('体験プロフィールを作成しました。')).toBeVisible();
+  await page.getByRole('link', { name: '3Dアバターを作成する' }).click();
+  await expect(page).toHaveURL(/\/avatar$/);
+  await expect(page.getByTitle('3Dアバター作成')).toBeVisible();
 });
 
 test('ログインは表示切替と未接続の案内を提供する', async ({ page }) => {

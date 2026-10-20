@@ -18,6 +18,8 @@
   <script>
     const canvas = document.getElementById('unity-canvas');
     const loading = document.getElementById('loading');
+    let hostReadyTimer;
+    const notifyHost = () => window.parent.postMessage({type:'melife:ready'},window.location.origin);
     function showError(message) {
       loading.hidden = false;
       document.getElementById('status').textContent = 'ワールドを起動できませんでした。ページを再読み込みしてください。';
@@ -25,6 +27,21 @@
       document.body.dataset.unityState = 'error';
       console.error(message);
     }
+    // Only the same-origin host iframe may initialize a display profile.
+    window.addEventListener('message', event => {
+      if (window.parent === window || event.source !== window.parent || event.origin !== window.location.origin || event.data?.type !== 'melife:initialize' || !window.unityInstance) return;
+      const {mode, profile} = event.data;
+      if ((mode === 'avatar' || mode === 'world') && profile && typeof profile.id === 'string' && typeof profile.nickname === 'string') {
+        window.unityInstance.SendMessage('MiraiLife', 'Initialize', JSON.stringify({mode,profileId:profile.id,nickname:profile.nickname,appearance:profile.appearance}));
+      }
+      clearInterval(hostReadyTimer);
+      loading.hidden = true;
+    });
+    window.addEventListener('melife-unity-avatar', event => {
+      const value = event.detail;
+      if (window.parent !== window && (value?.mode === 'appearance' || value?.mode === 'complete'))
+        window.parent.postMessage({type:'melife:' + value.mode,profileId:value.profileId,nickname:value.nickname,appearance:value.appearance},window.location.origin);
+    });
     document.body.dataset.unityState = 'loading';
     if (typeof createUnityInstance !== 'function') {
       showError('Unity loader could not be loaded.');
@@ -41,8 +58,9 @@
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
       }, value => { document.getElementById('progress').value = value; }).then(instance => {
         window.unityInstance = instance;
-        loading.hidden = true;
+        loading.hidden = window.parent === window;
         document.body.dataset.unityState = 'ready';
+        if (window.parent !== window) { notifyHost(); hostReadyTimer = setInterval(notifyHost,1000); }
       }).catch(showError);
     }
   </script>
