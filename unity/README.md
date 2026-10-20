@@ -11,6 +11,9 @@ TOP の「ワールドに入る」は `/plaza` の Unity 専用画面へ進む�
 ブラウザー表示には、以下の手順で Web ビルドを作成する必要がある。
 ログイン・通話・複数人同期は未接続。
 
+プレイヤーとワールド内の人物には、導入済みの **Creative Characters FREE - Animated Pack（ithappy / 2.4）** を使用する。5種類の組み合わせ・待機・歩行・着席の設定を共通で適用する。再生成・カスタマイズは [AVATARS.md](AVATARS.md) を参照。
+アバター素材は Unity Asset Store EULA の対象で、既存の CC0 テクスチャとは利用条件が異なる。
+
 ```
 unity/
   FutureCity/

@@ -2,7 +2,8 @@
     "name": "FutureCity.Editor",
     "rootNamespace": "FutureCity.EditorTools",
     "references": [
-        "FutureCity"
+        "FutureCity",
+        "ithappy.Creative_Characters_FREE.Editor"
     ],
     "includePlatforms": [
         "Editor"

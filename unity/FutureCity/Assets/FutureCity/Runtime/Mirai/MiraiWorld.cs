@@ -17,7 +17,7 @@ namespace FutureCity
     /// 点滅なし・マウスだけで操作できる（クリック移動と画面下のボタン）。
     /// </summary>
     [DefaultExecutionOrder(100)]
-    public class MiraiWorld : MonoBehaviour
+    public partial class MiraiWorld : MonoBehaviour
     {
         public static bool UIOpen { get; private set; }
         public static bool IntroShowing => instance != null && instance.panel == Panel.Intro;
@@ -150,10 +150,20 @@ namespace FutureCity
             return go;
         }
 
-        void ApplyAvatarColor()
+        void ApplyAvatarColor(bool choosePreset = false)
         {
             me.color = AvatarColors[avatarChoice];
             if (player == null || player.body == null) return;
+            var imported = player.body.GetComponent<ImportedAvatar>();
+            if (imported != null)
+            {
+                if (choosePreset)
+                {
+                    imported.SelectVariant(avatarChoice);
+                    if (imported.Appearance != null) AvatarWardrobePreferences.Save(imported.Appearance);
+                }
+                return;
+            }
             PersonFactory.SetSuitColor(player.body, me.color);   // 胴と両腕の服の色
         }
 
@@ -880,12 +890,16 @@ namespace FutureCity
             }
             y += 132f;
 
-            GUI.Label(new Rect(x, y, iw, 36f), "<b>あなたの服の色をえらべます</b>（あとで変えられます・えらばなくても大丈夫です）", sBody);
+            bool importedAvatars = player != null && player.body != null && player.body.GetComponent<ImportedAvatar>() != null;
+            GUI.Label(new Rect(x, y, iw, 36f), importedAvatars
+                ? "<b>あなたのアバターをえらべます</b>（あとで変えられます・えらばなくても大丈夫です）"
+                : "<b>あなたの服の色をえらべます</b>（あとで変えられます・えらばなくても大丈夫です）", sBody);
             y += 44f;
+            int selectedAvatar = importedAvatars ? player.body.GetComponent<ImportedAvatar>().SelectedVariant : avatarChoice;
             for (int i = 0; i < AvatarColors.Length; i++)
             {
                 var sr = new Rect(x + i * 100f, y, 84f, 64f);
-                if (Btn(sr, i == avatarChoice ? "✓" : "", AvatarColors[i])) { avatarChoice = i; ApplyAvatarColor(); }
+                if (Btn(sr, i == selectedAvatar ? "✓" : importedAvatars ? (i + 1).ToString() : "", AvatarColors[i])) { avatarChoice = i; ApplyAvatarColor(true); }
             }
             y += 84f;
             GUI.Label(new Rect(x, y, iw - 380f, 100f),
@@ -1293,7 +1307,7 @@ namespace FutureCity
         {
             Color acc = new Color(0.35f, 0.45f, 0.6f);
             var c = Frame("わたしのプロフィール", acc, 1240f, 900f);
-            float viewH = 1860f;
+            float viewH = 2900f + me.quals.Count * 72f + completed.Count * 40f;
             scroll = GUI.BeginScrollView(c, scroll, new Rect(0f, 0f, c.width - 24f, viewH));
             float x = 0f, y = 0f, iw = c.width - 40f;
 
@@ -1306,6 +1320,8 @@ namespace FutureCity
             if (Btn(new Rect(x + 396f, y, 64f, 56f), "＋", null, me.age < 130)) me.age++;
             GUI.Label(new Rect(x + 480f, y + 4f, iw - 480f, 60f), $"ほかの利用者のプロフィールに「{me.age}歳」と表示されます。", sSmall);
             y += 76f;
+
+            y = DrawWardrobe(x, y, iw);
 
             y = SkillPicker(x, y, iw, "教えられること", me.teaches, me.learns, MiraiData.FeatureColor(MiraiFeature.Teach)) + 18f;
             y = SkillPicker(x, y, iw, "学びたいこと", me.learns, me.teaches, MiraiData.FeatureColor(MiraiFeature.Learn)) + 24f;

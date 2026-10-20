@@ -1,0 +1,6 @@
+{
+  "name": "FutureCity.AvatarTests",
+  "references": ["FutureCity", "FutureCity.Editor"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}

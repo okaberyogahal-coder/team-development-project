@@ -24,5 +24,6 @@ unity/**/*.slnx
 unity/**/*.pidb
 unity/**/*.user
 unity/**/*.unitypackage
+unity/**/*.unitypackage.meta
 # Rebuild locally with npm run build:unity; deploy these files with the site.
 /public/unity/FutureCity/

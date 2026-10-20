@@ -34,3 +34,12 @@ CC0 のため表記の義務はありませんが、感謝をこめて記載し�
 
 - Poly Haven「Modern Buildings 2」 https://polyhaven.com/a/modern_buildings_2 （川ぞいの広場とガラスのビル、晴れ）
 - Poly Haven「Canary Wharf」 https://polyhaven.com/a/canary_wharf （ロンドンの高層ビル街）
+
+
+## アバター（CC0ではありません）
+
+- **Creative Characters FREE - Animated Pack** — ithappy、バージョン2.4
+- https://assetstore.unity.com/packages/3d/characters/humanoids/creative-characters-free-animated-pack-304841
+- **Standard Unity Asset Store EULA** に従って利用。既存のCC0素材とは利用条件が異なります。
+- 2026-10-20に取得・導入。人物の組み合わせPrefabと着席姿勢は本プロジェクト側で作成。
+- 元素材: `Assets/ithappy/Creative_Characters_FREE/`。アセット単体の再配布用ではありません。
