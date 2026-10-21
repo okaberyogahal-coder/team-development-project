@@ -36,3 +36,14 @@ test('Unityと同じ名前の正規化を使い、空になる名前は登録し
 test('保存機能を利用できない場合は、データなしと区別して呼び出し元に通知する',()=>{
  assert.throws(()=>readDemoProfile({getItem(){throw new Error('blocked');},setItem(){}}),/blocked/);
 });
+test('追加パーツとコスチュームの外見を保存して入場へ引き継ぐ',()=>{
+ const store=storage();saveDemoProfile(store,createDemoProfile('みらい','demo-1'));
+ const appearance={version:2,baseVariant:1,parts:[1,1,3,3,0,1,2,5,2],colors:[4,2,5,7,3,6,0,7,1],costume:2};
+ assert.equal(updateDemoAvatar(store,{profileId:'demo-1',nickname:'みらい',appearance}),true);
+ assert.deepEqual(readDemoProfile(store)?.appearance,appearance);
+});
+test('従来の6部位の外見も読み込める',()=>{
+ const store=storage(); const old={version:1,baseVariant:3,parts:[2,1,2,0,1,1],colors:[1,2,5,7,3,6]};
+ saveDemoProfile(store,{...createDemoProfile('みらい','demo-1'),appearance:old as any});
+ assert.equal(readDemoProfile(store)?.id,'demo-1');
+});

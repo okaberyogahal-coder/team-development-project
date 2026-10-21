@@ -130,7 +130,7 @@ export function SignupForm() {
               </div>}
               {step === 1 && <div className="auth-profile-fields">
                 <div className="form-field"><label htmlFor="nickname">ニックネーム <span className="auth-required">必須</span></label><input id="nickname" aria-label="ニックネーム" required maxLength={20} value={nickname} onChange={event => setNickname(event.target.value)} placeholder="広場で呼ばれたい名前（20文字以内）" autoComplete="nickname" /></div>
-                <div className="auth-demo-note"><strong>次に、3Dアバターを作成します。</strong><p>Unity Worldと同じキャラクターで、服・髪型・帽子・眼鏡を選べます。作成した姿のまま広場へ入れます。</p></div>
+                <div className="auth-demo-note"><strong>次に、3Dアバターを作成します。</strong><p>Unity Worldと同じキャラクターで、服・表情・髪型・小物・コスチュームを選べます。作成した姿のまま広場へ入れます。</p></div>
                 <TopicPicker id="interests" label="興味のある分野" selected={interests} onChange={setInterests} custom={interestText} onCustomChange={setInterestText} />
               </div>}
               {step === 2 && <div className="auth-learning-fields">

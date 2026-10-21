@@ -34,7 +34,7 @@ export function UnityExperience({ mode }: { mode: 'avatar' | 'world' }) {
   return () => window.removeEventListener('message',receive);
  },[mode,router]);
  return <>
-  {mode === 'avatar' && <div className="unity-onboarding"><strong>{profile?.nickname}さんのアバターを作成</strong><span>服・髪型・小物を選び、画面内の「このアバターで入場」を押してください。</span></div>}
+  {mode === 'avatar' && <div className="unity-onboarding"><strong>{profile?.nickname}さんのアバターを作成</strong><span>服・表情・髪型・小物を選び、画面内の「このアバターで入場」を押してください。</span></div>}
   {mode === 'world' && profile && <div className="unity-onboarding"><strong>{profile.nickname}さんの体験プロフィール</strong><a href="/avatar">アバターを変更</a></div>}
   {mode === 'world' && checked && !profile && <div className="unity-onboarding"><span>ゲストで体験中です。</span><a href="/signup">登録体験からアバターを作る</a></div>}
   {error && <p role="alert" className="unity-error">{error}</p>}

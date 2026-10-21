@@ -22,6 +22,13 @@ MonoBehaviour:
     - {fileID: 9053217031431064551, guid: fb022c26355942c3a153661fe453b3a6, type: 3}
     optional: 0
     colorable: 1
+    emptyLast: 0
+    category: 0
+    names:
+    - "\u30AC\u30A6\u30F3"
+    - "T\u30B7\u30E3\u30C4"
+    - "\u30DC\u30FC\u30C0\u30FC"
+    - "\u30D1\u30FC\u30AB\u30FC"
   - label: "\u30DC\u30C8\u30E0\u30B9"
     rendererPrefix: Pants
     meshes:
@@ -30,14 +37,28 @@ MonoBehaviour:
     - {fileID: -7058832261164120551, guid: 32b70401d2674966b252c19094cc8e32, type: 3}
     optional: 0
     colorable: 1
-  - label: "\u9774"
+    emptyLast: 0
+    category: 0
+    names:
+    - "\u30ED\u30FC\u30EB\u30A2\u30C3\u30D7"
+    - "\u30AB\u30FC\u30B4\u30D1\u30F3\u30C4"
+    - "\u30B7\u30E7\u30FC\u30C8\u30D1\u30F3\u30C4"
+  - label: "\u9774\u30FB\u9774\u4E0B"
     rendererPrefix: Shoes
     meshes:
     - {fileID: -1419061772662269867, guid: fab4d5a6a74c437591b388ecc20b0667, type: 3}
     - {fileID: -5648626978545720014, guid: 4bba9ab16b624951a701fdb3d42c0d29, type: 3}
     - {fileID: 2990419855401034948, guid: b724463617f448db8e211f0873040421, type: 3}
+    - {fileID: 2525575882034029105, guid: cb2b769b6d1947c3b54838dae8433793, type: 3}
     optional: 0
     colorable: 1
+    emptyLast: 0
+    category: 0
+    names:
+    - "\u30B9\u30EA\u30C3\u30D1"
+    - "\u30B5\u30F3\u30C0\u30EB"
+    - "\u30B9\u30CB\u30FC\u30AB\u30FC"
+    - "\u9774\u4E0B"
   - label: "\u9AEA\u578B"
     rendererPrefix: Hairstyle
     meshes:
@@ -46,6 +67,13 @@ MonoBehaviour:
     - {fileID: -4695107088515116087, guid: 2b3da96c4e704a238bb87eab9c144a69, type: 3}
     optional: 0
     colorable: 1
+    emptyLast: 1
+    category: 1
+    names:
+    - "\u30D8\u30A21"
+    - "\u30D8\u30A22"
+    - "\u30D8\u30A23"
+    - "\u9AEA\u306A\u3057"
   - label: "\u5E3D\u5B50"
     rendererPrefix: Hat
     meshes:
@@ -55,6 +83,14 @@ MonoBehaviour:
     - {fileID: -6976336618207450407, guid: d3a55dfc849142e298574ed03209fd44, type: 3}
     optional: 1
     colorable: 1
+    emptyLast: 0
+    category: 2
+    names:
+    - "\u306A\u3057"
+    - "\u30CF\u30C3\u30C8"
+    - "\u30D8\u30C3\u30C9\u30AE\u30A21"
+    - "\u30D8\u30C3\u30C9\u30AE\u30A22"
+    - "\u30D8\u30C3\u30C9\u30AE\u30A23"
   - label: "\u773C\u93E1"
     rendererPrefix: Glasses
     meshes:
@@ -62,6 +98,70 @@ MonoBehaviour:
     - {fileID: 4124652187440467762, guid: 031b9791be8a4424820a6d57f00ec252, type: 3}
     optional: 1
     colorable: 1
+    emptyLast: 0
+    category: 2
+    names:
+    - "\u306A\u3057"
+    - "\u773C\u93E11"
+    - "\u773C\u93E12"
+  - label: "\u8868\u60C5"
+    rendererPrefix: Faces
+    meshes:
+    - {fileID: -8518051590879840720, guid: 2fe4b0e4b60c489c9b9e8c9ba491c82f, type: 3}
+    - {fileID: -4389200089894859703, guid: f54f7c627ffd47c493e3dc059530089b, type: 3}
+    - {fileID: -7927354642031663450, guid: 3469b524b3cb4a2e98832a439835f74f, type: 3}
+    optional: 0
+    colorable: 0
+    emptyLast: 0
+    category: 1
+    names:
+    - "\u304D\u308A\u3063\u3068"
+    - "\u306B\u3063\u3053\u308A"
+    - "\u3044\u3064\u3082\u306E\u9854"
+  - label: "\u9854\u306E\u5C0F\u7269"
+    rendererPrefix: Accessories
+    meshes:
+    - {fileID: 7061910613977320673, guid: a2c37b4540c64dca9b853d2f8424e153, type: 3}
+    - {fileID: 2609398250338908505, guid: b7485eab03f4492ba1b917ef542e03cc, type: 3}
+    - {fileID: -3811569408259832331, guid: 7f83d94aaf054ebaa69b583603f1ffba, type: 3}
+    - {fileID: 2912484300477787147, guid: 841939df083440b08890b6456d9acfca, type: 3}
+    - {fileID: -7842831479439361333, guid: 3376c80d08014cc595b86677a16d0ef3, type: 3}
+    optional: 1
+    colorable: 0
+    emptyLast: 0
+    category: 2
+    names:
+    - "\u306A\u3057"
+    - "\u8D64\u3044\u9F3B"
+    - "\u30A4\u30E4\u30DB\u30F3"
+    - "\u3072\u30521"
+    - "\u3072\u30522"
+    - "\u304A\u3057\u3083\u3076\u308A"
+  - label: "\u624B\u888B"
+    rendererPrefix: Gloves
+    meshes:
+    - {fileID: 4388357067006938284, guid: 6e6a82e0c21a4286a4fffbda80c083ce, type: 3}
+    - {fileID: -2628522999209309539, guid: a16f866300a64599b683c7d9a881d94b, type: 3}
+    optional: 1
+    colorable: 1
+    emptyLast: 0
+    category: 2
+    names:
+    - "\u306A\u3057"
+    - "\u624B\u888B1"
+    - "\u624B\u888B2"
+  originalMaterial: {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  costumes:
+  - name: "\u7740\u3050\u308B\u307F"
+    pieces:
+    - rendererPrefix: Outerwear
+      mesh: {fileID: 8213599088856497855, guid: 72ebb9ef8d014c9a9ce77d133d3f0d1e, type: 3}
+  - name: "\u30B3\u30B9\u30C1\u30E5\u30FC\u30E0\u30BB\u30C3\u30C8"
+    pieces:
+    - rendererPrefix: Outerwear
+      mesh: {fileID: -6103042190287859381, guid: 8999864be5384636a74444be0ec12077, type: 3}
+    - rendererPrefix: Hat
+      mesh: {fileID: 6468300357437587556, guid: 54dedaa70a7f42fea35daa8e34373233, type: 3}
   colors:
   - {fileID: 2100000, guid: 8254698f5c7964a92a2c0b895c43f52f, type: 2}
   - {fileID: 2100000, guid: f7c602050db97402bb91aa5522f2cda1, type: 2}
@@ -81,18 +181,28 @@ MonoBehaviour:
   - "\u58A8"
   - "\u8336"
   presets:
-  - version: 1
-    parts: 000000000000000002000000000000000000000000000000
-    colors: 000000000600000005000000070000000200000006000000
-  - version: 1
-    parts: 010000000100000002000000010000000000000002000000
-    colors: 010000000700000005000000070000000300000006000000
-  - version: 1
-    parts: 020000000200000002000000020000000000000000000000
-    colors: 020000000000000005000000070000000400000006000000
-  - version: 1
-    parts: 030000000000000002000000000000000100000000000000
-    colors: 030000000100000005000000070000000500000006000000
-  - version: 1
-    parts: 000000000100000002000000010000000000000001000000
-    colors: 040000000200000005000000050000000600000006000000
+  - version: 2
+    costume: 0
+    baseVariant: 0
+    parts: 000000000000000002000000000000000000000000000000020000000000000000000000
+    colors: 000000000600000005000000070000000200000006000000000000000000000006000000
+  - version: 2
+    costume: 0
+    baseVariant: 1
+    parts: 010000000100000002000000010000000000000002000000010000000000000000000000
+    colors: 010000000700000005000000070000000300000006000000000000000000000006000000
+  - version: 2
+    costume: 0
+    baseVariant: 2
+    parts: 020000000200000002000000020000000000000000000000020000000000000000000000
+    colors: 020000000000000005000000070000000400000006000000000000000000000006000000
+  - version: 2
+    costume: 0
+    baseVariant: 3
+    parts: 030000000000000002000000000000000100000000000000020000000000000000000000
+    colors: 030000000100000005000000070000000500000006000000000000000000000006000000
+  - version: 2
+    costume: 0
+    baseVariant: 4
+    parts: 000000000100000002000000010000000000000001000000020000000000000000000000
+    colors: 040000000200000005000000050000000600000006000000000000000000000006000000

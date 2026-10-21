@@ -116,7 +116,25 @@ namespace FutureCity
                         renderer.localBounds = renderer.sharedMesh.bounds;
                         if (slot.colorable && wardrobe.ColorCount > 0)
                             renderer.sharedMaterial = wardrobe.colors[appearance.colors[i]];
+                        else if (wardrobe.originalMaterial != null) renderer.sharedMaterial = wardrobe.originalMaterial;
                     }
+                    break;
+                }
+            }
+            if (appearance.costume > 0)
+            {
+                // Costume meshes replace clothes/accessories together, preserving skin and expression.
+                foreach (var renderer in renderers)
+                    if (!renderer.name.StartsWith("Body", StringComparison.Ordinal) && !renderer.name.StartsWith("Faces", StringComparison.Ordinal))
+                        renderer.enabled = false;
+                foreach (var piece in wardrobe.costumes[appearance.costume - 1].pieces)
+                foreach (var renderer in renderers)
+                {
+                    if (!renderer.name.StartsWith(piece.rendererPrefix, StringComparison.Ordinal)) continue;
+                    renderer.sharedMesh = piece.mesh;
+                    renderer.localBounds = piece.mesh.bounds;
+                    renderer.sharedMaterial = wardrobe.originalMaterial;
+                    renderer.enabled = true;
                     break;
                 }
             }

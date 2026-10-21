@@ -79,14 +79,27 @@ namespace FutureCity.EditorTools
                 AssetDatabase.CreateAsset(catalog, path);
             }
             var customization = new CustomizableCharacter(library);
+            catalog.originalMaterial = original;
             catalog.slots = new[]
             {
-                Slot(customization, SlotType.Outerwear, "トップス", 4),
-                Slot(customization, SlotType.Pants, "ボトムス", 3),
-                Slot(customization, SlotType.Shoes, "靴", 3),
-                Slot(customization, SlotType.Hairstyle, "髪型", 3),
-                Slot(customization, SlotType.Hat, "帽子", 4, true),
-                Slot(customization, SlotType.Glasses, "眼鏡", 2, true)
+                Slot(customization, SlotType.Outerwear, "トップス", 4, 0, false, true, false, "ガウン", "Tシャツ", "ボーダー", "パーカー"),
+                Slot(customization, SlotType.Pants, "ボトムス", 3, 0, false, true, false, "ロールアップ", "カーゴパンツ", "ショートパンツ"),
+                Slot(customization, SlotType.Shoes, "靴・靴下", 4, 0, false, true, false, "スリッパ", "サンダル", "スニーカー", "靴下"),
+                Slot(customization, SlotType.Hairstyle, "髪型", 3, 1, false, true, true, "ヘア1", "ヘア2", "ヘア3", "髪なし"),
+                Slot(customization, SlotType.Hat, "帽子", 4, 2, true, true, false, "なし", "ハット", "ヘッドギア1", "ヘッドギア2", "ヘッドギア3"),
+                Slot(customization, SlotType.Glasses, "眼鏡", 2, 2, true, true, false, "なし", "眼鏡1", "眼鏡2"),
+                Slot(customization, SlotType.Faces, "表情", 3, 1, false, false, false, "きりっと", "にっこり", "いつもの顔"),
+                Slot(customization, SlotType.Accessories, "顔の小物", 5, 2, true, false, false, "なし", "赤い鼻", "イヤホン", "ひげ1", "ひげ2", "おしゃぶり"),
+                Slot(customization, SlotType.Gloves, "手袋", 2, 2, true, true, false, "なし", "手袋1", "手袋2")
+            };
+            var outerwear = customization.Slots.First(x => x.Type == SlotType.Outerwear);
+            outerwear.Select(4);
+            var fullBody = customization.Slots.First(x => x.Type == SlotType.FullBody);
+            fullBody.Select(0);
+            catalog.costumes = new[]
+            {
+                new AvatarCostume { name = "着ぐるみ", pieces = CostumePieces(outerwear) },
+                new AvatarCostume { name = "コスチュームセット", pieces = CostumePieces(fullBody) }
             };
             // The vendor texture is a hue/lightness atlas. Select a hue column only for clothing;
             // retain its vertical shading and leave body/face materials completely untouched.
@@ -115,19 +128,22 @@ namespace FutureCity.EditorTools
                 catalog.presets[i] = new AvatarAppearance
                 {
                     baseVariant = i,
-                    parts = new[] { i % 4, i % 3, 2, i % 3, i == 3 ? 1 : 0, i == 1 || i == 4 ? i % 2 + 1 : 0 },
-                    colors = new[] { i, (i + 6) % 8, 5, i == 4 ? 5 : 7, (i + 2) % 8, 6 }
+                    parts = new[] { i % 4, i % 3, 2, i % 3, i == 3 ? 1 : 0, i == 1 || i == 4 ? i % 2 + 1 : 0, i == 1 ? 1 : 2, 0, 0 },
+                    colors = new[] { i, (i + 6) % 8, 5, i == 4 ? 5 : 7, (i + 2) % 8, 6, 0, 0, 6 }
                 };
             EditorUtility.SetDirty(catalog);
         }
 
-        static AvatarWardrobeSlot Slot(CustomizableCharacter character, SlotType type, string label, int count, bool optional = false)
+        static AvatarWardrobeSlot Slot(CustomizableCharacter character, SlotType type, string label, int count, int category, bool optional, bool colorable, bool emptyLast, params string[] names)
         {
             var slot = character.Slots.First(x => x.Type == type);
             var meshes = new Mesh[Math.Min(count, slot.VariantsCount)];
             for (int i = 0; i < meshes.Length; i++) { slot.Select(i); meshes[i] = slot.Meshes[0].Item2; }
-            return new AvatarWardrobeSlot { label = label, rendererPrefix = type.ToString(), meshes = meshes, optional = optional, colorable = true };
+            return new AvatarWardrobeSlot { label = label, rendererPrefix = type.ToString(), meshes = meshes, optional = optional, colorable = colorable, emptyLast = emptyLast, category = category, names = names };
         }
+
+        static AvatarCostumePiece[] CostumePieces(SlotBase slot) => slot.Meshes
+            .Select(x => new AvatarCostumePiece { rendererPrefix = x.Item1.ToString(), mesh = x.Item2 }).ToArray();
 
         static void Pick(CustomizableCharacter character, SlotType type, int index)
         {

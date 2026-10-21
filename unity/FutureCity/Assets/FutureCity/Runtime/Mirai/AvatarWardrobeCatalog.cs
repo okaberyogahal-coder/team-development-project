@@ -11,13 +11,33 @@ namespace FutureCity
         public Mesh[] meshes;
         public bool optional;
         public bool colorable;
-        public int Count => (meshes == null ? 0 : meshes.Length) + (optional ? 1 : 0);
+        public bool emptyLast;
+        public int category;
+        public string[] names;
+        public string ChoiceName(int index) => names != null && index >= 0 && index < names.Length ? names[index] : (index + 1).ToString();
+        public int Count => (meshes == null ? 0 : meshes.Length) + (optional || emptyLast ? 1 : 0);
+    }
+
+    [Serializable]
+    public sealed class AvatarCostumePiece
+    {
+        public string rendererPrefix;
+        public Mesh mesh;
+    }
+
+    [Serializable]
+    public sealed class AvatarCostume
+    {
+        public string name;
+        public AvatarCostumePiece[] pieces;
     }
 
     public sealed class AvatarWardrobeCatalog : ScriptableObject
     {
         public const string ResourcePath = "FutureCityAvatars/Wardrobe";
         public AvatarWardrobeSlot[] slots;
+        public Material originalMaterial;
+        public AvatarCostume[] costumes;
         public Material[] colors;
         public string[] colorNames;
         public AvatarAppearance[] presets;
@@ -28,7 +48,8 @@ namespace FutureCity
     [Serializable]
     public sealed class AvatarAppearance
     {
-        public int version = 1;
+        public int version = 2;
+        public int costume;
         public int baseVariant;
         public int[] parts;
         public int[] colors;
@@ -36,6 +57,7 @@ namespace FutureCity
         public AvatarAppearance Copy() => new AvatarAppearance
         {
             version = version,
+            costume = costume,
             baseVariant = baseVariant,
             parts = parts == null ? null : (int[])parts.Clone(),
             colors = colors == null ? null : (int[])colors.Clone()
@@ -43,12 +65,16 @@ namespace FutureCity
 
         public void Normalize(AvatarWardrobeCatalog catalog)
         {
-            version = 1;
+            bool legacyParts = parts == null || parts.Length <= 6;
+            version = 2;
+            costume = Mathf.Clamp(costume, 0, catalog.costumes == null ? 0 : catalog.costumes.Length);
             baseVariant = Mathf.Max(0, baseVariant);
             if (parts == null) parts = new int[catalog.SlotCount];
             if (colors == null) colors = new int[catalog.SlotCount];
             Array.Resize(ref parts, catalog.SlotCount);
             Array.Resize(ref colors, catalog.SlotCount);
+            // Six-slot saves encoded the expression in the chosen base prefab.
+            if (legacyParts && catalog.SlotCount > 6) parts[6] = baseVariant % 2;
             for (int i = 0; i < catalog.SlotCount; i++)
             {
                 parts[i] = Mathf.Clamp(parts[i], 0, Mathf.Max(0, catalog.slots[i].Count - 1));
@@ -82,6 +108,10 @@ namespace FutureCity
                 appearance.parts[i] = slot.optional && random.Next(3) != 0 ? 0 : random.Next(Mathf.Max(1, slot.Count));
                 appearance.colors[i] = slot.colorable ? random.Next(Mathf.Max(1, catalog.ColorCount)) : 0;
             }
+            if (catalog.SlotCount > 3) appearance.colors[3] = new[] { 7, 6, 5 }[random.Next(3)];
+            if (catalog.SlotCount > 7) appearance.parts[7] = random.Next(5) == 0 ? random.Next(2, 5) : 0;
+            if (catalog.costumes != null && catalog.costumes.Length > 0 && random.Next(20) == 0)
+                appearance.costume = random.Next(1, catalog.costumes.Length + 1);
             return appearance;
         }
     }
@@ -98,7 +128,7 @@ namespace FutureCity
                 if (!string.IsNullOrEmpty(json))
                 {
                     var appearance = JsonUtility.FromJson<AvatarAppearance>(json);
-                    if (appearance != null && appearance.version == 1)
+                    if (appearance != null && (appearance.version == 1 || appearance.version == 2))
                     {
                         appearance.Normalize(catalog);
                         return appearance;

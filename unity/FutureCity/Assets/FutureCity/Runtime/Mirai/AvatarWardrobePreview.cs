@@ -61,11 +61,12 @@ namespace FutureCity
             previewCamera.cullingMask = 1 << PreviewLayer;
             previewCamera.clearFlags = CameraClearFlags.SolidColor;
             previewCamera.backgroundColor = new Color(0.94f, 0.94f, 0.9f);
-            previewCamera.fieldOfView = 32f;
+            // Leave room for the tallest hats and mascot ears, as well as the feet.
+            previewCamera.fieldOfView = 36f;
             previewCamera.nearClipPlane = 0.1f;
             previewCamera.farClipPlane = 10f;
-            cameraObject.transform.localPosition = new Vector3(0f, 1f, -3.6f);
-            cameraObject.transform.localRotation = Quaternion.Euler(2f, 0f, 0f);
+            cameraObject.transform.localPosition = new Vector3(0f, 1.05f, -3.6f);
+            cameraObject.transform.localRotation = Quaternion.identity;
             texture = new RenderTexture(384, 512, 24) { name = "WardrobePreview", antiAliasing = 2 };
             texture.Create();
             previewCamera.targetTexture = texture;
