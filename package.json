@@ -9,11 +9,12 @@
     "start": "next start",
     "lint": "next lint",
     "test:plaza": "tsx --test tests/plaza/*.test.ts",
-    "test": "npm run test:plaza",
+    "test": "npm run test:plaza && npm run test:ai-navi",
     "dev:plaza": "tsx server/plaza/index.ts",
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
-    "dev:lan": "node scripts/dev-lan.mjs"
+    "dev:lan": "node scripts/dev-lan.mjs",
+    "test:ai-navi": "node --import tsx --test tests/ai-navi/*.test.ts"
   },
   "dependencies": {
     "livekit-client": "^2.15.6",
