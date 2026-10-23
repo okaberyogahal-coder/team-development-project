@@ -8,7 +8,7 @@ import './demo.css';
 export const dynamic='force-dynamic';
 export default function AiNaviDemoPage(){
   const host=headers().get('host');
-  if(process.env.NODE_ENV!=='development' || !host || !isLocalDemoUrl(`http://${host}`)) notFound();
+  if(process.env.NODE_ENV!=='development' || process.env.MILIFE_AI_NAVI_DEMO!=='local' || !host || !isLocalDemoUrl(`http://${host}`)) notFound();
   const popularity=createDemoContext('newcomer',Date.now()).popularity;
   return <DemoClient profiles={demoProfiles.map(({id,label,description})=>({id,label,description}))}
     materials={demoMaterials} popularity={popularity}/>;

@@ -1,6 +1,6 @@
 # AI未来ナビ OpenAI開発体験版
 
-2026-10-23。状態：利用者承認済み。実装計画レビュー待ち。
+2026-10-23。状態：設計・計画承認済み、開発体験版を実装。実APIの接続確認はキー設定後。
 
 ## 目的と合意
 
@@ -29,3 +29,7 @@
 ## 公式API資料
 
 [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)、[Responses移行ガイド](https://developers.openai.com/api/docs/guides/migrate-to-responses)を2026-10-23に確認した。
+
+## 実装時の補強（2026-10-23）
+
+Host/Origin検証だけではLANからの直接HTTPを排除できないため、専用の `npm run dev:ai-navi` で127.0.0.1:3002へ固定して起動する。専用コマンドだけで有効化フラグを設定し、追加のhost等の引数を拒否する。通常のdev・dev:lan・本番起動では画面とAPIを無効にする。

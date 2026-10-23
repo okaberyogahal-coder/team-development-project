@@ -40,13 +40,13 @@ async function readBody(request:Request):Promise<unknown> {
   try {return JSON.parse(new TextDecoder().decode(buffer));}catch{throw new Error('INVALID');}
 }
 export function createDemoHandler(options:{
-  environment:string;config:{apiKey:string;model:string};generate?:typeof generateSuggestions;now?:()=>number;
+  environment:string;enabled?:boolean;config:{apiKey:string;model:string};generate?:typeof generateSuggestions;now?:()=>number;
 }): (request:Request)=>Promise<Response> {
   const generate=options.generate??generateSuggestions;
   const clock=options.now??Date.now;
   let requests:number[]=[];let busy=false;
   return async(request)=>{
-    if(options.environment!=='development') return failure('NOT_FOUND',404);
+    if(options.environment!=='development' || !options.enabled) return failure('NOT_FOUND',404);
     const url=new URL(request.url);
     if(!isLocalDemoUrl(request.url) || request.headers.get('host')!==url.host || request.headers.get('origin')!==url.origin) return failure('FORBIDDEN',403);
     if(request.method!=='POST') return failure('INVALID',405);
