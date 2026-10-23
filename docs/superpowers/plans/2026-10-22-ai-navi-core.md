@@ -1,6 +1,6 @@
 # AI未来ナビ推薦コア Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans or superpowers:subagent-driven-development to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 履歴と直近30日の利用率80%以上による人気を使う、検証可能な推薦コアを作る。
 
@@ -43,11 +43,11 @@
 
 **Interfaces:** `aggregatePopularity(materials: Material[], events: LearningEvent[], now: number): PopularitySummary`。`PopularitySummary { start: number; end: number; activeUsers: number; items: PopularityItem[] }`、`PopularityItem { materialId: string; users: number; completedUsers: number; ratio: number | null; popular: boolean }`。集計期間は `(now - 30 * 86400000, now]`。
 
-- [ ] 失敗テストを書く。5人中4人は人気、5人中3人は非該当。閲覧・完了重複は1人。0人ではratio=null。境界時刻と未来時刻は除外。未存在・非公開教材のイベントは分母にも含めない。
-- [ ] `npx tsx --test tests/ai-navi/popularity.test.ts` を実行し、未実装による失敗を確認する。
-- [ ] 型と集計を実装する。整数比較 `users * 100 >= activeUsers * 80` で判定し、丸めによる誤判定を防ぐ。完了人数、利用人数、IDの順で安定ソートする。
-- [ ] 同コマンドで全件PASSを確認し、`test:ai-navi` を登録する。
-- [ ] 対象ファイルのみをコミットする。
+- [x] 失敗テストを書く。5人中4人は人気、5人中3人は非該当。閲覧・完了重複は1人。0人ではratio=null。境界時刻と未来時刻は除外。未存在・非公開教材のイベントは分母にも含めない。
+- [x] `npx tsx --test tests/ai-navi/popularity.test.ts` を実行し、未実装による失敗を確認する。
+- [x] 型と集計を実装する。整数比較 `users * 100 >= activeUsers * 80` で判定し、丸めによる誤判定を防ぐ。完了人数、利用人数、IDの順で安定ソートする。
+- [x] 同コマンドで全件PASSを確認し、`test:ai-navi` を登録する。
+- [x] 対象ファイルのみをコミットする。
 
 ### Task 2: 本人の候補選択
 
@@ -55,11 +55,11 @@
 
 **Interfaces:** `selectCandidates(materials: Material[], personal: PersonalInput, popularity: PopularitySummary): Candidate[]`。`Candidate { materialId: string; sources: ('interest' | 'history' | 'feedback' | 'popularity' | 'catalog')[] }`。AIへ渡す候補は最大20件とし、本人のイベントを他者の集計イベントとは別引数に保つ。
 
-- [ ] 失敗テストを書く。登録した関心・目標と教材topicsの一致、本人が閲覧・完了した教材のtopicsとの一致を人気より優先。関連なしの初回は人気を優先。人気なしならcatalog根拠。非公開は除外。not-interestedは除外し、反応を取り除いた次回入力では再び候補にできる。履歴を変更しない。
-- [ ] `npx tsx --test tests/ai-navi/candidates.test.ts` で失敗を確認する。
-- [ ] 実装する。文字列はNFKC・前後空白除去・小文字化して比較し、相互の包含一致で判定する。interested、関心・目標一致、履歴一致、人気、一般候補の優先順とし、同順位は集計順位・IDで安定させる。これはAI前の候補抽出であり、AIによる意味理解を代替しない。
-- [ ] 同コマンドと `npm run test:ai-navi` でPASSを確認する。
-- [ ] 対象ファイルのみをコミットする。
+- [x] 失敗テストを書く。登録した関心・目標と教材topicsの一致、本人が閲覧・完了した教材のtopicsとの一致を人気より優先。関連なしの初回は人気を優先。人気なしならcatalog根拠。非公開は除外。not-interestedは除外し、反応を取り除いた次回入力では再び候補にできる。履歴を変更しない。
+- [x] `npx tsx --test tests/ai-navi/candidates.test.ts` で失敗を確認する。
+- [x] 実装する。文字列はNFKC・前後空白除去・小文字化して比較し、相互の包含一致で判定する。interested、関心・目標一致、履歴一致、人気、一般候補の優先順とし、同順位は集計順位・IDで安定させる。これはAI前の候補抽出であり、AIによる意味理解を代替しない。
+- [x] 同コマンドと `npm run test:ai-navi` でPASSを確認する。
+- [x] 対象ファイルのみをコミットする。
 
 ### Task 3: AI出力の境界と接続契約
 
@@ -67,11 +67,11 @@
 
 **Interfaces:** `validateSuggestions(value: unknown, allowedIds: ReadonlySet<string>): Suggestion[]`、`Suggestion { materialId: string; reason: string; nextLearning: string }`。入力は配列で最大3件。各文字列は空白除去後1〜500文字、materialIdは許可集合に含み重複不可。不正入力は例外で拒否する。
 
-- [ ] 失敗テストを書く。正常値、未知ID、重複、4件、空文字、長過ぎる文章、不正JSON相当の値を検証。命令文を含む文字列は実行・HTML化せずただのデータとして返す。
-- [ ] `npx tsx --test tests/ai-navi/output.test.ts` で失敗を確認する。
-- [ ] 検証関数を実装し、開発資料に本人認証・入力版確認・公開状態再取得はAPI側の責務と記す。allowedIdsは応答時の最新公開教材で再作成する契約とする。
-- [ ] 全体の `npm test` と `npx tsc --noEmit` を実行し成功を確認する。失敗が既存由来なら切り分けて記録する。
-- [ ] 対象ファイルのみをコミットする。
+- [x] 失敗テストを書く。正常値、未知ID、重複、4件、空文字、長過ぎる文章、不正JSON相当の値を検証。命令文を含む文字列は実行・HTML化せずただのデータとして返す。
+- [x] `npx tsx --test tests/ai-navi/output.test.ts` で失敗を確認する。
+- [x] 検証関数を実装し、開発資料に本人認証・入力版確認・公開状態再取得はAPI側の責務と記す。allowedIdsは応答時の最新公開教材で再作成する契約とする。
+- [x] 全体の `npm test` と `npx tsc --noEmit` を実行し成功を確認する。失敗が既存由来なら切り分けて記録する。
+- [x] 対象ファイルのみをコミットする。
 
 ## 後続計画と完了の境界
 
@@ -80,3 +80,7 @@
 ## セルフレビュー
 
 第1段階の人気・候補・出力検証をTasks 1〜3で網羅。データ保存・AIアダプター・画面・属性利用は後続であり未実装と明示した。型と各タスクのインターフェース、Review Focusの検証先を照合済み。
+
+## 実行結果（2026-10-23）
+
+推薦コアの3タスクを実装。新規15件・既存51件が成功、TypeScript型チェック成功。別担当の読み取り専用レビューで修正対象なし。環境制限により専用ワークツリーへ書き込めず、現在の機能ブランチで実装した。ユニットテストはIPCを作らないnode --import tsxを利用。本番の本人認証・保存・AI画面は後続工程。
