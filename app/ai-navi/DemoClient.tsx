@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { Material, PopularitySummary, Suggestion } from '../../server/ai-navi/types';
+import type { DiscoveryHistory, Material, PopularitySummary, Suggestion } from '../../server/ai-navi/types';
 
-type Props={profiles:{id:string;label:string;description:string}[];materials:Material[];popularity:PopularitySummary};
+type Props={profiles:{id:string;label:string;description:string;history:DiscoveryHistory[]}[];materials:Material[];popularity:PopularitySummary};
 export function DemoClient({profiles,materials,popularity}:Props){
   const [profileId,setProfileId]=useState(profiles[0].id);
   const [loading,setLoading]=useState(false);
@@ -36,28 +36,67 @@ export function DemoClient({profiles,materials,popularity}:Props){
   }
   const profile=profiles.find(item=>item.id===profileId)!;
   const formatDate=(at:number)=>new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric'}).format(at);
+  function evidenceLabel(item:Suggestion,id:string){
+    if(item.basis==='history'){
+      const event=profile.history.find(value=>value.id===id);
+      return event?`${event.title}（${event.kind==='complete'?'受講完了':'閲覧'}）`:null;
+    }
+    const material=materials.find(value=>value.id===id);
+    const stats=popularity.items.find(value=>value.materialId===id&&value.popular);
+    return material&&stats?`${material.title}：${Math.round((stats.ratio??0)*100)}%（${stats.users} / ${popularity.activeUsers}人）`:null;
+  }
   return <main className="navi-demo">
     <header className="navi-demo-header"><a href="/" className="navi-demo-brand">ME LIFE<span>みらいふ</span></a><a href="/">ホームへ戻る ↗</a></header>
-    <section className="navi-demo-intro"><span className="navi-demo-kicker">AI 未来ナビ · 開発体験版</span>
-      <h1>次の「やってみたい」を<br/>見つけよう。</h1><p>あなたの「好き」と、これまでの学びから。<br/>未来ナビが、次の一歩をいっしょに考えます。</p>
+    <section className="navi-demo-intro">
+      <span className="navi-demo-kicker">AI 未来ナビ · 開発体験版</span>
+      <h1>履歴から見つかる、<br/>新しい楽しみ。</h1>
+      <p>これまで見たもの、学んだこと。そのつながりから、<br/>まだ気づいていない趣味やテーマを見つけます。</p>
     </section>
-    <div className="navi-demo-notice"><strong>サンプルで試す体験版です。</strong> 教材・プロフィール・人気は架空のデータです。実際の登録情報や履歴は使用しません。提案の実行にはOpenAI APIの利用料が発生します。</div>
+    <div className="navi-demo-notice"><strong>サンプルの履歴で試す体験版です。</strong> 教材・履歴・人気は架空のデータです。実際の登録情報は使用しません。提案の実行にはOpenAI APIの利用料が発生します。</div>
     <div className="navi-demo-columns">
-      <section className="navi-demo-panel"><span className="navi-demo-step">01 / あなたのサンプル</span><h2>どんな学びから、はじめる？</h2>
-        <label htmlFor="demo-profile">サンプル利用者</label><select id="demo-profile" value={profileId} onChange={event=>changeProfile(event.target.value)}>{profiles.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select>
-        <div className="navi-demo-profile"><span aria-hidden="true">{profileId==='photography'?'◎':'✧'}</span><div><h3>{profile.label}</h3><p>{profile.description}</p></div></div>
-        <p className="navi-demo-explain">興味・目標・閲覧した分野を優先。まだ情報がないときは、みらいふ内の人気からおすすめします。</p>
-        <button className="navi-demo-submit" disabled={loading} onClick={propose}>{loading?'提案を考えています…':'AIに提案してもらう'}<span aria-hidden="true">↗</span></button>
+      <section className="navi-demo-panel">
+        <span className="navi-demo-step">01 / これまでの体験</span>
+        <h2>学びの足あと</h2>
+        <p className="navi-demo-explain">やりたいことを言葉にしなくても大丈夫。閲覧・受講の履歴を手がかりにします。</p>
+        <div data-testid="learning-history" className="navi-demo-history">
+          {profile.history.length?<ol>{profile.history.map(event=><li key={event.id}>
+            <span className={`navi-demo-history-kind ${event.kind}`}>{event.kind==='complete'?'受講完了':'閲覧'}</span>
+            <h3>{event.title}</h3><p>{event.description}</p>
+          </li>)}</ol>:<div className="navi-demo-no-history"><h3>まだ履歴がありません</h3><p>みらいふ内で人気のテーマを、新しい楽しみの入口として紹介します。</p></div>}
+        </div>
+        <p className="navi-demo-small">閲覧した教材を「受講完了」や「習得済み」とは扱いません。</p>
+        <div className="navi-demo-case">
+          <label htmlFor="demo-profile">テスト用の履歴ケース</label>
+          <select id="demo-profile" value={profileId} onChange={event=>changeProfile(event.target.value)}>{profiles.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select>
+          <p className="navi-demo-small">{profile.description}</p>
+          <p className="navi-demo-small">この切替は開発確認用です。利用者に好みや希望を入力してもらう操作ではありません。</p>
+        </div>
+        <button className="navi-demo-submit" disabled={loading} onClick={propose}>{loading?'テーマを考えています…':'履歴からテーマを見つける'}<span aria-hidden="true">↗</span></button>
         <p className="navi-demo-small">1回ずつ、60秒に3回までお試しいただけます。</p>
         {error&&<p className="navi-demo-error" role="alert">{error}</p>}
         <details className="navi-demo-settings"><summary>はじめて使う方へ：接続の設定</summary><p>サーバーの .env.local に OPENAI_API_KEY と OPENAI_MODEL を設定して、開発サーバーを再起動します。キーはこの画面やチャットに入力しないでください。</p></details>
       </section>
-      <section className="navi-demo-panel navi-demo-result" aria-live="polite" aria-busy={loading}><span className="navi-demo-step">02 / 次の一歩</span><h2>未来ナビからの提案</h2>
-        {loading?<div className="navi-demo-empty"><span className="navi-demo-orbit" aria-hidden="true">✦</span><p>サンプルの興味と学びを見ながら、<br/>次の一歩を考えています。</p></div>:suggestions===null?<div className="navi-demo-empty"><span aria-hidden="true">✧</span><p>あなたに合う「やってみたい」を。<br/>ボタンから、提案を試してみましょう。</p></div>:suggestions.length===0?<p>今回は候補が見つかりませんでした。別のサンプルをお試しください。</p>:<div data-testid="suggestions" className="navi-demo-suggestions">{suggestions.map(item=>{const material=materials.find(value=>value.id===item.materialId);return <article key={item.materialId}><span className="navi-demo-tag">サンプル教材</span><h3>{material?.title??'教材の提案'}</h3><p>{item.reason}</p><div className="navi-demo-next"><strong>次に学べること</strong><p>{item.nextLearning}</p></div><details><summary>教材の内容を見る</summary><p>{material?.description}</p><p className="navi-demo-small">この教材は体験用です。実際の受講はできません。</p></details></article>})}</div>}
+      <section className="navi-demo-panel navi-demo-result" aria-live="polite" aria-busy={loading}>
+        <span className="navi-demo-step">02 / 見つかる新しい楽しみ</span><h2>こんなテーマはいかがですか？</h2>
+        {loading?<div className="navi-demo-empty"><span className="navi-demo-orbit" aria-hidden="true">✦</span><p>履歴のつながりから、<br/>次に楽しめそうなテーマを考えています。</p></div>
+        :suggestions===null?<div className="navi-demo-empty"><span aria-hidden="true">✧</span><p>これまでの体験から、新しい発見へ。<br/>テーマと、その理由、最初の一歩をご提案します。</p></div>
+        :suggestions.length===0?<p>今回はテーマが見つかりませんでした。別の履歴ケースをお試しください。</p>
+        :<div data-testid="suggestions" className="navi-demo-suggestions">{suggestions.map(item=><article key={item.theme}>
+          <span className="navi-demo-tag">{item.basis==='history'?'履歴のつながりから':'人気を入口にした提案'}</span>
+          <h3>{item.theme}</h3>
+          <div className="navi-demo-reason"><strong>なぜ合いそう？</strong><p>{item.reason}</p></div>
+          <div className="navi-demo-next"><strong>最初に試せること</strong><p>{item.firstStep}</p></div>
+          <div className="navi-demo-evidence"><strong>{item.basis==='history'?'手がかりになった履歴':'参考にしたみらいふ内の人気（サンプル）'}</strong>
+            <ul>{item.evidenceIds.map(id=>{const label=evidenceLabel(item,id);return label?<li key={id}>{label}</li>:null;})}</ul>
+          </div>
+          {item.relatedMaterialIds.length>0&&<details className="navi-demo-related"><summary>関連する教材</summary><p className="navi-demo-small">テーマを試すための補助案内です。</p>{item.relatedMaterialIds.map(id=>{const material=materials.find(value=>value.id===id);return material?<div key={id}><h4>{material.title}</h4><p>{material.description}</p></div>:null;})}<p className="navi-demo-small">サンプル教材のため、実際の受講はできません。</p></details>}
+        </article>)}</div>}
       </section>
     </div>
-    <section className="navi-demo-catalog"><div><span className="navi-demo-step">SAMPLE LIBRARY</span><h2>今回おすすめする教材</h2><p>人気の基準は、直近30日の教材利用者の80%以上。<br/>以下はサンプル{popularity.activeUsers}人の集計です（{formatDate(popularity.start)}〜{formatDate(popularity.end)}）。</p></div>
+    <section className="navi-demo-catalog"><details><summary>体験版で使っているサンプル教材・人気情報</summary>
+      <p>教材は趣味・テーマを見つけ、試すための補助情報です。人気の基準は直近30日の教材利用者の80%以上。以下はサンプル{popularity.activeUsers}人の集計です（{formatDate(popularity.start)}〜{formatDate(popularity.end)}）。</p>
       <ul>{materials.map(material=>{const stats=popularity.items.find(item=>item.materialId===material.id);return <li key={material.id}><h3>{material.title}</h3><p>{material.description}</p>{stats?.popular&&<span className="navi-demo-popular">サンプル人気 <strong>{Math.round((stats.ratio??0)*100)}%（{stats.users} / {popularity.activeUsers}人）</strong></span>}</li>})}</ul>
-    </section><footer className="navi-demo-footer">何歳からでも、新しい未来へ。<span>ME LIFE / AI未来ナビ</span></footer>
+    </details></section>
+    <footer className="navi-demo-footer">何歳からでも、新しい未来へ。<span>ME LIFE / AI未来ナビ</span></footer>
   </main>;
 }
