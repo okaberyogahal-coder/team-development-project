@@ -4,7 +4,7 @@ import { createDemoContext } from '../../server/ai-navi/demo-data';
 import { generateSuggestions } from '../../server/ai-navi/openai';
 const context=createDemoContext('photography',Date.UTC(2026,9,23));
 const config={apiKey:'test-secret',model:'test-model'};
-const suggestion={materialId:'flower-photo',reason:'写真の学びから',nextLearning:'生花の撮影を学ぶ'};
+const suggestion={theme:'季節の花を撮る',reason:'写真と花の教材の履歴をつなげた提案です。',firstStep:'身近な花を窓辺で一枚撮る。',basis:'history',evidenceIds:['complete:natural-light','view:flower-arrange'],relatedMaterialIds:[]};
 const response=(payload:unknown)=>new Response(JSON.stringify(payload),{status:200});
 const success=(suggestions:unknown)=>response({status:'completed',output:[{type:'message',content:[{type:'output_text',text:JSON.stringify({suggestions})}]}]});
 
@@ -38,7 +38,7 @@ test('missing config makes no network call',async()=>{
 });
 
 test('rejects hallucinated IDs and malformed JSON',async()=>{
- await assert.rejects(generateSuggestions(context,config,async()=>success([{...suggestion,materialId:'missing'}])),{code:'INVALID_OUTPUT'});
+ await assert.rejects(generateSuggestions(context,config,async()=>success([{...suggestion,relatedMaterialIds:['missing']}])),{code:'INVALID_OUTPUT'});
  await assert.rejects(generateSuggestions(context,config,async()=>response({status:'completed',output:[{type:'message',content:[{type:'output_text',text:'broken'}]}]})),{code:'INVALID_OUTPUT'});
 });
 
@@ -53,4 +53,31 @@ test('maps HTTP and abort failures without leaking upstream text or retrying',as
  await assert.rejects(generateSuggestions(context,config,async()=>{calls++;return new Response('test-secret',{status:500})}),{code:'UPSTREAM'});
  assert.equal(calls,1);
  await assert.rejects(generateSuggestions(context,config,async()=>{throw new DOMException('secret','AbortError')}),{code:'TIMEOUT'});
+});
+
+
+test('uses observed history without declared goals and sends different combinations',async()=>{
+ const inputs:any[]=[];
+ for(const id of ['photography','food-photo']){
+  const ctx=createDemoContext(id,Date.UTC(2026,9,24));
+  await generateSuggestions(ctx,config,async(_url,init)=>{inputs.push(JSON.parse(JSON.parse(String(init?.body)).input));return success([])});
+ }
+ assert.equal(inputs[0].interests,undefined);
+ assert.equal(inputs[0].goals,undefined);
+ assert.deepEqual(inputs[0].history.map((x:any)=>[x.id,x.kind]),[['complete:natural-light','complete'],['view:flower-arrange','view']]);
+ assert.deepEqual(inputs[1].history.map((x:any)=>x.materialId),['natural-light','cooking']);
+ assert.ok(inputs[0].history.every((x:any)=>x.title&&x.description&&x.topics.length));
+});
+
+test('rejects fabricated completion evidence and personal-history claims for newcomers',async()=>{
+ await assert.rejects(generateSuggestions(context,config,async()=>success([{...suggestion,evidenceIds:['complete:flower-arrange']}])),{code:'INVALID_OUTPUT'});
+ const newcomer=createDemoContext('newcomer',Date.UTC(2026,9,24));
+ await assert.rejects(generateSuggestions(newcomer,config,async()=>success([suggestion])),{code:'INVALID_OUTPUT'});
+ const popular={...suggestion,basis:'popularity',evidenceIds:['cooking']};
+ assert.deepEqual(await generateSuggestions(newcomer,config,async()=>success([popular])),[popular]);
+});
+
+test('can suggest a theme without any related material candidates',async()=>{
+ const noCatalog={...context,candidates:[]};
+ assert.deepEqual(await generateSuggestions(noCatalog,config,async()=>success([suggestion])),[suggestion]);
 });

@@ -4,7 +4,7 @@ import { createDemoHandler } from '../../server/ai-navi/demo-handler';
 import { AiNaviError } from '../../server/ai-navi/openai';
 const config={apiKey:'secret',model:'test-model'};
 const request=(body='{"profileId":"photography"}',headers:Record<string,string>={})=>new Request('http://localhost:3002/api/ai-navi/demo',{method:'POST',headers:{host:'localhost:3002',origin:'http://localhost:3002','content-type':'application/json',...headers},body});
-const generate=async()=>[{materialId:'flower-photo',reason:'写真が好き',nextLearning:'花を撮る'}];
+const generate=async()=>[{theme:'季節の花を撮る',reason:'写真と花の履歴から',firstStep:'身近な花を撮る',basis:'history' as const,evidenceIds:['complete:natural-light','view:flower-arrange'],relatedMaterialIds:[]}];
 
 test('non-development, public hosts and mismatched origins never call OpenAI',async()=>{
  let calls=0;
