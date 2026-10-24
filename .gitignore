@@ -27,3 +27,6 @@ unity/**/*.unitypackage
 unity/**/*.unitypackage.meta
 # Rebuild locally with npm run build:unity; deploy these files with the site.
 /public/unity/FutureCity/
+
+# Atomic-write scratch files; shared development JSON itself is tracked.
+data/local-demo/users/.*.tmp

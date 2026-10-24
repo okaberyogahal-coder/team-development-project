@@ -9,13 +9,14 @@
     "start": "next start",
     "lint": "next lint",
     "test:plaza": "tsx --test tests/plaza/*.test.ts",
-    "test": "npm run test:plaza && npm run test:ai-navi",
+    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo",
     "dev:plaza": "tsx server/plaza/index.ts",
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
     "dev:lan": "node scripts/dev-lan.mjs",
     "test:ai-navi": "node --import tsx --test tests/ai-navi/*.test.ts",
-    "dev:ai-navi": "node scripts/dev-ai-navi.mjs"
+    "dev:ai-navi": "node scripts/dev-ai-navi.mjs",
+    "test:local-demo": "node --import tsx --test tests/local-demo/*.test.ts"
   },
   "dependencies": {
     "livekit-client": "^2.15.6",
