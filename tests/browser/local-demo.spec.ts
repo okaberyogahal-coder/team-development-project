@@ -3,7 +3,7 @@ import {readFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {resetSharedFixture,selectUser} from './local-demo-fixture';
 
-test.beforeEach(async()=>{await resetSharedFixture();});
+test.beforeEach(async({page})=>{await resetSharedFixture(page);});
 
 test('passwordless fictional login restores after reload and logout preserves saved history',async({page})=>{
  await page.goto('/login');
@@ -42,4 +42,10 @@ test('viewing and explicit completion are persisted to the selected JSON and nev
  await expect(page.getByTestId('learning-history')).not.toContainText('スマートフォンで写真を整理する');
  const other=JSON.parse(await readFile(join(process.env.MILIFE_LOCAL_DEMO_TEST_DIR!,'users/photography.json'),'utf8'));
  expect(other.events).toHaveLength(2);
+});
+
+test('fixture setup refuses a server using a different store before any writes',async()=>{
+ const {resetSharedFixture}=await import('./local-demo-fixture');
+ const wrongServer={request:{get:async()=>({ok:()=>true,headers:()=>({'x-melife-local-store':'shared'})})}};
+ await expect(resetSharedFixture(wrongServer as never)).rejects.toThrow(/保存先/);
 });

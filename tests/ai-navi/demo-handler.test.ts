@@ -90,7 +90,7 @@ test('ordinary development stays disabled even with matching spoofable headers a
 
 async function setup(t:{after(fn:()=>Promise<void>):void}){
  const root=await mkdtemp(join(tmpdir(),'melife-ai-handler-'));
- await cp('data/local-demo',root,{recursive:true});
+ await cp('tests/fixtures/local-demo',root,{recursive:true});
  t.after(()=>rm(root,{recursive:true,force:true}));
  return new FileLocalDemoRepository(root);
 }

@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,useCallback} from 'react';
 import type {LocalDemoState} from '../../shared/local-demo';
-import {readLocalState,changeLocalState} from '../../shared/local-demo-client';
+import {readLocalState,changeLocalState,LocalClientError} from '../../shared/local-demo-client';
 import {LocalDemoLogin} from '../components/LocalDemoLogin';
 import {DemoClient} from './DemoClient';
 
@@ -10,15 +10,16 @@ export function LocalDemoWorkspace(){
   const [error,setError]=useState('');const [busy,setBusy]=useState(false);
   const [invalidation,setInvalidation]=useState(0);const pending=useRef(false);
   const [openMaterial,setOpenMaterial]=useState<string|null>(null);
-  const refresh=useCallback(async()=>{const next=await readLocalState();setState(next);return next;},[]);
+  const generation=useRef(0);
+  const refresh=useCallback(async()=>{const version=generation.current;const next=await readLocalState();if(version!==generation.current)throw new Error('操作が変更されました。');setState(next);return next;},[]);
   useEffect(()=>{const abort=new AbortController();readLocalState(abort.signal).then(setState).catch(error=>{if(!abort.signal.aborted)setError(error instanceof Error?error.message:'保存データを取得できませんでした。');});return()=>abort.abort();},[]);
   async function mutate(body:unknown,opened?:string){
-    if(pending.current)return;pending.current=true;setBusy(true);setError('');setInvalidation(value=>value+1);
+    if(pending.current)return;pending.current=true;generation.current++;setBusy(true);setError('');setInvalidation(value=>value+1);
     try{
-      const next=await changeLocalState(body);
+      const next=await changeLocalState(body,state?.revision);
       if(next.currentUser?.id!==state?.currentUser?.id)setOpenMaterial(null);
       setState(next);if(opened)setOpenMaterial(opened);
-    }catch(error){setError(error instanceof Error?error.message:'保存に失敗しました。');}
+    }catch(error){if(error instanceof LocalClientError&&error.status===409){try{await refresh();setOpenMaterial(null);}catch{}}setError(error instanceof Error?error.message:'保存に失敗しました。');}
     finally{pending.current=false;setBusy(false);}
   }
   const user=state?.currentUser;
@@ -37,7 +38,7 @@ export function LocalDemoWorkspace(){
       {error&&<p role="alert" className="navi-demo-error">{error}</p>}
     </section>
     {!state&&!error&&<main className="navi-demo"><p role="status">保存したデータを読み込んでいます…</p></main>}
-    {state&&!user&&<main className="navi-demo"><section className="navi-demo-panel"><h1>開発用ユーザーを選んではじめる</h1><LocalDemoLogin onLogin={next=>{setState(next);setError('');setInvalidation(value=>value+1);}}/></section></main>}
+    {state&&!user&&<main className="navi-demo"><section className="navi-demo-panel"><h1>開発用ユーザーを選んではじめる</h1><LocalDemoLogin onLogin={next=>{generation.current++;setState(next);setError('');setInvalidation(value=>value+1);}}/></section></main>}
     {state&&profile&&<DemoClient key={`${user!.id}:${state.revision}:${invalidation}`} profile={profile} materials={state.materials} popularity={state.popularity} revision={state.revision} blocked={busy} refreshState={refresh}/>}
     {state&&user&&<section className="local-demo-library"><details><summary>サンプル教材を開いて履歴を記録</summary>
       <p>教材を開くと閲覧をJSONへ保存します。完了は詳細内のボタンで記録します。同じ教材の再閲覧は1件の日時更新となります。</p>

@@ -6,8 +6,8 @@ export async function readLocalState(signal?:AbortSignal):Promise<LocalDemoState
   if(!response.ok)throw new LocalClientError(result.error?.message??'開発用データを取得できませんでした。',response.status);
   return result;
 }
-export async function changeLocalState(body:unknown):Promise<LocalDemoState>{
-  const response=await fetch('/api/local-demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+export async function changeLocalState(body:unknown,revision?:string):Promise<LocalDemoState>{
+  const response=await fetch('/api/local-demo',{method:'POST',headers:{'Content-Type':'application/json',...(revision?{'If-Match':revision}:{})},body:JSON.stringify(body)});
   const result=await response.json();
   if(!response.ok)throw new LocalClientError(result.error?.message??'開発用データを保存できませんでした。',response.status);
   return result;

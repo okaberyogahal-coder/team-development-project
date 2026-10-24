@@ -9,7 +9,7 @@ import {LOCAL_USER_COOKIE} from '../../server/local-demo/session';
 const now=Date.UTC(2026,9,24,12);
 const request=(userId='',body='{}')=>new Request('http://localhost:3002/api/ai-navi/demo',{method:'POST',headers:{host:'localhost:3002',origin:'http://localhost:3002','content-type':'application/json',cookie:userId?`${LOCAL_USER_COOKIE}=${userId}`:''},body});
 async function setup(t:{after(fn:()=>Promise<void>):void}){
- const root=await mkdtemp(join(tmpdir(),'melife-ai-context-'));await cp('data/local-demo',root,{recursive:true});t.after(()=>rm(root,{recursive:true,force:true}));
+ const root=await mkdtemp(join(tmpdir(),'melife-ai-context-'));await cp('tests/fixtures/local-demo',root,{recursive:true});t.after(()=>rm(root,{recursive:true,force:true}));
  return new FileLocalDemoRepository(root);
 }
 

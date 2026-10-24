@@ -8,7 +8,7 @@ import {loadLocalDemoState,buildStoredContext} from '../../server/local-demo/sta
 
 async function setup(t:{after(fn:()=>Promise<void>):void}){
  const root=await mkdtemp(join(tmpdir(),'melife-local-demo-'));
- await cp('data/local-demo',root,{recursive:true});
+ await cp('tests/fixtures/local-demo',root,{recursive:true});
  t.after(()=>rm(root,{recursive:true,force:true}));
  return {root,repo:new FileLocalDemoRepository(root)};
 }

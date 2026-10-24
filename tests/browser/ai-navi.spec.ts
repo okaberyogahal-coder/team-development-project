@@ -1,7 +1,7 @@
 import {expect,test} from '@playwright/test';
 import {resetSharedFixture,selectUser} from './local-demo-fixture';
 const theme={theme:'季節の花を撮る',reason:'<b>写真の受講と花の閲覧のつながりから</b>',firstStep:'窓辺の花を一枚撮ってみる',basis:'history',evidenceIds:['complete:natural-light','view:flower-arrange'],relatedMaterialIds:[]};
-test.beforeEach(async({page,baseURL})=>{await resetSharedFixture();await selectUser(page,'photography',baseURL!);});
+test.beforeEach(async({page,baseURL})=>{await resetSharedFixture(page);await selectUser(page,'photography',baseURL!);});
 
 test('uses saved history instead of asking the user to describe interests',async({page})=>{
  await page.goto('/ai-navi');
@@ -80,4 +80,32 @@ test('logging out during AI generation never leaves the old result visible',asyn
  await page.getByRole('button',{name:'開発用ログアウト'}).click();release();
  await expect(page.getByRole('button',{name:'そら（架空）で開発用ログイン'})).toBeVisible();
  await expect(page.getByTestId('suggestions')).toHaveCount(0);
+});
+
+test('a delayed AI confirmation GET cannot restore a logged-out user',async({page})=>{
+ await page.goto('/ai-navi');
+ await expect(page.getByTestId('local-current-user')).toBeVisible();
+ const snapshot=await (await page.request.get('/api/local-demo')).json();
+ let release!:()=>void;const pending=new Promise<void>(resolve=>{release=resolve});
+ let started!:()=>void;const requested=new Promise<void>(resolve=>{started=resolve});
+ await page.route('**/api/local-demo',async route=>{
+  if(route.request().method()!=='GET')return route.continue();
+  started();await pending;await route.fulfill({json:snapshot}).catch(()=>{});
+ });
+ await page.route('**/api/ai-navi/demo',route=>route.fulfill({json:{suggestions:[theme],revision:snapshot.revision}}));
+ await page.getByRole('button',{name:'履歴からテーマを見つける'}).click();await requested;
+ await page.getByRole('button',{name:'開発用ログアウト'}).click();
+ await expect(page.getByTestId('local-current-user')).toHaveCount(0);
+ release();await page.waitForTimeout(300);
+ await expect(page.getByTestId('local-current-user')).toHaveCount(0);
+});
+
+test('an old tab cannot save history into a newly selected user',async({page,baseURL})=>{
+ await page.goto('/ai-navi');await expect(page.getByTestId('local-current-user')).toContainText('そら');
+ await selectUser(page,'newcomer',baseURL!);
+ await page.getByText('サンプル教材を開いて履歴を記録').click();
+ await page.getByRole('button',{name:'スマートフォンで写真を整理するを開く'}).click();
+ await expect(page.getByTestId('local-current-user')).toContainText('はる');
+ const state=await (await page.request.get('/api/local-demo')).json();
+ expect(state.currentUser.events).toEqual([]);
 });

@@ -5,13 +5,13 @@ import {loadLocalDemoState} from './state';
 import {getSelectedLocalUser,selectionCookie} from './session';
 import {LocalHttpError,exactKeys,guardLocalRequest,localFailure,localJSON,readLocalJSON} from './http';
 
-export function createLocalDemoHandler(options:{repo:LocalDemoRepository;environment:string;enabled:boolean;now?:()=>number}):(request:Request)=>Promise<Response>{
+export function createLocalDemoHandler(options:{repo:LocalDemoRepository;environment:string;enabled:boolean;now?:()=>number;storeFingerprint?:string}):(request:Request)=>Promise<Response>{
   const now=options.now??Date.now;
   return async request=>{
     try{
       guardLocalRequest(request,options.environment,options.enabled,request.method!=='GET');
       let userId=getSelectedLocalUser(request);
-      if(request.method==='GET') return localJSON(await loadLocalDemoState(options.repo,userId,now()));
+      if(request.method==='GET') return localJSON(await loadLocalDemoState(options.repo,userId,now()),200,{'X-Melife-Local-Store':options.storeFingerprint??'shared'});
       if(request.method!=='POST') throw new LocalHttpError(405,'INVALID');
       const body=await readLocalJSON(request);
       if(exactKeys(body,['action','userId'])&&body.action==='login'&&isLocalUserId(body.userId)){
@@ -23,6 +23,9 @@ export function createLocalDemoHandler(options:{repo:LocalDemoRepository;environ
       }
       if(exactKeys(body,['action','materialId','kind'])&&body.action==='record'&&typeof body.materialId==='string'&&(body.kind==='view'||body.kind==='complete')){
         if(!userId)throw new LocalHttpError(401,'UNSELECTED');
+        const state=await loadLocalDemoState(options.repo,userId,now());
+        if(!request.headers.get('if-match'))throw new LocalHttpError(400,'INVALID');
+        if(request.headers.get('if-match')!==state.revision)throw new LocalHttpError(409,'STALE');
         await options.repo.recordEvent(userId,body.materialId,body.kind,new Date(now()));
         return localJSON(await loadLocalDemoState(options.repo,userId,now()));
       }

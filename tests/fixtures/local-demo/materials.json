@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "materials": [
+    {
+      "id": "natural-light",
+      "title": "自然光と背景ぼけの基本",
+      "description": "窓辺の光と絞りを使った写真の撮り方を学ぶサンプル教材。",
+      "topics": [
+        "写真",
+        "カメラ"
+      ],
+      "published": true
+    },
+    {
+      "id": "flower-photo",
+      "title": "生花を美しく撮る、小さな写真教室",
+      "description": "切り花を被写体に、背景・光・構図を工夫するサンプル教材。",
+      "topics": [
+        "写真",
+        "カメラ",
+        "生花"
+      ],
+      "published": true
+    },
+    {
+      "id": "flower-arrange",
+      "title": "季節の花を楽しむ、はじめての花飾り",
+      "description": "花瓶と色の組み合わせを考えるサンプル教材。",
+      "topics": [
+        "生花",
+        "園芸"
+      ],
+      "published": true
+    },
+    {
+      "id": "cooking",
+      "title": "毎日に役立つ、やさしい料理",
+      "description": "手軽な献立の組み立てを学ぶサンプル教材。",
+      "topics": [
+        "料理"
+      ],
+      "published": true
+    },
+    {
+      "id": "digital",
+      "title": "スマートフォンで写真を整理する",
+      "description": "写真の整理や保存の基本を学ぶサンプル教材。",
+      "topics": [
+        "写真",
+        "デジタル"
+      ],
+      "published": true
+    }
+  ]
+}

@@ -8,7 +8,7 @@ import {createLocalDemoHandler} from '../../server/local-demo/handler';
 import {LOCAL_USER_COOKIE} from '../../server/local-demo/session';
 
 async function setup(t:{after(fn:()=>Promise<void>):void}){
- const root=await mkdtemp(join(tmpdir(),'melife-local-api-'));await cp('data/local-demo',root,{recursive:true});
+ const root=await mkdtemp(join(tmpdir(),'melife-local-api-'));await cp('tests/fixtures/local-demo',root,{recursive:true});
  t.after(()=>rm(root,{recursive:true,force:true}));
  const repo=new FileLocalDemoRepository(root);
  const handler=createLocalDemoHandler({repo,environment:'development',enabled:true,now:()=>Date.UTC(2026,9,24,12)});
@@ -30,9 +30,10 @@ test('lists fictional users, selects one with a private local cookie, and restor
 
 test('records only for the selected user, distinguishing view and completion; logout preserves files',async t=>{
  const {handler,repo}=await setup(t);const cookie=`${LOCAL_USER_COOKIE}=newcomer`;
- assert.equal((await handler(request({action:'record',materialId:'digital',kind:'view'},cookie))).status,200);
+ const revision=async()=> (await (await handler(request(undefined,cookie))).json()).revision;
+ assert.equal((await handler(request({action:'record',materialId:'digital',kind:'view'},cookie,{'if-match':await revision()}))).status,200);
  assert.deepEqual((await repo.getUser('newcomer')).events.map(x=>x.kind),['view']);
- await handler(request({action:'record',materialId:'digital',kind:'complete'},cookie));
+ await handler(request({action:'record',materialId:'digital',kind:'complete'},cookie,{'if-match':await revision()}));
  assert.equal((await repo.getUser('photography')).events.length,2);
  const before=await repo.getUser('newcomer');const logout=await handler(request({action:'logout'},cookie));
  assert.match(logout.headers.get('set-cookie')!,/Max-Age=0/);
@@ -58,4 +59,12 @@ test('ordinary dev and production stay disabled, while invalid stored data is re
  const broken={listUsers:async()=>{throw new Error('/private/secret/path')},listMaterials:()=>repo.listMaterials(),getUser:repo.getUser.bind(repo),recordEvent:repo.recordEvent.bind(repo)};
  const handler=createLocalDemoHandler({repo:broken,environment:'development',enabled:true});
  const response=await handler(request());assert.equal(response.status,500);assert.ok(!(await response.text()).includes('/private/secret'));
+});
+
+test('stale displayed user cannot record into another cookie-selected user',async t=>{
+ const {handler,repo}=await setup(t);
+ const state=await (await handler(request(undefined,`${LOCAL_USER_COOKIE}=photography`))).json();
+ const before=await repo.getUser('newcomer');
+ const response=await handler(request({action:'record',materialId:'digital',kind:'view'},`${LOCAL_USER_COOKIE}=newcomer`,{'if-match':state.revision}));
+ assert.equal(response.status,409);assert.deepEqual(await repo.getUser('newcomer'),before);
 });
