@@ -42,8 +42,19 @@ export interface Candidate {
   materialId: string;
   sources: CandidateSource[];
 }
-export interface Suggestion {
+export interface DiscoveryHistory {
+  id: string;
   materialId: string;
+  kind: 'view' | 'complete';
+  title: string;
+  description: string;
+  topics: string[];
+}
+export interface Suggestion {
+  theme: string;
   reason: string;
-  nextLearning: string;
+  firstStep: string;
+  basis: 'history' | 'popularity';
+  evidenceIds: string[];
+  relatedMaterialIds: string[];
 }
