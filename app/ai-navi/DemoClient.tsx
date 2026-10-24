@@ -1,32 +1,31 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import type {LocalDemoState} from '../../shared/local-demo';
 import type { DiscoveryHistory, Material, PopularitySummary, Suggestion } from '../../server/ai-navi/types';
 
-type Props={profiles:{id:string;label:string;description:string;history:DiscoveryHistory[]}[];materials:Material[];popularity:PopularitySummary};
-export function DemoClient({profiles,materials,popularity}:Props){
-  const [profileId,setProfileId]=useState(profiles[0].id);
+type Props={profile:{id:string;label:string;description:string;history:DiscoveryHistory[]};materials:Material[];popularity:PopularitySummary;revision:string;blocked:boolean;refreshState:()=>Promise<LocalDemoState>};
+export function DemoClient({profile,materials,popularity,revision,blocked,refreshState}:Props){
   const [loading,setLoading]=useState(false);
   const [error,setError]=useState('');
   const [suggestions,setSuggestions]=useState<Suggestion[]|null>(null);
   const request=useRef<AbortController|null>(null);
   const sequence=useRef(0);
   useEffect(()=>()=>{request.current?.abort();sequence.current++;},[]);
-  function changeProfile(value:string){
-    sequence.current++;request.current?.abort();request.current=null;
-    setProfileId(value);setLoading(false);setError('');setSuggestions(null);
-  }
   async function propose(){
-    if(request.current) return;
+    if(request.current||blocked) return;
     const controller=new AbortController();request.current=controller;
     const version=++sequence.current;
     setLoading(true);setError('');setSuggestions(null);
     try{
       const response=await fetch('/api/ai-navi/demo',{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({profileId}),signal:controller.signal});
+        body:JSON.stringify({}),signal:controller.signal});
       const result=await response.json();
       if(version!==sequence.current) return;
       if(!response.ok) {setError(result.error?.message??'提案を取得できませんでした。');return;}
       if(!Array.isArray(result.suggestions)) throw new Error('Invalid response');
+      const latest=await refreshState();
+      if(version!==sequence.current)return;
+      if(result.revision!==revision||latest.revision!==revision||latest.currentUser?.id!==profile.id){setError('ユーザーまたは履歴が更新されたため、古い提案を破棄しました。');return;}
       setSuggestions(result.suggestions);
     }catch(failure){
       if(version===sequence.current && !(failure instanceof Error&&failure.name==='AbortError')) setError('提案を取得できませんでした。接続を確認してもう一度お試しください。');
@@ -34,7 +33,6 @@ export function DemoClient({profiles,materials,popularity}:Props){
       if(version===sequence.current){request.current=null;setLoading(false);}
     }
   }
-  const profile=profiles.find(item=>item.id===profileId)!;
   const formatDate=(at:number)=>new Intl.DateTimeFormat('ja-JP',{timeZone:'Asia/Tokyo',month:'numeric',day:'numeric'}).format(at);
   function evidenceLabel(item:Suggestion,id:string){
     if(item.basis==='history'){
@@ -65,13 +63,8 @@ export function DemoClient({profiles,materials,popularity}:Props){
           </li>)}</ol>:<div className="navi-demo-no-history"><h3>まだ履歴がありません</h3><p>みらいふ内で人気のテーマを、新しい楽しみの入口として紹介します。</p></div>}
         </div>
         <p className="navi-demo-small">閲覧した教材を「受講完了」や「習得済み」とは扱いません。</p>
-        <div className="navi-demo-case">
-          <label htmlFor="demo-profile">テスト用の履歴ケース</label>
-          <select id="demo-profile" value={profileId} onChange={event=>changeProfile(event.target.value)}>{profiles.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select>
-          <p className="navi-demo-small">{profile.description}</p>
-          <p className="navi-demo-small">この切替は開発確認用です。利用者に好みや希望を入力してもらう操作ではありません。</p>
-        </div>
-        <button className="navi-demo-submit" disabled={loading} onClick={propose}>{loading?'テーマを考えています…':'履歴からテーマを見つける'}<span aria-hidden="true">↗</span></button>
+        <p className="navi-demo-small">{profile.label}さんのJSONに保存した履歴です。再ログインしても保持されます。</p>
+        <button className="navi-demo-submit" disabled={loading||blocked} onClick={propose}>{loading?'テーマを考えています…':'履歴からテーマを見つける'}<span aria-hidden="true">↗</span></button>
         <p className="navi-demo-small">1回ずつ、60秒に3回までお試しいただけます。</p>
         {error&&<p className="navi-demo-error" role="alert">{error}</p>}
         <details className="navi-demo-settings"><summary>はじめて使う方へ：接続の設定</summary><p>サーバーの .env.local に OPENAI_API_KEY と OPENAI_MODEL を設定して、開発サーバーを再起動します。キーはこの画面やチャットに入力しないでください。</p></details>

@@ -1,4 +1,5 @@
 "use client";
+import {LocalDemoLogin} from "./LocalDemoLogin";
 import { Icon } from "./Icon";
 import { useEffect, useState } from "react";
 import { readDemoProfile, type DemoProfile } from "../../shared/demo-profile";
@@ -19,6 +20,7 @@ export function LoginForm() {
         <h1 className="form-heading">おかえりなさい。</h1>
         <p className="auth-form-description">あなたの「好き」の続きを、ここから。</p>
       </div>
+      <LocalDemoLogin />
       {profile && <div className="auth-demo-note"><strong>{profile.nickname}さんの体験データがあります</strong><p>実際のログイン認証は行いません。このブラウザのデータで再開します。</p><a className="secondary-button" href={profile.appearance ? "/plaza" : "/avatar"}>保存した体験を再開する</a></div>}
       <form className="auth-login-form" onSubmit={event => {
         event.preventDefault();
