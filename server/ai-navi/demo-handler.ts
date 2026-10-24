@@ -1,71 +1,60 @@
-import { createDemoContext, demoProfiles } from './demo-data';
-import { AiNaviError, generateSuggestions } from './openai';
+import {AiNaviError,generateSuggestions} from './openai';
+import {getLocalDemoRepository,type LocalDemoRepository} from '../local-demo/repository';
+import {loadLocalDemoState,buildStoredContext} from '../local-demo/state';
+import {getSelectedLocalUser} from '../local-demo/session';
+import {LocalHttpError,exactKeys,guardLocalRequest,readLocalJSON,localJSON} from '../local-demo/http';
+export {isLocalDemoUrl} from '../local-demo/http';
 
-export function isLocalDemoUrl(value: string): boolean {
-  try {
-    const url=new URL(value);
-    return ['http:','https:'].includes(url.protocol) && ['localhost','127.0.0.1','[::1]'].includes(url.hostname);
-  } catch { return false; }
-}
-const messages: Record<string,string>={
+const messages:Record<string,string>={
   UNCONFIGURED:'サーバーの OPENAI_API_KEY と OPENAI_MODEL を設定し、再起動してください。',
   TIMEOUT:'提案に時間がかかっています。少し待ってからもう一度お試しください。',
   UPSTREAM:'AIに接続できませんでした。APIの設定や利用状況を確認してください。',
   INVALID_OUTPUT:'提案の形式を確認できませんでした。もう一度お試しください。',
-  REFUSED:'今回はAIから提案を取得できませんでした。別のサンプルをお試しください。',
+  REFUSED:'今回はAIから提案を取得できませんでした。',
   RATE_LIMIT:'実行回数の上限です。60秒ほど待ってからお試しください。',
   BUSY:'前の提案を処理しています。完了までお待ちください。',
-  INVALID:'サンプルの選択内容を確認してください。',
+  INVALID:'操作内容を確認してください。',
+  UNSELECTED:'開発用ユーザーを選択してください。',
+  STORE_FAILED:'保存した履歴を読み込めませんでした。JSONと保存先を確認してください。',
+  STALE:'履歴が更新されたため、古い提案を破棄しました。最新の履歴でお試しください。',
 };
-function json(value: unknown,status=200): Response {
-  return Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
-}
-function failure(code:string,status:number): Response {
-  return json({error:{code,message:messages[code]??'この操作は利用できません。'}},status);
-}
-async function readBody(request:Request):Promise<unknown> {
-  if (!request.body) throw new Error('INVALID');
-  const reader=request.body.getReader();
-  const chunks:Uint8Array[]=[];let length=0;
-  try {
-    while(true){
-      const {done,value}=await reader.read();if(done) break;
-      length+=value.byteLength;
-      if(length>1024){await reader.cancel();throw new Error('TOO_LARGE');}
-      chunks.push(value);
-    }
-  } finally { reader.releaseLock(); }
-  const buffer=new Uint8Array(length);let offset=0;
-  for(const chunk of chunks){buffer.set(chunk,offset);offset+=chunk.length;}
-  try {return JSON.parse(new TextDecoder().decode(buffer));}catch{throw new Error('INVALID');}
+function failure(code:string,status:number):Response{
+  return localJSON({error:{code,message:messages[code]??'この操作は利用できません。'}},status);
 }
 export function createDemoHandler(options:{
-  environment:string;enabled?:boolean;config:{apiKey:string;model:string};generate?:typeof generateSuggestions;now?:()=>number;
-}): (request:Request)=>Promise<Response> {
+  repo?:LocalDemoRepository;environment:string;enabled?:boolean;config:{apiKey:string;model:string};generate?:typeof generateSuggestions;now?:()=>number;
+}):(request:Request)=>Promise<Response>{
+  const repo=options.repo??getLocalDemoRepository();
   const generate=options.generate??generateSuggestions;
   const clock=options.now??Date.now;
   let requests:number[]=[];let busy=false;
-  return async(request)=>{
-    if(options.environment!=='development' || !options.enabled) return failure('NOT_FOUND',404);
-    const url=new URL(request.url);
-    if(!isLocalDemoUrl(request.url) || request.headers.get('host')!==url.host || request.headers.get('origin')!==url.origin) return failure('FORBIDDEN',403);
-    if(request.method!=='POST') return failure('INVALID',405);
-    if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json') return failure('INVALID',415);
-    let input:unknown;
-    try{input=await readBody(request);}catch(error){return failure('INVALID',error instanceof Error&&error.message==='TOO_LARGE'?413:400);}
-    if(!input || typeof input!=='object' || Array.isArray(input) || Object.keys(input).length!==1 || !('profileId' in input) || !demoProfiles.some(item=>item.id===input.profileId)) return failure('INVALID',400);
-    if(!options.config.apiKey.trim() || !options.config.model.trim()) return failure('UNCONFIGURED',503);
-    if(busy) return failure('BUSY',429);
-    const now=clock();requests=requests.filter(at=>at>now-60000);
-    if(requests.length>=3) return failure('RATE_LIMIT',429);
-    busy=true;requests.push(now);
+  return async request=>{
     try{
-      const context=createDemoContext(String(input.profileId),now);
-      const suggestions=await generate(context,options.config);
-      return json({suggestions,popularity:context.popularity});
+      guardLocalRequest(request,options.environment,!!options.enabled,true);
+      if(request.method!=='POST')throw new LocalHttpError(405,'INVALID');
+      if(!exactKeys(await readLocalJSON(request),[]))throw new LocalHttpError(400,'INVALID');
+      const userId=getSelectedLocalUser(request);
+      if(!userId)return failure('UNSELECTED',401);
+      if(!options.config.apiKey.trim()||!options.config.model.trim())return failure('UNCONFIGURED',503);
+      if(busy)return failure('BUSY',429);
+      busy=true;
+      try{
+        const now=clock();
+        const state=await loadLocalDemoState(repo,userId,now);
+        if(!state.currentUser)return failure('UNSELECTED',401);
+        requests=requests.filter(at=>at>now-60000);
+        if(requests.length>=3)return failure('RATE_LIMIT',429);
+        requests.push(now);
+        let suggestions;
+        try{suggestions=await generate(buildStoredContext(state),options.config);}
+        catch(error){const code=error instanceof AiNaviError?error.code:'UPSTREAM';return failure(code,code==='TIMEOUT'?504:code==='UNCONFIGURED'?503:502);}
+        const latest=await loadLocalDemoState(repo,userId,clock());
+        if(state.revision!==latest.revision)return failure('STALE',409);
+        return localJSON({suggestions,popularity:state.popularity,revision:state.revision});
+      }finally{busy=false;}
     }catch(error){
-      const code=error instanceof AiNaviError?error.code:'UPSTREAM';
-      return failure(code,code==='TIMEOUT'?504:code==='UNCONFIGURED'?503:502);
-    }finally{busy=false;}
+      if(error instanceof LocalHttpError)return failure(error.code,error.status);
+      return failure('STORE_FAILED',500);
+    }
   };
 }

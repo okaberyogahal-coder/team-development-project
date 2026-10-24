@@ -84,6 +84,9 @@ export class FileLocalDemoRepository implements LocalDemoRepository {
     });
   }
 }
+const repositories=new Map<string,LocalDemoRepository>();
 export function getLocalDemoRepository():LocalDemoRepository{
-  return new FileLocalDemoRepository(process.env.MILIFE_LOCAL_DEMO_DIR??join(process.cwd(),'data','local-demo'));
+  const root=resolve(process.env.MILIFE_LOCAL_DEMO_DIR??join(process.cwd(),'data','local-demo'));
+  if(!repositories.has(root))repositories.set(root,new FileLocalDemoRepository(root));
+  return repositories.get(root)!;
 }
