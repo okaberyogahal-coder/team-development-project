@@ -3,6 +3,7 @@ import { Icon } from "./Icon";
 import { useEffect, useRef, useState } from "react";
 import {useRouter} from "next/navigation";
 import {readLocalState,changeLocalState,LocalClientError} from "../../shared/local-demo-client";
+import {createDemoProfile,readDemoProfile,saveDemoProfile} from "../../shared/demo-profile";
 import { PasswordField } from "./PasswordField";
 
 export function LoginForm() {
@@ -23,7 +24,15 @@ export function LoginForm() {
   async function login(event:React.FormEvent<HTMLFormElement>){
     event.preventDefault();if(pending.current||!available)return;
     pending.current=true;setBusy(true);setMessage('');
-    try{await changeLocalState({action:'login',email,password});router.push('/ai-navi');}
+    try{
+      const next=await changeLocalState({action:'login',email,password});
+      const user=next.currentUser;if(!user)throw new Error('ログイン状態を確認できませんでした。');
+      try{
+        const saved=readDemoProfile(window.localStorage);
+        saveDemoProfile(window.localStorage,saved?.id===user.id?saved:createDemoProfile(user.nickname,user.id));
+      }catch{throw new Error('プロフィールを準備できませんでした。ブラウザの保存設定を確認してください。');}
+      router.push('/avatar');
+    }
     catch(error){setMessage(error instanceof Error?error.message:'ログインできませんでした。');}
     finally{setPassword('');pending.current=false;setBusy(false);}
   }
