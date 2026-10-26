@@ -31,3 +31,16 @@ export function createCredentialVerifier(root:string):CredentialVerifier{
   return account&&equal?account.userId:null;
  };
 }
+
+/** One local process: reserve a slot before async hashing to bound concurrent attempts too. */
+export class LoginAttemptLimiter{
+ private attempts:{at:number}[]=[];
+ begin(now:number):{at:number}|null{
+  this.attempts=this.attempts.filter(item=>item.at>now-600000);
+  if(this.attempts.length>=20)return null;
+  const attempt={at:now};this.attempts.push(attempt);return attempt;
+ }
+ succeed(attempt:{at:number}):void{this.attempts=this.attempts.filter(item=>item!==attempt);}
+}
+const processAttempts=globalThis as typeof globalThis&{__melifeLoginAttempts?:LoginAttemptLimiter};
+export function getLoginAttempts():LoginAttemptLimiter{return processAttempts.__melifeLoginAttempts??=new LoginAttemptLimiter();}

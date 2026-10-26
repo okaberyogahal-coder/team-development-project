@@ -5,10 +5,10 @@ import {mkdtemp,cp,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {FileLocalDemoRepository} from '../../server/local-demo/repository';
-import {LOCAL_USER_COOKIE} from '../../server/local-demo/session';
+import {testCookie} from '../local-demo/test-auth';
 import { AiNaviError } from '../../server/ai-navi/openai';
 const config={apiKey:'secret',model:'test-model'};
-const request=(body='{}',headers:Record<string,string>={})=>new Request('http://localhost:3002/api/ai-navi/demo',{method:'POST',headers:{host:'localhost:3002',origin:'http://localhost:3002','content-type':'application/json',cookie:`${LOCAL_USER_COOKIE}=photography`,...headers},body});
+const request=(body='{}',headers:Record<string,string>={})=>new Request('http://localhost:3002/api/ai-navi/demo',{method:'POST',headers:{host:'localhost:3002',origin:'http://localhost:3002','content-type':'application/json',cookie:testCookie('photography'),...headers},body});
 const generate=async()=>[{theme:'季節の花を撮る',reason:'写真と花の履歴から',firstStep:'身近な花を撮る',basis:'history' as const,evidenceIds:['complete:natural-light','view:flower-arrange'],relatedMaterialIds:[]}];
 
 test('non-development, public hosts and mismatched origins never call OpenAI',async t=>{

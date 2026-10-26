@@ -1,7 +1,7 @@
 import {AiNaviError,generateSuggestions} from './openai';
 import {getLocalDemoRepository,type LocalDemoRepository} from '../local-demo/repository';
 import {loadLocalDemoState,buildStoredContext} from '../local-demo/state';
-import {getSelectedLocalUser} from '../local-demo/session';
+import {getSessionToken,getLocalSessionStore,type LocalSessionStore} from '../local-demo/session';
 import {LocalHttpError,exactKeys,guardLocalRequest,readLocalJSON,localJSON} from '../local-demo/http';
 export {isLocalDemoUrl} from '../local-demo/http';
 
@@ -14,7 +14,7 @@ const messages:Record<string,string>={
   RATE_LIMIT:'実行回数の上限です。60秒ほど待ってからお試しください。',
   BUSY:'前の提案を処理しています。完了までお待ちください。',
   INVALID:'操作内容を確認してください。',
-  UNSELECTED:'開発用ユーザーを選択してください。',
+  UNSELECTED:'ログインしてください。',
   STORE_FAILED:'保存した履歴を読み込めませんでした。JSONと保存先を確認してください。',
   STALE:'履歴が更新されたため、古い提案を破棄しました。最新の履歴でお試しください。',
 };
@@ -22,9 +22,10 @@ function failure(code:string,status:number):Response{
   return localJSON({error:{code,message:messages[code]??'この操作は利用できません。'}},status);
 }
 export function createDemoHandler(options:{
-  repo?:LocalDemoRepository;environment:string;enabled?:boolean;config:{apiKey:string;model:string};generate?:typeof generateSuggestions;now?:()=>number;
+  sessions?:LocalSessionStore;repo?:LocalDemoRepository;environment:string;enabled?:boolean;config:{apiKey:string;model:string};generate?:typeof generateSuggestions;now?:()=>number;
 }):(request:Request)=>Promise<Response>{
   const repo=options.repo??getLocalDemoRepository();
+  const sessions=options.sessions??getLocalSessionStore();
   const generate=options.generate??generateSuggestions;
   const clock=options.now??Date.now;
   let requests:number[]=[];let busy=false;
@@ -33,7 +34,8 @@ export function createDemoHandler(options:{
       guardLocalRequest(request,options.environment,!!options.enabled,true);
       if(request.method!=='POST')throw new LocalHttpError(405,'INVALID');
       if(!exactKeys(await readLocalJSON(request),[]))throw new LocalHttpError(400,'INVALID');
-      const userId=getSelectedLocalUser(request);
+      const token=getSessionToken(request);
+      const userId=sessions.resolve(token,clock());
       if(!userId)return failure('UNSELECTED',401);
       if(!options.config.apiKey.trim()||!options.config.model.trim())return failure('UNCONFIGURED',503);
       if(busy)return failure('BUSY',429);
@@ -48,7 +50,9 @@ export function createDemoHandler(options:{
         let suggestions;
         try{suggestions=await generate(buildStoredContext(state),options.config);}
         catch(error){const code=error instanceof AiNaviError?error.code:'UPSTREAM';return failure(code,code==='TIMEOUT'?504:code==='UNCONFIGURED'?503:502);}
+        if(sessions.resolve(token,clock())!==userId)return failure('UNSELECTED',401);
         const latest=await loadLocalDemoState(repo,userId,clock());
+        if(sessions.resolve(token,clock())!==userId)return failure('UNSELECTED',401);
         if(state.revision!==latest.revision)return failure('STALE',409);
         return localJSON({suggestions,popularity:state.popularity,revision:state.revision});
       }finally{busy=false;}

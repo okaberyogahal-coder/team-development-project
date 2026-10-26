@@ -13,7 +13,7 @@ export function localJSON(value:unknown,status=200,headers:Record<string,string>
   return Response.json(value,{status,headers:{'Cache-Control':'no-store',...headers}});
 }
 export function localFailure(code:string,status:number,message?:string):Response{
-  return localJSON({error:{code,message:message??(code==='STALE'?'ユーザーまたは履歴が変更されました。表示を更新したので、もう一度操作してください。':code==='UNSELECTED'?'開発用ユーザーを選択してください。':code==='STORE_FAILED'?'保存ファイルを読み書きできませんでした。JSONと保存先を確認してください。':'操作内容を確認してください。')}},status);
+  return localJSON({error:{code,message:message??(code==='INVALID_CREDENTIALS'?'メールアドレスまたはパスワードが違います。':code==='LOGIN_RATE_LIMIT'?'ログインの試行回数が上限に達しました。10分ほど待ってからお試しください。':code==='STALE'?'ユーザーまたは履歴が変更されました。表示を更新したので、もう一度操作してください。':code==='UNSELECTED'?'ログインしてください。':code==='STORE_FAILED'?'保存ファイルを読み書きできませんでした。JSONと保存先を確認してください。':'操作内容を確認してください。')}},status);
 }
 export async function readLocalJSON(request:Request):Promise<unknown>{
   if(request.headers.get('content-type')?.split(';')[0].trim().toLowerCase()!=='application/json') throw new LocalHttpError(415,'INVALID');
