@@ -104,3 +104,20 @@ test('broken credential data yields a safe error without leaking paths or hashes
  const {repo}=await setup(t);const handler=createLocalDemoHandler({repo,environment:'development',enabled:true,attempts:new LoginAttemptLimiter(),verify:async()=>{throw new Error('/private/sensitive/hash')}});
  const result=await handler(request({action:'login',email:'sora@example.test',password:'x'}));assert.equal(result.status,500);assert.ok(!(await result.text()).includes('/private/sensitive'));
 });
+
+test('logout while record body is pending prevents admission of a history write',async t=>{
+ const {repo}=await setup(t);const sessions=new LocalSessionStore();const now=1000;
+ const {LOCAL_SESSION_COOKIE}=await import('../../server/local-demo/session');
+ const token=sessions.issue('newcomer',now);const cookie=`${LOCAL_SESSION_COOKIE}=${token}`;
+ const handler=createLocalDemoHandler({repo,sessions,environment:'development',enabled:true,now:()=>now});
+ const state=await (await handler(request(undefined,cookie))).json();const before=await repo.getUser('newcomer');
+ let release!:(value:Uint8Array)=>void;
+ const stream=new ReadableStream<Uint8Array>({start(controller){release=value=>{controller.enqueue(value);controller.close();};}});
+ const base=request({action:'record',materialId:'digital',kind:'view'},cookie,{'if-match':state.revision});
+ const slow=new Request(base,{body:stream,duplex:'half'} as RequestInit);
+ const result=handler(slow);
+ assert.equal((await handler(request({action:'logout'},cookie))).status,200);
+ assert.equal(sessions.resolve(token,now),null);
+ release(new TextEncoder().encode(JSON.stringify({action:'record',materialId:'digital',kind:'view'})));
+ assert.equal((await result).status,401);assert.deepEqual(await repo.getUser('newcomer'),before);
+});

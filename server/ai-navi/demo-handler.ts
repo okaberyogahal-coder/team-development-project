@@ -43,7 +43,7 @@ export function createDemoHandler(options:{
       try{
         const now=clock();
         const state=await loadLocalDemoState(repo,userId,now);
-        if(!state.currentUser)return failure('UNSELECTED',401);
+        if(!state.currentUser||sessions.resolve(token,clock())!==userId)return failure('UNSELECTED',401);
         requests=requests.filter(at=>at>now-60000);
         if(requests.length>=3)return failure('RATE_LIMIT',429);
         requests.push(now);

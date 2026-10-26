@@ -53,3 +53,15 @@ test('AI discards results when the session expires during generation',async t=>{
  const req=request();req.headers.set('cookie',`${LOCAL_SESSION_COOKIE}=${token}`);
  assert.equal((await handler(req)).status,401);
 });
+
+test('logout during state loading prevents any AI generation call',async t=>{
+ const repo=await setup(t);const {LocalSessionStore,LOCAL_SESSION_COOKIE}=await import('../../server/local-demo/session');
+ const sessions=new LocalSessionStore();const token=sessions.issue('photography',now);
+ let release!:()=>void;let started!:()=>void;let calls=0;
+ const pending=new Promise<void>(resolve=>{release=resolve});const entered=new Promise<void>(resolve=>{started=resolve});
+ const delayed={listUsers:async()=>{started();await pending;return repo.listUsers();},listMaterials:repo.listMaterials.bind(repo),getUser:repo.getUser.bind(repo),recordEvent:repo.recordEvent.bind(repo)};
+ const handler=createDemoHandler({repo:delayed,sessions,environment:'development',enabled:true,now:()=>now,config:{apiKey:'test',model:'test'},generate:async()=>{calls++;return []}});
+ const req=request();req.headers.set('cookie',`${LOCAL_SESSION_COOKIE}=${token}`);
+ const result=handler(req);await entered;sessions.revoke(token);release();
+ assert.equal((await result).status,401);assert.equal(calls,0);
+});

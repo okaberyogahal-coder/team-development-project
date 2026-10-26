@@ -36,6 +36,7 @@ export function createLocalDemoHandler(options:{repo:LocalDemoRepository;environ
       if(exactKeys(body,['action','materialId','kind'])&&body.action==='record'&&typeof body.materialId==='string'&&(body.kind==='view'||body.kind==='complete')){
         if(!userId)throw new LocalHttpError(401,'UNSELECTED');
         const state=await loadLocalDemoState(options.repo,userId,now());
+        if(sessions.resolve(token,now())!==userId)throw new LocalHttpError(401,'UNSELECTED');
         if(!request.headers.get('if-match'))throw new LocalHttpError(400,'INVALID');
         if(request.headers.get('if-match')!==state.revision)throw new LocalHttpError(409,'STALE');
         await options.repo.recordEvent(userId,body.materialId,body.kind,new Date(now()));
