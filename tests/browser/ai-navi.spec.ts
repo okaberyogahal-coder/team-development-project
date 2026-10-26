@@ -41,12 +41,12 @@ test('newcomer recommendations cite popularity computed from the shared files',a
  await expect(page.getByTestId('suggestions')).toContainText('100%（2 / 2人）');
 });
 
-test('switching user while AI works discards the old response',async({page})=>{
+test('switching user while AI works discards the old response',async({page,baseURL})=>{
  let release!:()=>void;const pending=new Promise<void>(resolve=>{release=resolve});
  await page.route('**/api/ai-navi/demo',async route=>{await pending;await route.fulfill({json:{suggestions:[theme],revision:'old'}}).catch(()=>{});});
  await page.goto('/ai-navi');await page.getByRole('button',{name:'履歴からテーマを見つける'}).click();
  await expect(page.getByRole('button',{name:'テーマを考えています…'})).toBeDisabled();
- await page.getByLabel('開発用ユーザー切替').selectOption('food-photo');release();
+ await selectUser(page,'food-photo',baseURL!);release();
  await expect(page.getByTestId('learning-history')).toContainText('毎日に役立つ、やさしい料理');
  await expect(page.getByTestId('suggestions')).toHaveCount(0);
 });
@@ -77,8 +77,8 @@ test('logging out during AI generation never leaves the old result visible',asyn
  let release!:()=>void;const pending=new Promise<void>(resolve=>{release=resolve});
  await page.route('**/api/ai-navi/demo',async route=>{await pending;await route.fulfill({json:{suggestions:[theme],revision:'old'}}).catch(()=>{});});
  await page.goto('/ai-navi');await page.getByRole('button',{name:'履歴からテーマを見つける'}).click();
- await page.getByRole('button',{name:'開発用ログアウト'}).click();release();
- await expect(page.getByRole('button',{name:'そら（架空）で開発用ログイン'})).toBeVisible();
+ await page.getByRole('button',{name:'ログアウト',exact:true}).click();release();
+ await expect(page.getByRole('link',{name:'ログイン画面へ'})).toBeVisible();
  await expect(page.getByTestId('suggestions')).toHaveCount(0);
 });
 
@@ -94,7 +94,7 @@ test('a delayed AI confirmation GET cannot restore a logged-out user',async({pag
  });
  await page.route('**/api/ai-navi/demo',route=>route.fulfill({json:{suggestions:[theme],revision:snapshot.revision}}));
  await page.getByRole('button',{name:'履歴からテーマを見つける'}).click();await requested;
- await page.getByRole('button',{name:'開発用ログアウト'}).click();
+ await page.getByRole('button',{name:'ログアウト',exact:true}).click();
  await expect(page.getByTestId('local-current-user')).toHaveCount(0);
  release();await page.waitForTimeout(300);
  await expect(page.getByTestId('local-current-user')).toHaveCount(0);

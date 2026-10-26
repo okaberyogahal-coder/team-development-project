@@ -33,14 +33,14 @@ test('登録の入力確認と戻る操作、体験完了まで進める', async
   await expect(page.getByTitle('3Dアバター作成')).toBeVisible();
 });
 
-test('ログインは表示切替と未接続の案内を提供する', async ({ page }) => {
+test('ログインは表示切替と認証エラーを提供する', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('メールアドレス', { exact: true }).fill('hello@example.com');
   await page.getByLabel('パスワード', { exact: true }).fill('password123');
   await page.getByRole('button', { name: 'パスワードを表示', exact: true }).click();
   await expect(page.getByLabel('パスワード', { exact: true })).toHaveAttribute('type', 'text');
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
-  await expect(page.getByRole('alert').filter({ hasText: '認証サービス' })).toBeVisible();
+  await expect(page.getByRole('alert').filter({ hasText: 'メールアドレスまたはパスワード' })).toBeVisible();
 });
 
 test('ログインとアカウント作成でロゴをヘッダーサイズに収める', async ({ page }) => {

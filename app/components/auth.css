@@ -302,9 +302,3 @@
 }
 
 /* The temporary user chooser adds content; scroll the whole login panel, not a clipped form. */
-.auth-page .local-demo-user-buttons { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; }
-@media (min-width: 1024px) {
-  .login-screen:has(.local-demo-login) { justify-content: flex-start; overflow-y: auto; overscroll-behavior-y: contain; padding-right: 8px; }
-  .login-screen:has(.local-demo-login) > * { flex-shrink: 0; }
-  .login-screen:has(.local-demo-login) .auth-login-form { flex: 0 0 auto; overflow: visible; }
-}

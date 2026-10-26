@@ -14,6 +14,6 @@ export async function selectUser(page:Page,id:string,baseURL:string){
  const root=process.env.MILIFE_LOCAL_DEMO_TEST_DIR;
  const check=await page.request.get('/api/local-demo');
  if(!root||!check.ok()||check.headers()['x-melife-local-store']!==createHash('sha256').update(resolve(root)).digest('hex'))throw new Error('試験サーバーの保存先が一致しません。');
- const response=await page.request.post('/api/local-demo',{headers:{Origin:baseURL},data:{action:'login',userId:id}});
+ const response=await page.request.post('/api/local-demo',{headers:{Origin:baseURL},data:{action:'login',email:({photography:'sora', 'food-photo':'aoi', newcomer:'haru'} as Record<string,string>)[id]+'@example.test',password:'MilifeDemo2026!'}});
  if(!response.ok()) throw new Error(`Cannot select local fixture user (${response.status()})`);
 }

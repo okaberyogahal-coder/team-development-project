@@ -5,22 +5,34 @@ import {resetSharedFixture,selectUser} from './local-demo-fixture';
 
 test.beforeEach(async({page})=>{await resetSharedFixture(page);});
 
-test('passwordless fictional login restores after reload and logout preserves saved history',async({page})=>{
+async function formLogin(page:import('@playwright/test').Page,email='sora@example.test'){
+ await expect(page.getByRole('button',{name:'ログイン',exact:true})).toBeEnabled();
+ await page.getByLabel('メールアドレス',{exact:true}).fill(email);
+ await page.getByLabel('パスワード',{exact:true}).fill('MilifeDemo2026!');
+ await page.getByRole('button',{name:'ログイン',exact:true}).click();
+}
+test('existing email and password form logs in, restores and logs out without selector buttons',async({page})=>{
  await page.goto('/login');
- await expect(page.getByRole('button',{name:'そら（架空）で開発用ログイン'})).toBeVisible();
+ await expect(page.getByRole('button',{name:/で開発用ログイン/})).toHaveCount(0);
+ await page.getByLabel('メールアドレス',{exact:true}).fill('sora@example.test');
+ await page.getByLabel('パスワード',{exact:true}).fill('wrong');
+ await page.getByRole('button',{name:'ログイン',exact:true}).click();
+ await expect(page.locator('form').getByRole('alert')).toContainText('メールアドレスまたはパスワード');
+ await expect(page.getByLabel('パスワード',{exact:true})).toHaveValue('');
  await page.screenshot({path:'/private/tmp/melife-local-login-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)).toBe(false);
  await page.screenshot({path:'/private/tmp/melife-local-login-mobile.png',fullPage:true});
- await page.setViewportSize({width:1440,height:1000});
- await page.getByRole('button',{name:'そら（架空）で開発用ログイン'}).click();
+ await page.setViewportSize({width:1440,height:1000});await formLogin(page);
  await expect(page).toHaveURL(/\/ai-navi$/);
  await expect(page.getByTestId('local-current-user')).toContainText('そら（架空）');
+ await expect(page.getByLabel('開発用ユーザー切替')).toHaveCount(0);
+ const storage=await page.evaluate(()=>JSON.stringify({...localStorage,...sessionStorage}));expect(storage).not.toContain('MilifeDemo2026!');
  await page.reload();await expect(page.getByTestId('local-current-user')).toContainText('そら（架空）');
- await page.getByRole('button',{name:'開発用ログアウト'}).click();
- await expect(page.getByRole('button',{name:'そら（架空）で開発用ログイン'})).toBeVisible();
+ await page.getByRole('button',{name:'ログアウト',exact:true}).click();
+ await expect(page.getByRole('link',{name:'ログイン画面へ'})).toBeVisible();
  await expect(page.getByRole('button',{name:'履歴からテーマを見つける'})).toHaveCount(0);
- await page.getByRole('button',{name:'そら（架空）で開発用ログイン'}).click();
+ await page.getByRole('link',{name:'ログイン画面へ'}).click();await formLogin(page);
  await expect(page.getByTestId('learning-history')).toContainText('自然光と背景ぼけの基本');
 });
 
@@ -37,7 +49,7 @@ test('viewing and explicit completion are persisted to the selected JSON and nev
  saved=JSON.parse(await readFile(join(process.env.MILIFE_LOCAL_DEMO_TEST_DIR!,'users/newcomer.json'),'utf8'));
  expect(saved.events.map((x:any)=>x.kind)).toEqual(['view','complete']);
  await page.reload();await expect(page.getByTestId('learning-history')).toContainText('受講完了');
- await page.getByLabel('開発用ユーザー切替').selectOption('photography');
+ await selectUser(page,'photography',baseURL!);await page.reload();
  await expect(page.getByTestId('local-current-user')).toContainText('そら（架空）');
  await expect(page.getByTestId('learning-history')).not.toContainText('スマートフォンで写真を整理する');
  const other=JSON.parse(await readFile(join(process.env.MILIFE_LOCAL_DEMO_TEST_DIR!,'users/photography.json'),'utf8'));

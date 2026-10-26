@@ -21,7 +21,7 @@ export function DemoClient({profile,materials,popularity,revision,blocked,refres
         body:JSON.stringify({}),signal:controller.signal});
       const result=await response.json();
       if(version!==sequence.current) return;
-      if(!response.ok) {setError(result.error?.message??'提案を取得できませんでした。');return;}
+      if(!response.ok) {if(response.status===401){await refreshState();return;}setError(result.error?.message??'提案を取得できませんでした。');return;}
       if(!Array.isArray(result.suggestions)) throw new Error('Invalid response');
       const latest=await refreshState();
       if(version!==sequence.current)return;
