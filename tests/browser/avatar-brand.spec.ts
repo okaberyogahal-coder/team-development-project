@@ -89,14 +89,22 @@ test.describe('small and Retina viewports',()=>{
   const tabY=bodyY+(stacked?250+218:0),choiceY=tabY+(stacked?124:58)+18;
   const width=inner-(stacked?0:previewW+32),cols=Math.max(1,Math.min(4,Math.floor(width/150))),optionWidth=(width-(cols-1)*8)/cols;
   await page.screenshot({path:`/private/tmp/avatar-brand-real-${viewport.width}.png`,fullPage:true});
+  if(viewport.width===390){
+   // The page now fits the viewport. On portrait screens the lower choices
+   // remain in the wardrobe's own scroll area; exercise a visible preset here.
+   const presetWidth=(inner-32)/5;
+   await canvas.click({position:{x:(bodyX+presetWidth+8+presetWidth/2)*s,y:(bodyY+250+12+112+29)*s},delay:120});
+  }else{
   await canvas.click({position:{x:(right+(optionWidth+8)*(1%cols)+optionWidth/2)*s,y:(choiceY+42+Math.floor(1/cols)*64+28)*s},delay:120});
   const palette=width>=510?8:4,swatch=(width-(palette-1)*8)/palette;
   await canvas.click({position:{x:(right+swatch+8+swatch/2)*s,y:(choiceY+42+Math.ceil(4/cols)*64+8+28)*s},delay:120});
+  }
   await canvas.hover({position:{x:box.width*.8,y:box.height*.8}});await page.mouse.wheel(0,400);
   await page.screenshot({path:`/private/tmp/avatar-brand-scrolled-${viewport.width}.png`,fullPage:true});
   const enter=narrow?{x:(left+pw/2)*s,y:(18+88+31)*s}:{x:(left+pw-194)*s,y:(18+22+31)*s};
   await canvas.click({position:enter,delay:120});await expect(page).toHaveURL(/\/plaza$/,{timeout:20000});
   const saved=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)!),DEMO_PROFILE_KEY);
-  expect(saved.appearance.parts[0]).toBe(1);expect(saved.appearance.colors[0]).toBe(1);
+  if(viewport.width===390)expect(saved.appearance.baseVariant).toBe(1);
+  else{expect(saved.appearance.parts[0]).toBe(1);expect(saved.appearance.colors[0]).toBe(1);}
  });
 });

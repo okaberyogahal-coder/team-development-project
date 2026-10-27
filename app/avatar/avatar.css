@@ -1,4 +1,4 @@
-.avatar-setup-page { position: relative; isolation: isolate; color: #153b78; background: radial-gradient(circle, #d5edf4 1.2px, transparent 1.5px) 0 0 / 22px 22px, #effaff; }
+.avatar-setup-page { height: 100dvh; min-height: 0; max-height: 100dvh; overflow: hidden; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto; position: relative; isolation: isolate; color: #153b78; background: radial-gradient(circle, #d5edf4 1.2px, transparent 1.5px) 0 0 / 22px 22px, #effaff; }
 .avatar-setup-page::before { content: ''; position: absolute; z-index: -1; pointer-events: none; width: 460px; height: 270px; top: 65px; left: -180px; background: #fff3ae; border-radius: 0 0 70% 40%; }
 .avatar-setup-header { display: flex; align-items: center; gap: 26px; padding: 16px max(24px, calc((100% - 1380px) / 2)); background: #fffefa; border-bottom: 1.5px solid #cde4ee; }
 .avatar-setup-header .home-brand-logo { display: block; flex-shrink: 0; width: 165px; }
@@ -12,7 +12,7 @@
 .avatar-setup-intro p { border-left: 5px solid #ffa3ca; padding-left: 14px; font-size: 13px; line-height: 1.8; color: #496683; }
 .avatar-setup-page .avatar-setup-onboarding { width: min(1380px, calc(100% - 48px)); margin: 0 auto 12px; padding: 0; background: transparent; color: #153b78; font-size: 12px; }
 .avatar-setup-onboarding strong { font-size: 13px; }
-.avatar-setup-page .unity-frame { flex: none; width: min(1380px, calc(100% - 48px)); margin: 0 auto; height: max(540px, calc(100dvh - 255px)); min-height: 540px; border: 2px solid #153b78; border-radius: 24px; box-shadow: 6px 7px 0 #b4e3ee; background: #effaff; }
+.avatar-setup-page .unity-frame { flex: none; width: min(1380px, calc(100% - 48px)); margin: 0 auto; height: 100%; min-height: 0; max-height: 100%; border: 2px solid #153b78; border-radius: 24px; box-shadow: 6px 7px 0 #b4e3ee; background: #effaff; }
 .avatar-setup-page .avatar-setup-guide { width: min(1380px, calc(100% - 48px)); margin: 12px auto 0; padding: 10px 0 16px; color: #496683; font-size: 11px; }
 .avatar-setup-guide > span { color: #153b78; font-weight: 800; }
 .avatar-setup-page a:focus-visible { outline: 3px solid #0755cf; outline-offset: 4px; }
@@ -26,6 +26,18 @@
  .avatar-setup-intro p { margin-top: 10px; font-size: 12px; }
  .avatar-setup-intro br { display: none; }
  .avatar-setup-page .avatar-setup-onboarding, .avatar-setup-page .unity-frame, .avatar-setup-page .avatar-setup-guide { width: calc(100% - 32px); }
- .avatar-setup-page .unity-frame { height: 740px; min-height: 740px; border-radius: 18px; box-shadow: 4px 5px 0 #b4e3ee; }
+ .avatar-setup-page .unity-frame { border-radius: 18px; box-shadow: 4px 5px 0 #b4e3ee; }
  .avatar-setup-page .avatar-setup-guide { display: flex; flex-wrap: wrap; gap: 5px; }
+}
+
+@media(max-height:650px) {
+ .avatar-setup-header { padding-top: 8px; padding-bottom: 8px; }
+ .avatar-setup-header .home-brand-logo { width: 125px; }
+ .avatar-setup-intro { margin-top: 8px; margin-bottom: 6px; }
+ .avatar-setup-intro h1 { margin-top: 0; font-size: 22px; }
+ .avatar-setup-label, .avatar-setup-intro p { display: none; }
+ .avatar-setup-page .avatar-setup-onboarding { margin-bottom: 6px; }
+ .avatar-setup-onboarding > span { display: none; }
+ .avatar-setup-page .avatar-setup-guide { margin-top: 8px; padding: 4px 0 8px; }
+ .avatar-setup-guide > span { display: none; }
 }
