@@ -625,7 +625,7 @@ namespace FutureCity
 
         static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
 
-        float UiScale() => creatingWebAvatar ? (Screen.width < 700 ? 0.75f : Mathf.Clamp(Screen.height / 900f, 0.75f, 1.2f)) : Mathf.Max(0.6f, Screen.height / 1080f) * userScale;
+        float UiScale() => creatingWebAvatar ? AvatarWardrobeLayout.ScaleForViewport(Screen.width, Screen.height) : Mathf.Max(0.6f, Screen.height / 1080f) * userScale;
 
         // ================================================================== GUI：描画
         float W, H;

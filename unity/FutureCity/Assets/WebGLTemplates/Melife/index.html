@@ -9,6 +9,9 @@
     #unity-canvas{width:100%;height:100%;display:block;outline:none}
     #loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:#eef5ef;color:#213d35}
     #loading[hidden]{display:none}h1{font-size:24px;margin:0 0 14px}p{line-height:1.8}progress{width:min(320px,75vw);height:12px;accent-color:#497a60;margin:auto}
+    .avatar-experience body{background:#effaff;color:#153b78}
+    .avatar-experience #loading{background:radial-gradient(circle,#d5edf4 1px,transparent 1.5px) 0 0/22px 22px,#effaff;color:#153b78}
+    .avatar-experience progress{accent-color:#0755cf}
   </style>
 </head>
 <body>
@@ -16,6 +19,7 @@
   <div id="loading" role="status"><h1>ミライフへようこそ</h1><p id="status">ワールドを読み込んでいます…</p><progress id="progress" max="1" value="0"></progress><p>初回は読み込みに時間がかかる場合があります。</p></div>
   <script src="Build/{{{ LOADER_FILENAME }}}"></script>
   <script>
+    if(new URLSearchParams(location.search).get('experience')==='avatar')document.documentElement.classList.add('avatar-experience');
     const canvas = document.getElementById('unity-canvas');
     const loading = document.getElementById('loading');
     let hostReadyTimer;

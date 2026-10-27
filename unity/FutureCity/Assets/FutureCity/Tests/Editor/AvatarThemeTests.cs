@@ -29,6 +29,17 @@ namespace FutureCity.Tests
         }
 
         [Test]
+        public void PortraitControlsKeepTheSameLogicalSizeOnRetinaDisplays()
+        {
+            foreach (float density in new[] {1f, 1.5f, 2f})
+            {
+                float scale = AvatarWardrobeLayout.ScaleForViewport(358f*density, 740f*density);
+                Assert.That(358f*density/scale, Is.EqualTo(512f).Within(0.01f));
+                Assert.That(22f*scale/density, Is.GreaterThan(15f));
+            }
+        }
+
+        [Test]
         public void ThemeActivatesAfterOrdinaryStylesAndDoesNotReplaceWorldStyles()
         {
             var go = new GameObject("AvatarThemeTest");

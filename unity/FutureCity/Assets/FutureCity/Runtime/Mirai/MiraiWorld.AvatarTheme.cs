@@ -9,6 +9,9 @@ namespace FutureCity
         public Rect Preview, Tabs, Choices;
         public float ContentHeight;
         public bool Stacked;
+        public static float ScaleForViewport(float width, float height) =>
+            width / height < 0.9f ? width / 512f : Mathf.Max(0.6f, height / 900f);
+
         public static AvatarWardrobeLayout Calculate(float width, float height, float choicesHeight = 700f)
         {
             bool stacked = width < 780f;
@@ -33,7 +36,7 @@ namespace FutureCity
         readonly Dictionary<Color, GUIStyle> avatarButtons = new Dictionary<Color, GUIStyle>();
         readonly List<Texture2D> avatarThemeTextures = new List<Texture2D>();
         GUIStyle avatarPanel, avatarShadow, avatarPreviewCard, avatarTitle, avatarBody, avatarSmall;
-        Texture2D avatarDots;
+        Texture2D avatarDots, avatarYellowSpot;
         Vector2 avatarWardrobeScroll;
         GUIStyle WardrobeBody => creatingWebAvatar ? avatarBody : sBody;
         GUIStyle WardrobeSmall => creatingWebAvatar ? avatarSmall : sSmall;
@@ -63,6 +66,7 @@ namespace FutureCity
         {
             if (avatarPanel != null) return;
             avatarPanel = new GUIStyle { border = new RectOffset(22, 22, 22, 22) };
+            avatarYellowSpot = AvatarRounded(new Color(1f,0.95f,0.68f),new Color(1f,0.95f,0.68f),24,0);
             avatarPanel.normal.background = AvatarRounded(new Color(1f, 0.996f, 0.976f), AvatarInk, 22);
             avatarShadow = new GUIStyle { border = new RectOffset(22, 22, 22, 22) };
             avatarShadow.normal.background = AvatarRounded(new Color(0.7f, 0.89f, 0.94f), new Color(0.7f, 0.89f, 0.94f), 22, 0);
@@ -83,7 +87,7 @@ namespace FutureCity
         {
             EnsureAvatarTheme();
             GUI.DrawTextureWithTexCoords(new Rect(0,0,W,H), avatarDots, new Rect(0,0,W/28f,H/28f));
-            GUI.DrawTexture(new Rect(-80,-90,440,310), Solid(new Color(1f,0.95f,0.68f)));
+            GUI.DrawTexture(new Rect(-80,-90,440,310), avatarYellowSpot);
             bool narrow = W < 820f;
             float width = Mathf.Min(1480f, W - 36f);
             var panelRect = new Rect((W-width)/2f,18f,width,H-36f);
