@@ -1,9 +1,34 @@
 using UnityEngine;
+using System;
+using System.Runtime.InteropServices;
 
 namespace FutureCity
 {
     public partial class MiraiWorld
     {
+        [Serializable]
+        sealed class WebInteractionSnapshot
+        {
+            public string panel;
+            public Vector3 position;
+            public float yaw;
+            public bool cursorVisible, freeLook;
+        }
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [DllImport("__Internal")] static extern void MelifeWorldInteraction(string json);
+#endif
+        // Read-only display receipt for browser diagnostics; never authentication authority.
+        public void ReportWebInteraction()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if (player == null) return;
+            MelifeWorldInteraction(JsonUtility.ToJson(new WebInteractionSnapshot {
+                panel = panel.ToString(), position = player.transform.position, yaw = player.Yaw,
+                cursorVisible = Cursor.visible, freeLook = PlayerWalker.FreeLook
+            }));
+#endif
+        }
+
         bool creatingWebAvatar;
         WebProfileBridge webProfile;
         public string WebNickname => me.name;

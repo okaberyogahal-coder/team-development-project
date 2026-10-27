@@ -57,6 +57,14 @@ namespace FutureCity
         }
 
         [Preserve]
+        public void SetKeyboardFocus(string focused)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLInput.captureAllKeyboardInput = focused == "1";
+#endif
+        }
+
+        [Preserve]
         public void ApplySession(string json)
         {
             if (world == null || string.IsNullOrEmpty(json) || json.Length > 16384) return;

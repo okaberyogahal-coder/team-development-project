@@ -7,7 +7,6 @@ export function UnityExperience({ mode, accountProfile }: { mode: 'avatar' | 'wo
  const router = useRouter();
  const frame = useRef<HTMLIFrameElement>(null);
  const [profile, setProfile] = useState<DemoProfile | null>(null);
- const [checked, setChecked] = useState(false);
  const [error, setError] = useState('');
  useEffect(() => {
   let saved: DemoProfile | null;
@@ -21,7 +20,7 @@ export function UnityExperience({ mode, accountProfile }: { mode: 'avatar' | 'wo
   catch { setError('このブラウザの保存機能を利用できません。ブラウザの設定を確認してください。'); return; }
   if (mode === 'avatar' && !saved) { router.replace('/signup'); return; }
   if (mode === 'world' && saved && !saved.appearance) { router.replace('/avatar'); return; }
-  setProfile(saved); setChecked(true);
+  setProfile(saved);
   function receive(event: MessageEvent) {
    if (event.origin !== window.location.origin || event.source !== frame.current?.contentWindow) return;
    const message = event.data;
@@ -41,8 +40,6 @@ export function UnityExperience({ mode, accountProfile }: { mode: 'avatar' | 'wo
  },[mode,router,accountProfile?.id,accountProfile?.nickname]);
  return <>
   {mode === 'avatar' && <div className="unity-onboarding avatar-setup-onboarding"><strong>{profile?.nickname}さんのアバターを作成</strong><span>服・表情・髪型・小物を選び、画面内の「このアバターで入場」を押してください。</span></div>}
-  {mode === 'world' && profile && <div className="unity-onboarding"><strong>{profile.nickname}さんの体験プロフィール</strong><a href="/avatar">アバターを変更</a></div>}
-  {mode === 'world' && checked && !profile && <div className="unity-onboarding"><span>ゲストで体験中です。</span><a href="/signup">登録体験からアバターを作る</a></div>}
   {error && <p role="alert" className="unity-error">{error}</p>}
   {/* Keep the iframe in initial HTML; delayed insertion can stall navigation on reload. */}
   <iframe key={mode} ref={frame} className="unity-frame" title={mode === 'avatar' ? '3Dアバター作成' : 'ミライフ Unityワールド'} src={`/unity/FutureCity/index.html${mode === 'avatar' ? '?experience=avatar' : ''}`} allow="fullscreen; autoplay" allowFullScreen />

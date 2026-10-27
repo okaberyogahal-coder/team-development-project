@@ -4,7 +4,7 @@ namespace FutureCity
 {
     /// <summary>
     /// 三人称で街を歩くプレイヤー。
-    ///  - 視点：ふだんからマウスを動かすだけで見回せる（ボタン不要）。Esc でカーソルを出す（画面をクリックで戻る）。V で切り替え
+    ///  - 視点：通常はカーソルを表示。ドラッグで見回す。V でマウス固定を切り替え、Esc で解除
     ///          カーソルを出しているときは、左右どちらかのボタンでドラッグしても見回せる
     ///          Q／E でも回せる ／ ホイールで近づく・離れる ／ R で視点をもとに戻す
     ///  - 移動：地面を左クリック（ドラッグせずに離す）でそこまで歩く ／ WASD・矢印キー（Shift で速く）
@@ -50,9 +50,8 @@ namespace FutureCity
         bool pressing, dragging;
         Vector2 pressPos;
         public static bool FreeLook { get; private set; }
-        /// <summary>マウスで見回すモードにしたいか（既定：オン）。パネルを開いている間だけ自動でカーソルを出す</summary>
-        public static bool LookWanted = true;
-        bool suppressThisPress;
+        /// <summary>マウスを固定して見回すモードにしたいか（既定：オフ）。パネルを開いている間だけ自動でカーソルを出す</summary>
+        public static bool LookWanted = false;
         /// <summary>直前のマウス操作がドラッグ（見回し）だった → クリック移動にしない</summary>
         public bool LastPressWasDrag { get; private set; }
 
@@ -67,6 +66,7 @@ namespace FutureCity
 
         void Awake()
         {
+            LookWanted = false;
             cc = GetComponent<CharacterController>();
             cc.height = 1.8f;
             cc.radius = 0.35f;
@@ -128,6 +128,15 @@ namespace FutureCity
             Cursor.visible = !on;
         }
 
+        void OnApplicationFocus(bool focused)
+        {
+            if (focused) return;
+            LookWanted = false;
+            SetFreeLook(false);
+            planarVel = Vector3.zero;
+            pressing = dragging = false;
+        }
+
         void OnDisable()
         {
             if (FreeLook) SetFreeLook(false);
@@ -146,19 +155,12 @@ namespace FutureCity
             }
             float dt = Time.deltaTime;
 
-            // ---- 見回すモード：ふだんはオン。Esc でカーソルを出し、画面をクリックすると戻る。V で切り替え
+            // 通常はドラッグ操作。Vで明示的に固定し、Escまたはブラウザでの解除を尊重する。
+            if (FreeLook && Cursor.lockState != CursorLockMode.Locked)
+            { LookWanted = false; SetFreeLook(false); }
             if (InputBridge.Down(FKey.Escape) && LookWanted) LookWanted = false;
             else if (InputBridge.Down(FKey.V)) LookWanted = !LookWanted;
             bool down = InputBridge.LeftMouseDown || InputBridge.RightMouseDown;
-            if (down)
-            {
-                suppressThisPress = false;
-                if (!LookWanted && InputBridge.LeftMouseDown && !MiraiWorld.PointerOverUI)
-                {
-                    LookWanted = true;            // このクリックは「見回しに戻る」だけに使う（歩かない）
-                    suppressThisPress = true;
-                }
-            }
             if (FreeLook != LookWanted) SetFreeLook(LookWanted);
 
             Vector2 md = InputBridge.MouseDelta;
@@ -180,9 +182,8 @@ namespace FutureCity
             }
             if (pressing && !held)
             {
-                LastPressWasDrag = (!FreeLook && dragging) || suppressThisPress;
+                LastPressWasDrag = !FreeLook && dragging;
                 pressing = dragging = false;
-                suppressThisPress = false;
             }
             if (InputBridge.Held(FKey.Q)) yaw -= keyTurnSpeed * dt;
             if (InputBridge.Held(FKey.E) && !MiraiWorld.PromptVisible) yaw += keyTurnSpeed * dt;

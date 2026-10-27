@@ -1,4 +1,7 @@
 mergeInto(LibraryManager.library, {
+  MelifeWorldInteraction: function (json) {
+    window.melifeWorldInteraction = Object.freeze(JSON.parse(UTF8ToString(json)));
+  },
   MelifeBridgeReady: function () {
     if (typeof window.melifeBridgeReady === 'function') window.melifeBridgeReady();
   },

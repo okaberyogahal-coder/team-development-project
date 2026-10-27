@@ -11,6 +11,9 @@
     #session-bar a,#session-bar button{min-height:36px;padding:7px 12px;border:1px solid #b7d1c2;border-radius:8px;background:#fff;color:#213d35;font:inherit;cursor:pointer;text-decoration:none}
     #session-bar a:focus-visible,#session-bar button:focus-visible,#unity-canvas:focus-visible{outline:3px solid #0b57d0;outline-offset:-3px}#session-bar button:disabled{cursor:wait;opacity:.6}
     #session-error{flex-basis:100%;margin:0;color:#a32b20;font-size:13px}.unity-stage{position:relative;flex:1;min-height:0}
+    #session-bar{min-height:34px;padding:3px 12px;gap:6px;font-size:12px}
+    #session-avatar{width:24px;height:24px}
+    #session-bar a,#session-bar button{min-height:28px;padding:3px 8px;font-size:12px}
     #unity-canvas{width:100%;height:100%;display:block;outline:none}
     #loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:#eef5ef;color:#213d35}
     #loading[hidden]{display:none}h1{font-size:24px;margin:0 0 14px}p{line-height:1.8}progress{width:min(320px,75vw);height:12px;accent-color:#497a60;margin:auto}
@@ -37,6 +40,14 @@
   <script>
     if(new URLSearchParams(location.search).get('experience')==='avatar')document.documentElement.classList.add('avatar-experience');
     const canvas = document.getElementById('unity-canvas');
+    function syncKeyboardFocus() {
+      if(window.unityInstance)window.unityInstance.SendMessage('MelifeSessionBridge','SetKeyboardFocus',document.hasFocus() && document.activeElement === canvas ? '1':'0');
+    }
+    canvas.addEventListener('pointerdown',()=>{canvas.focus({preventScroll:true});syncKeyboardFocus();},true);
+    canvas.addEventListener('focus',syncKeyboardFocus);
+    canvas.addEventListener('blur',syncKeyboardFocus);
+    window.addEventListener('blur',()=>{if(window.unityInstance)window.unityInstance.SendMessage('MelifeSessionBridge','SetKeyboardFocus','0');});
+    window.addEventListener('focus',syncKeyboardFocus);
     const loading = document.getElementById('loading');
     let hostReadyTimer;
     const notifyHost = () => window.parent.postMessage({type:'melife:ready'},window.location.origin);
@@ -79,6 +90,7 @@
       }, value => { document.getElementById('progress').value = value; }).then(instance => {
         window.unityInstance = instance;
         window.melifeUnityReady(instance);
+        syncKeyboardFocus();
         loading.hidden = window.parent === window;
 
         document.body.dataset.unityState = 'ready';
