@@ -28,7 +28,7 @@ npm.cmd audit --omit=dev
 
 ブラウザーでの再確認はビルド後に実行する。既定では Playwright の Chromium を使用する。
 
-認証接続後の現在のスイートはテスト専用DBも必要。先に `npm.cmd run db:test:up` と `npm.cmd run test:db` を実行する。認証追加後の対象・手順は [authentication.md](./authentication.md) を参照。
+認証接続後の現在のスイートはテスト専用DBも必要。独立したローカルPostgreSQLの接続を `DATABASE_TEST_URL` に設定してから `npm.cmd run test:db` を実行する。認証追加後の対象・手順は [authentication.md](./authentication.md) を参照。
 
 ```powershell
 npx.cmd playwright install chromium

@@ -22,12 +22,13 @@
 
 ## ローカル起動
 
+起動前に [Supabase接続・起動手順](./supabase.md#start) に従い、アプリ用の接続文字列とCA証明書のパスを `.env.local` に設定する。
+
 ```powershell
 npm.cmd ci
 # 初回のみ .env.example を参考に .env.local を作成。既存設定は保持する。
 npm.cmd run auth:setup
-npm.cmd run db:up
-npm.cmd run db:deploy
+npm.cmd run db:check
 npm.cmd run dev -- --port 3002
 ```
 
@@ -54,7 +55,6 @@ Unity側はJavaScriptとC#のブリッジで表示を更新する。別タブで
 登録アバターはワールド上部のアイコンと人型アバターの服の色に対応する。動物の3Dモデルへの変換やプロフィール編集は未実装。Unity用の手順と実ビルド検証は [Unity共有手順](../unity/README.md) を参照。
 
 ```powershell
-npm.cmd run db:test:up
 npm.cmd run test:db
 npm.cmd test
 npm.cmd run lint
@@ -71,6 +71,8 @@ npm.cmd run test:smoke
 
 ## 将来のSupabase移行
 
-SupabaseへのDB移行の検討は維持する。Prismaの業務モデルと永続userIdを残す案を基本とし、Supabase Authの採用は別判断。認証方式を変える場合は、既存のハッシュがそのまま利用できると仮定せず、本人確認を経た資格情報の再設定や `AuthIdentity` との紐づけ、既存セッションの失効を設計・検証する。
+2026-10-27にSupabase上の新規DBへ3マイグレーションを適用し、Prisma・Better Authを維持したまま接続した。アプリ専用の制限付きロールで登録・プロフィール保存・ログインを確認し、検証データはロールバックした。ローカルの既存ユーザー・セッションは移していない。接続設定と実施状況は [Supabase接続](./supabase.md) を参照する。
+
+Supabase Authの採用は別判断。将来認証方式を変える場合は、既存のハッシュがそのまま利用できると仮定せず、本人確認を経た資格情報の再設定や `AuthIdentity` との紐づけ、既存セッションの失効を設計・検証する。
 
 参考：[Better AuthのNext.js連携](https://www.better-auth.com/docs/integrations/next)、[Prismaアダプター](https://www.better-auth.com/docs/adapters/prisma)、[Next.js認証ガイド](https://nextjs.org/docs/app/guides/authentication)。

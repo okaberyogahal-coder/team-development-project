@@ -22,8 +22,6 @@
     "test:unity": "playwright test --config playwright.unity.config.ts",
     "test:unity:auth": "playwright test --config playwright.unity-auth.config.ts",
     "dev:lan": "node scripts/dev-lan.mjs",
-    "db:up": "docker compose up -d db --wait",
-    "db:stop": "docker compose stop db",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
@@ -31,7 +29,6 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:check": "tsx scripts/db-check.ts",
-    "db:test:up": "docker compose --profile test up -d db-test --wait",
     "test:db": "prisma generate && tsx scripts/test-database.ts"
   },
   "dependencies": {

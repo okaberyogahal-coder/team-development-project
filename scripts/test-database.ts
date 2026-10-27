@@ -5,7 +5,7 @@ import { readdirSync } from "node:fs";
 
 loadEnvConfig(process.cwd());
 const target = process.env.DATABASE_TEST_URL;
-if (!target) throw new Error("DATABASE_TEST_URL is required. Start the isolated db-test service.");
+if (!target) throw new Error("DATABASE_TEST_URL is required. Use an isolated local PostgreSQL database ending in _test.");
 const url = new URL(target);
 const loopbackHosts = ["localhost", "127.0.0.1", "[::1]"];
 if (!["postgres:", "postgresql:"].includes(url.protocol)

@@ -143,10 +143,11 @@ Unityのプロフィール画面は登録情報の閲覧用。Editor内での従
 
 生成したWebビルドと本番Webビルドを用意し、独立したローカルテストDBで実際のUnityとの連携を検証する。
 開発用のDBや既存サーバーは利用しない。
+事前にローカルPostgreSQLの専用 `*_test` DBを `DATABASE_TEST_URL` に設定する。設定は [DBテスト手順](../docs/database.md#スキーマ変更と検証) を参照。
 
 ```powershell
-npm.cmd run db:test:up
 npm.cmd run build:unity
+npm.cmd run test:db
 npm.cmd run build
 $env:PLAYWRIGHT_EXECUTABLE_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 npm.cmd run test:unity:auth
