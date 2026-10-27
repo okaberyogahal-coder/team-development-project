@@ -25,9 +25,7 @@ namespace FutureCity
 
         void DrawWebAvatarCreation()
         {
-            var content = Frame("あなたのアバターを作成", new Color(0.3f, 0.55f, 0.4f), 1240f, H - 30f, "", false);
-            if (Btn(new Rect(content.xMax - 330f, content.y - 76f, 330f, 58f), "このアバターで入場", new Color(0.18f, 0.6f, 0.36f)))
-                webProfile.Complete();
+            var content = DrawAvatarFrame();
             GUI.BeginGroup(content);
             DrawWardrobe(0f, 0f, content.width, content.height);
             GUI.EndGroup();

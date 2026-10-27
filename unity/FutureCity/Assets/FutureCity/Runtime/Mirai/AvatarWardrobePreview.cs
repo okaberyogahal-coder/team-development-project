@@ -16,9 +16,10 @@ namespace FutureCity
         int lastShownFrame = -10;
         public RenderTexture Texture => texture;
 
-        public void Render(ImportedAvatar source, Camera camera)
+        public void Render(ImportedAvatar source, Camera camera, Color? background = null)
         {
             if (stage == null) Create(camera);
+            previewCamera.backgroundColor = background ?? new Color(0.94f, 0.94f, 0.9f);
             string json = JsonUtility.ToJson(source.Appearance);
             if (json != lastAppearance)
             {

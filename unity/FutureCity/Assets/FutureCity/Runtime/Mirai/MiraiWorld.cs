@@ -181,6 +181,7 @@ namespace FutureCity
 
         void OnDestroy()
         {
+            DisposeAvatarTheme();
             if (instance == this) { instance = null; UIOpen = false; PointerOverUI = false; PromptVisible = false; }
         }
 
@@ -611,7 +612,7 @@ namespace FutureCity
             Track(r);
             bool old = GUI.enabled;
             GUI.enabled = enabled;
-            bool clicked = GUI.Button(r, text, color.HasValue ? Primary(color.Value) : sBtn2);
+            bool clicked = GUI.Button(r, text, ButtonStyle(color));
             GUI.enabled = old;
             return clicked && enabled;
         }
@@ -624,7 +625,7 @@ namespace FutureCity
 
         static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
 
-        float UiScale() => Mathf.Max(0.6f, Screen.height / 1080f) * userScale;
+        float UiScale() => creatingWebAvatar ? (Screen.width < 700 ? 0.75f : Mathf.Clamp(Screen.height / 900f, 0.75f, 1.2f)) : Mathf.Max(0.6f, Screen.height / 1080f) * userScale;
 
         // ================================================================== GUI：描画
         float W, H;

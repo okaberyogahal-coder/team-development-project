@@ -15,7 +15,7 @@ namespace FutureCity
             new Color(0.63f, 0.4f, 0.8f), new Color(0.96f, 0.96f, 0.95f),
             new Color(0.34f, 0.38f, 0.4f), new Color(0.65f, 0.46f, 0.31f)
         };
-        static readonly Color WardrobeAccent = new Color(0.25f, 0.53f, 0.36f);
+        Color WardrobeAccent => creatingWebAvatar ? AvatarBlue : new Color(0.25f, 0.53f, 0.36f);
 
         float DrawWardrobe(float x, float y, float width, float height = 740f)
         {
@@ -23,6 +23,7 @@ namespace FutureCity
             if (avatar == null || avatar.Wardrobe == null) return y;
             var catalog = avatar.Wardrobe;
             var appearance = avatar.Appearance;
+            if (creatingWebAvatar) return DrawAvatarWardrobe(avatar, x, y, width, height);
             float start = y;
             GUI.Label(new Rect(x, y, width, 40f), "<b>服・顔・小物で、あなたらしい姿に</b>", sH2);
             GUI.Label(new Rect(x, y + 44f, width, 40f), creatingWebAvatar
@@ -60,29 +61,39 @@ namespace FutureCity
             float innerWidth = rightWidth - 24f;
             int columns = Mathf.Clamp(Mathf.FloorToInt(innerWidth / 150f), 1, 4);
             int paletteColumns = innerWidth >= 510f ? 8 : 4;
-            float contentHeight = 0f;
-            if (wardrobeCategory == 3) contentHeight = 500f;
-            else
-            {
-                if (appearance.costume > 0) contentHeight += 72f;
-                foreach (var slot in catalog.slots)
-                    if (slot.category == wardrobeCategory) contentHeight += WardrobeRowHeight(slot, catalog.ColorCount, columns, paletteColumns);
-            }
+            float contentHeight = wardrobeCategory == 3 ? 500f : WardrobeChoicesHeight(avatar, appearance, columns, paletteColumns);
             wardrobeScroll = GUI.BeginScrollView(viewport, wardrobeScroll, new Rect(0f, 0f, innerWidth, Mathf.Max(viewport.height, contentHeight)));
+            DrawWardrobeChoices(avatar, appearance, innerWidth, columns, paletteColumns);
+            GUI.EndScrollView();
+            return start + height + 24f;
+        }
+
+        float WardrobeChoicesHeight(ImportedAvatar avatar, AvatarAppearance appearance, int columns, int paletteColumns)
+        {
+            if (wardrobeCategory == 3) return 100f + ((avatar.Wardrobe.costumes?.Length ?? 0)+1)*96f;
+            float height = appearance.costume > 0 ? 72f : 0f;
+            foreach (var slot in avatar.Wardrobe.slots)
+                if (slot.category == wardrobeCategory) height += WardrobeRowHeight(slot, avatar.Wardrobe.ColorCount, columns, paletteColumns);
+            return height;
+        }
+
+        void DrawWardrobeChoices(ImportedAvatar avatar, AvatarAppearance appearance, float innerWidth, int columns, int paletteColumns)
+        {
+            var catalog = avatar.Wardrobe;
             float cy = 0f;
             if (wardrobeCategory == 3) DrawCostumes(avatar, appearance, innerWidth);
             else
             {
                 if (appearance.costume > 0)
                 {
-                    GUI.Label(new Rect(0f, cy, innerWidth, 64f), "セット衣装を着用中です。表情以外のパーツを選ぶと通常の服装に戻ります。", sSmall);
+                    GUI.Label(new Rect(0f, cy, innerWidth, 64f), "セット衣装を着用中です。表情以外のパーツを選ぶと通常の服装に戻ります。", WardrobeSmall);
                     cy += 72f;
                 }
                 for (int i = 0; i < catalog.SlotCount; i++)
                 {
                     var slot = catalog.slots[i];
                     if (slot.category != wardrobeCategory) continue;
-                    GUI.Label(new Rect(0f, cy, innerWidth, 36f), "<b>" + slot.label + "</b>　" + slot.ChoiceName(appearance.parts[i]), sBody);
+                    GUI.Label(new Rect(0f, cy, innerWidth, 36f), "<b>" + slot.label + "</b>　" + slot.ChoiceName(appearance.parts[i]), WardrobeBody);
                     float choiceWidth = (innerWidth - (columns - 1) * 8f) / columns;
                     for (int choice = 0; choice < slot.Count; choice++)
                     {
@@ -115,8 +126,6 @@ namespace FutureCity
                     cy += WardrobeRowHeight(slot, catalog.ColorCount, columns, paletteColumns);
                 }
             }
-            GUI.EndScrollView();
-            return start + height + 24f;
         }
 
         static float WardrobeRowHeight(AvatarWardrobeSlot slot, int colors, int columns, int paletteColumns) =>
@@ -125,7 +134,7 @@ namespace FutureCity
         void DrawCostumes(ImportedAvatar avatar, AvatarAppearance appearance, float width)
         {
             var costumes = avatar.Wardrobe.costumes;
-            GUI.Label(new Rect(0f, 0f, width, 88f), "セットで着替えられる特別な衣装です。\n通常の服装に戻すと、元の服や小物を再び表示します。", sBody);
+            GUI.Label(new Rect(0f, 0f, width, 88f), "セットで着替えられる特別な衣装です。\n通常の服装に戻すと、元の服や小物を再び表示します。", WardrobeBody);
             int count = costumes == null ? 0 : costumes.Length;
             for (int i = 0; i <= count; i++)
             {
