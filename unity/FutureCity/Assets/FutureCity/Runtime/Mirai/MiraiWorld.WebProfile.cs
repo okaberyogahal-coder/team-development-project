@@ -11,7 +11,8 @@ namespace FutureCity
 
         public void ApplyWebProfile(WebAvatarProfile profile)
         {
-            me.name = profile.nickname;
+            // Server session remains authoritative for the displayed identity.
+            if (webSession == null) me.name = profile.nickname;
             var avatar = player.body.GetComponent<ImportedAvatar>();
             if (avatar != null && avatar.Wardrobe != null)
             {

@@ -7,7 +7,7 @@ if(process.argv.length>2){
   process.exit(1);
 }
 const require=createRequire(import.meta.url);
-const child=spawn(process.execPath,[require.resolve('next/dist/bin/next'),'dev','--hostname','127.0.0.1','--port','3002'],{
+const child=spawn(process.execPath,[require.resolve('next/dist/bin/next'),'dev','--webpack','--hostname','127.0.0.1','--port','3002'],{
   stdio:'inherit',
   env:{...process.env,MILIFE_AI_NAVI_DEMO:'local',WATCHPACK_POLLING:'true',CHOKIDAR_USEPOLLING:'true'},
 });

@@ -1,0 +1,354 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["app"]
+}
+
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+
+  @@schema("app")
+}
+
+enum MaterialKind {
+  VIDEO
+  DOCUMENT
+
+  @@schema("app")
+}
+
+enum MediaStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+
+  @@schema("app")
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+
+  @@schema("app")
+}
+
+enum ProgressStatus {
+  IN_PROGRESS
+  COMPLETED
+
+  @@schema("app")
+}
+
+enum LectureSessionStatus {
+  DRAFT
+  OPEN
+  ONGOING
+  ENDED
+  CANCELLED
+
+  @@schema("app")
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+
+  @@schema("app")
+}
+
+model User {
+  id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String?              @unique @db.VarChar(254)
+  name        String               @default("") @db.VarChar(20)
+  emailVerified Boolean            @default(false) @map("email_verified")
+  image       String?
+  status      AccountStatus        @default(PENDING)
+  createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime?            @map("deleted_at") @db.Timestamptz(3)
+  identities  AuthIdentity[]
+  profile     UserProfile?
+  preferences LearningPreferences?
+  consents    PolicyConsent[]
+  media       MediaAsset[]
+  materials   LearningMaterial[]
+  progress    MaterialProgress[]
+  lectures    Lecture[]
+  bookings    LectureBooking[]
+  authAccounts AuthAccount[]
+  authSessions AuthSession[]
+
+  @@map("users")
+  @@schema("app")
+}
+
+// Better Auth owns credential hashing and session cookies. These tables stay server-only.
+model AuthAccount {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  password              String?
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("auth_accounts")
+  @@schema("app")
+}
+
+model AuthSession {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+  @@schema("app")
+}
+
+model AuthVerification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("auth_verifications")
+  @@schema("app")
+}
+
+model AuthRateLimit {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@index([lastRequest])
+  @@map("auth_rate_limits")
+  @@schema("app")
+}
+
+// Provider + subject identify a verified identity. Never store plain-text passwords/tokens.
+model AuthIdentity {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  provider  String   @db.VarChar(64)
+  subject   String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, subject])
+  @@index([userId])
+  @@map("auth_identities")
+  @@schema("app")
+}
+
+// Public-profile fields are separate from private goals/history. Visibility needs authenticated APIs.
+model UserProfile {
+  userId         String          @id @map("user_id") @db.Uuid
+  nickname       String          @db.VarChar(20)
+  bio            String          @default("") @db.VarChar(2000)
+  avatarId       String?         @map("avatar_id") @db.VarChar(64)
+  age            Int?            @db.SmallInt
+  ageUpdatedAt   DateTime?       @map("age_updated_at") @db.Timestamptz(3)
+  teaches        String[]        @default([])
+  wantsToLearn   String[]        @default([]) @map("wants_to_learn")
+  version        Int             @default(1)
+  updatedAt      DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  qualifications Qualification[]
+
+  @@map("user_profiles")
+  @@schema("app")
+}
+
+model LearningPreferences {
+  userId      String   @id @map("user_id") @db.Uuid
+  interests   String[] @default([])
+  strengths   String   @default("") @db.VarChar(500)
+  goal        String   @default("") @db.VarChar(500)
+  useAgeForAi Boolean  @default(false) @map("use_age_for_ai")
+  version     Int      @default(1)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_preferences")
+  @@schema("app")
+}
+
+model Qualification {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String      @map("user_id") @db.Uuid
+  name          String      @db.VarChar(200)
+  issuer        String?     @db.VarChar(200)
+  acquiredMonth String?     @map("acquired_month") @db.VarChar(7)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  profile       UserProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("qualifications")
+  @@schema("app")
+}
+
+// The policy document/version is supplied by the future registration service.
+model PolicyConsent {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  policy     String   @db.VarChar(64)
+  version    String   @db.VarChar(64)
+  acceptedAt DateTime @default(now()) @map("accepted_at") @db.Timestamptz(3)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, policy, version])
+  @@map("policy_consents")
+  @@schema("app")
+}
+
+model MediaAsset {
+  id         String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ownerId    String             @map("owner_id") @db.Uuid
+  storageKey String             @unique @map("storage_key") @db.VarChar(1024)
+  kind       MaterialKind
+  mimeType   String             @map("mime_type") @db.VarChar(127)
+  byteSize   BigInt?            @map("byte_size")
+  status     MediaStatus        @default(UPLOADING)
+  createdAt  DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  owner      User               @relation(fields: [ownerId], references: [id], onDelete: Restrict)
+  materials  LearningMaterial[]
+
+  @@unique([id, ownerId])
+  @@index([ownerId, status])
+  @@map("media_assets")
+  @@schema("app")
+}
+
+model LearningMaterial {
+  id           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId     String             @map("author_id") @db.Uuid
+  title        String             @db.VarChar(100)
+  description  String             @default("") @db.VarChar(2000)
+  category     String             @db.VarChar(100)
+  tags         String[]           @default([])
+  kind         MaterialKind
+  status       ContentStatus      @default(DRAFT)
+  mediaAssetId String?            @map("media_asset_id") @db.Uuid
+  version      Int                @default(1)
+  createdAt    DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime?          @map("deleted_at") @db.Timestamptz(3)
+  author       User               @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  media        MediaAsset?        @relation(fields: [mediaAssetId, authorId], references: [id, ownerId], onDelete: Restrict)
+  progress     MaterialProgress[]
+
+  @@index([status, deletedAt, createdAt])
+  @@index([authorId, createdAt])
+  @@index([mediaAssetId, authorId])
+  @@map("learning_materials")
+  @@schema("app")
+}
+
+model MaterialProgress {
+  userId          String           @map("user_id") @db.Uuid
+  materialId      String           @map("material_id") @db.Uuid
+  materialVersion Int              @map("material_version")
+  titleSnapshot   String           @map("title_snapshot") @db.VarChar(100)
+  status          ProgressStatus   @default(IN_PROGRESS)
+  startedAt       DateTime         @default(now()) @map("started_at") @db.Timestamptz(3)
+  completedAt     DateTime?        @map("completed_at") @db.Timestamptz(3)
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material        LearningMaterial @relation(fields: [materialId], references: [id], onDelete: Restrict)
+
+  @@id([userId, materialId])
+  @@index([userId, completedAt])
+  @@index([materialId])
+  @@map("material_progress")
+  @@schema("app")
+}
+
+// On-demand materials and scheduled lectures are different resources (BR-20).
+model Lecture {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId      String           @map("author_id") @db.Uuid
+  title         String           @db.VarChar(100)
+  description   String           @default("") @db.VarChar(2000)
+  prerequisites String           @default("") @db.VarChar(2000)
+  preparation   String           @default("") @db.VarChar(2000)
+  status        ContentStatus    @default(DRAFT)
+  version       Int              @default(1)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt     DateTime?        @map("deleted_at") @db.Timestamptz(3)
+  author        User             @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  sessions      LectureSession[]
+
+  @@index([authorId, createdAt])
+  @@map("lectures")
+  @@schema("app")
+}
+
+model LectureSession {
+  id        String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lectureId String               @map("lecture_id") @db.Uuid
+  startsAt  DateTime             @map("starts_at") @db.Timestamptz(3)
+  endsAt    DateTime             @map("ends_at") @db.Timestamptz(3)
+  capacity  Int
+  status    LectureSessionStatus @default(DRAFT)
+  version   Int                  @default(1)
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  lecture   Lecture              @relation(fields: [lectureId], references: [id], onDelete: Restrict)
+  bookings  LectureBooking[]
+
+  @@index([status, startsAt])
+  @@index([lectureId, startsAt])
+  @@map("lecture_sessions")
+  @@schema("app")
+}
+
+model LectureBooking {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionId   String         @map("session_id") @db.Uuid
+  userId      String         @map("user_id") @db.Uuid
+  status      BookingStatus  @default(CONFIRMED)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(3)
+  cancelledAt DateTime?      @map("cancelled_at") @db.Timestamptz(3)
+  attendedAt  DateTime?      @map("attended_at") @db.Timestamptz(3)
+  completedAt DateTime?      @map("completed_at") @db.Timestamptz(3)
+  session     LectureSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([sessionId, status])
+  @@index([userId, status])
+  @@map("lecture_bookings")
+  @@schema("app")
+}

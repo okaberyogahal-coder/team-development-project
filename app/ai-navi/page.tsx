@@ -5,8 +5,8 @@ import {LocalDemoWorkspace} from './LocalDemoWorkspace';
 import './demo.css';
 
 export const dynamic='force-dynamic';
-export default function AiNaviDemoPage(){
-  const host=headers().get('host');
+export default async function AiNaviDemoPage(){
+  const host=(await headers()).get('host');
   if(process.env.NODE_ENV!=='development' || process.env.MILIFE_AI_NAVI_DEMO!=='local' || !host || !isLocalDemoUrl(`http://${host}`)) notFound();
   return <LocalDemoWorkspace/>;
 }

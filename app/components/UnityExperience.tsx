@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DEFAULT_AVATAR, readDemoProfile, updateDemoAvatar, type DemoProfile } from '../../shared/demo-profile';
+import { DEFAULT_AVATAR, createDemoProfile, saveDemoProfile, readDemoProfile, updateDemoAvatar, type DemoProfile } from '../../shared/demo-profile';
 
-export function UnityExperience({ mode }: { mode: 'avatar' | 'world' }) {
+export function UnityExperience({ mode, accountProfile }: { mode: 'avatar' | 'world'; accountProfile?: {id:string;nickname:string} | null }) {
  const router = useRouter();
  const frame = useRef<HTMLIFrameElement>(null);
  const [profile, setProfile] = useState<DemoProfile | null>(null);
@@ -11,7 +11,13 @@ export function UnityExperience({ mode }: { mode: 'avatar' | 'world' }) {
  const [error, setError] = useState('');
  useEffect(() => {
   let saved: DemoProfile | null;
-  try { saved = readDemoProfile(window.localStorage); }
+  try {
+   saved = readDemoProfile(window.localStorage);
+   if (accountProfile) {
+    saved = saved?.id === accountProfile.id ? {...saved,nickname:accountProfile.nickname} : createDemoProfile(accountProfile.nickname,accountProfile.id);
+    saveDemoProfile(window.localStorage,saved);
+   }
+  }
   catch { setError('このブラウザの保存機能を利用できません。ブラウザの設定を確認してください。'); return; }
   if (mode === 'avatar' && !saved) { router.replace('/signup'); return; }
   if (mode === 'world' && saved && !saved.appearance) { router.replace('/avatar'); return; }
@@ -32,7 +38,7 @@ export function UnityExperience({ mode }: { mode: 'avatar' | 'world' }) {
   }
   window.addEventListener('message',receive);
   return () => window.removeEventListener('message',receive);
- },[mode,router]);
+ },[mode,router,accountProfile?.id,accountProfile?.nickname]);
  return <>
   {mode === 'avatar' && <div className="unity-onboarding avatar-setup-onboarding"><strong>{profile?.nickname}さんのアバターを作成</strong><span>服・表情・髪型・小物を選び、画面内の「このアバターで入場」を押してください。</span></div>}
   {mode === 'world' && profile && <div className="unity-onboarding"><strong>{profile.nickname}さんの体験プロフィール</strong><a href="/avatar">アバターを変更</a></div>}

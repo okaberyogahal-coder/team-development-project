@@ -1,4 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { createDatabase } from '../../server/db/connection';
+import { authTestDatabaseUrl } from '../support/auth-database';
+
+const registrationEmail = `${randomUUID()}@example.invalid`;
+test.afterAll(async () => {
+  const db = createDatabase(authTestDatabaseUrl());
+  try { await db.user.deleteMany({ where: { email: registrationEmail } }); }
+  finally { await db.$disconnect(); }
+});
 
 test('トップから登録とログインへ進める', async ({ page }) => {
   await page.goto('/');
@@ -8,35 +18,32 @@ test('トップから登録とログインへ進める', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'アカウントを作成' })).toBeVisible();
 });
 
-test('登録の入力確認と戻る操作、体験完了まで進める', async ({ page }) => {
+test('登録の入力確認と戻る操作、アカウント作成まで進める', async ({ page }) => {
   await page.goto('/signup');
-  await page.getByLabel('メールアドレス', { exact: true }).fill('hello@example.com');
-  await page.getByLabel('パスワード', { exact: true }).fill('password123');
-  await page.getByLabel('パスワード（確認）', { exact: true }).fill('different123');
+  await page.getByLabel('メールアドレス', { exact: true }).fill(registrationEmail);
+  await page.getByLabel('パスワード', { exact: true }).fill('test-password-12345');
+  await page.getByLabel('パスワード（確認）', { exact: true }).fill('different-password-12345');
   await page.getByLabel('18歳以上です').check();
-  await page.getByLabel('利用規約に同意します').check();
-  await page.getByLabel('プライバシーポリシーに同意します').check();
+  await page.getByLabel('開発版の利用条件を確認しました').check();
+  await page.getByLabel('アカウント情報の保存に同意します').check();
   await page.getByRole('button', { name: '次へ' }).click();
   await expect(page.getByRole('alert').filter({ hasText: 'パスワードが一致しません' })).toBeVisible();
-  await page.getByLabel('パスワード（確認）', { exact: true }).fill('password123');
+  await page.getByLabel('パスワード（確認）', { exact: true }).fill('test-password-12345');
   await page.getByRole('button', { name: '次へ' }).click();
   await page.getByLabel('ニックネーム').fill('みらい');
   await page.getByRole('button', { name: '次へ' }).click();
   await page.getByRole('button', { name: '戻る', exact: true }).click();
   await expect(page.getByLabel('ニックネーム')).toHaveValue('みらい');
   await page.getByRole('button', { name: '次へ' }).click();
-  await page.getByRole('button', { name: '入力を完了する' }).click();
+  await page.getByRole('button', { name: 'アカウントを作成' }).click();
   await expect(page.getByRole('heading', { name: 'ミライフへようこそ！' })).toBeVisible();
-  await expect(page.getByText('体験プロフィールを作成しました。')).toBeVisible();
-  await page.getByRole('link', { name: '3Dアバターを作成する' }).click();
-  await expect(page).toHaveURL(/\/avatar$/);
-  await expect(page.getByTitle('3Dアバター作成')).toBeVisible();
+  await expect(page.getByText('アカウントを作成しました。', { exact: true })).toBeVisible();
 });
 
-test('ログインは表示切替と認証エラーを提供する', async ({ page }) => {
+test('ログインは表示切替と認証失敗の案内を提供する', async ({ page }) => {
   await page.goto('/login');
   await page.getByLabel('メールアドレス', { exact: true }).fill('hello@example.com');
-  await page.getByLabel('パスワード', { exact: true }).fill('password123');
+  await page.getByLabel('パスワード', { exact: true }).fill('test-password-12345');
   await page.getByRole('button', { name: 'パスワードを表示', exact: true }).click();
   await expect(page.getByLabel('パスワード', { exact: true })).toHaveAttribute('type', 'text');
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
@@ -91,11 +98,11 @@ for (const viewport of [{ width: 1366, height: 768 }, { width: 1024, height: 600
       expect(await panel.boundingBox()).toEqual(initial);
     }
     await page.getByLabel('メールアドレス', { exact: true }).fill('hello@example.com');
-    await page.getByLabel('パスワード', { exact: true }).fill('password123');
-    await page.getByLabel('パスワード（確認）', { exact: true }).fill('password123');
+    await page.getByLabel('パスワード', { exact: true }).fill('test-password-12345');
+    await page.getByLabel('パスワード（確認）', { exact: true }).fill('test-password-12345');
     await page.getByLabel('18歳以上です').check();
-    await page.getByLabel('利用規約に同意します').check();
-    await page.getByLabel('プライバシーポリシーに同意します').check();
+    await page.getByLabel('開発版の利用条件を確認しました').check();
+    await page.getByLabel('アカウント情報の保存に同意します').check();
     await page.getByRole('button', { name: '次へ' }).click();
     await expect(page.getByLabel('ニックネーム')).toBeVisible();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
@@ -122,18 +129,18 @@ for (const viewport of [{ width: 1366, height: 768 }, { width: 1440, height: 900
     };
     await assertNoFormScroll();
     await page.getByLabel('メールアドレス', { exact: true }).fill('hello@example.com');
-    await page.getByLabel('パスワード', { exact: true }).fill('password123');
-    await page.getByLabel('パスワード（確認）', { exact: true }).fill('password123');
+    await page.getByLabel('パスワード', { exact: true }).fill('test-password-12345');
+    await page.getByLabel('パスワード（確認）', { exact: true }).fill('test-password-12345');
     await page.getByLabel('18歳以上です').check();
-    await page.getByLabel('利用規約に同意します').check();
-    await page.getByLabel('プライバシーポリシーに同意します').check();
+    await page.getByLabel('開発版の利用条件を確認しました').check();
+    await page.getByLabel('アカウント情報の保存に同意します').check();
     await next.click();
     expect((await next.boundingBox())!.y).toBeCloseTo(bounds!.y, 0);
     await page.screenshot({ path: `test-results/pop-profile-${viewport.width}.png` });
     await assertNoFormScroll();
     await page.getByLabel('ニックネーム').fill('みらい');
     await next.click();
-    const finish = page.getByRole('button', { name: '入力を完了する' });
+    const finish = page.getByRole('button', { name: 'アカウントを作成' });
     expect((await finish.boundingBox())!.y).toBeCloseTo(bounds!.y, 0);
     await page.screenshot({ path: `test-results/pop-interests-${viewport.width}.png` });
     await assertNoFormScroll();

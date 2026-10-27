@@ -11,7 +11,7 @@ namespace FutureCity
     /// 仕様 v0.17 の Unity 側の責務（3D描画・入力・視点・参加者表示・案内の選択）に加えて、
     /// 本来 Web パネルが担う画面（教材・講座予約・投稿・未来ナビ・プロフィール）を
     /// 「流れを確かめるためのデモ画面」として Unity 内に用意している。
-    /// ログイン・保存・実AI・通話・アップロードは、サーバー／Web と接続して置き換える前提。
+    /// Webのログイン・プロフィールを反映。保存・実AI・通話・アップロードはデモ。
     ///
     /// シニアの利用を前提に：明るい配色・大きな文字（本文22px相当以上）・大きなボタン（高さ56px以上）・
     /// 点滅なし・マウスだけで操作できる（クリック移動と画面下のボタン）。
@@ -48,6 +48,8 @@ namespace FutureCity
         readonly Dictionary<string, DateTime> completed = new Dictionary<string, DateTime>();
         readonly List<string> later = new List<string>();
         MiraiProfile me;
+        WebPlayerSession webSession;
+        Vector2 webProfileScroll;
 
         Course detailCourse;
         float viewerProgress;
@@ -130,6 +132,60 @@ namespace FutureCity
             SetPanel(Panel.Intro);
             webProfile = gameObject.AddComponent<WebProfileBridge>();
             webProfile.Init(this);
+            WebSessionBridge.Attach(this);
+        }
+
+        public AppliedWebPlayer ApplyWebSession(WebPlayerSession session)
+        {
+            bool authenticated = session.authenticated && session.profile != null;
+            string userId = authenticated ? session.profile.userId : "";
+            string oldUserId = webSession != null && webSession.authenticated && webSession.profile != null ? webSession.profile.userId : "";
+            bool changed = webSession == null || oldUserId != userId;
+            webSession = session;
+            me = new MiraiProfile
+            {
+                name = authenticated ? session.profile.nickname : "ゲスト",
+                age = 0,
+                bio = "",
+                aiUsesAge = false,
+                teaches = new List<string>(authenticated ? session.profile.teaches ?? new string[0] : new string[0]),
+                learns = new List<string>(authenticated ? session.profile.wantsToLearn ?? new string[0] : new string[0]),
+                color = WebSessionBridge.AvatarColor(authenticated ? session.profile.avatarId : "sprout")
+            };
+            if (changed)
+            {
+                completed.Clear();
+                later.Clear();
+                webProfileScroll = Vector2.zero;
+                courses = MiraiData.Courses();
+                sessions = MiraiData.Sessions(MiraiClock.Now);
+                naviResult = null;
+                naviReadyAt = uploadStart = -1f;
+                detailCourse = editTarget = null;
+                personView = null;
+                currentRoom = pendingRoom = null;
+                mic = camOn = false;
+                toast = guideLabel = null;
+                guideTarget = null;
+                if (guideMarker != null) guideMarker.SetActive(false);
+                if (player != null) { player.StopAuto(); PlayerWalker.SetFreeLook(false); }
+                SetPanel(Panel.Intro);
+            }
+            ApplyAvatarColor();
+            return new AppliedWebPlayer
+            {
+                revision = session.revision,
+                authenticated = authenticated,
+                state = authenticated ? "authenticated" : session.status == "unavailable" ? "unavailable" : "guest",
+                userId = userId,
+                nickname = me.name,
+                avatarId = authenticated ? session.profile.avatarId : "sprout",
+                avatarLabel = WebSessionBridge.AvatarLabel(authenticated ? session.profile.avatarId : "sprout"),
+                suitColor = ColorUtility.ToHtmlStringRGB(me.color),
+                teaches = me.teaches.ToArray(),
+                wantsToLearn = me.learns.ToArray()
+            };
+
         }
 
         GameObject BuildMarker(string name, float height, Mat color)
@@ -154,7 +210,9 @@ namespace FutureCity
 
         void ApplyAvatarColor(bool choosePreset = false)
         {
-            me.color = AvatarColors[avatarChoice];
+            me.color = webSession != null && webSession.authenticated
+                ? WebSessionBridge.AvatarColor(webSession.profile.avatarId)
+                : webSession != null ? WebSessionBridge.AvatarColor("sprout") : AvatarColors[avatarChoice];
             if (player == null || player.body == null) return;
             var imported = player.body.GetComponent<ImportedAvatar>();
             if (imported != null)
@@ -742,11 +800,13 @@ namespace FutureCity
         // ---- 左上：現在地と参加人数
         void DrawStatus()
         {
-            var r = new Rect(16f, 16f, 430f, currentRoom != null ? 200f : 104f);
+            var r = new Rect(16f, 16f, 430f, (currentRoom != null ? 200f : 104f) + (webSession != null ? 38f : 0f));
             Box(r, sPanel);
             string where = currentRoom != null ? $"{currentRoom.name}（{RoomCount(currentRoom)}/8人）" : "ロビー・庭";
             GUI.Label(new Rect(r.x + 20f, r.y + 12f, r.width - 40f, 36f), $"<b>現在地：</b>{where}", sBody);
             GUI.Label(new Rect(r.x + 20f, r.y + 52f, r.width - 40f, 36f), "広場の参加者：<b>1</b>/50人（あなた）", sSmall);
+            if (webSession != null)
+                GUI.Label(new Rect(r.x + 20f, r.yMax - 40f, r.width - 40f, 36f), webSession.authenticated ? $"{Plain(me.name)}さんとして参加中" : "ゲストとして見学中", sSmall);
             if (currentRoom != null)
             {
                 float bw = (r.width - 52f) / 2f;
@@ -902,15 +962,23 @@ namespace FutureCity
                 : "<b>あなたの服の色をえらべます</b>（あとで変えられます・えらばなくても大丈夫です）", sBody);
             y += 44f;
             int selectedAvatar = importedAvatars ? player.body.GetComponent<ImportedAvatar>().SelectedVariant : avatarChoice;
-            for (int i = 0; i < AvatarColors.Length; i++)
+            for (int i = 0; webSession == null && i < AvatarColors.Length; i++)
+
             {
                 var sr = new Rect(x + i * 100f, y, 84f, 64f);
                 if (Btn(sr, i == selectedAvatar ? "✓" : importedAvatars ? (i + 1).ToString() : "", AvatarColors[i])) { avatarChoice = i; ApplyAvatarColor(true); }
             }
+            if (webSession != null)
+            {
+                GUI.DrawTexture(new Rect(x, y, 64f, 64f), Solid(me.color));
+                GUI.Label(new Rect(x + 84f, y + 8f, iw - 84f, 56f), webSession.authenticated
+                    ? "登録したアバターをアイコンと服の色に反映しています。"
+                    : "見学中の操作やお試しデータは保存されません。", sSmall);
+            }
             y += 84f;
             GUI.Label(new Rect(x, y, iw - 380f, 100f),
                 "マウスを動かすだけで見回せます（ボタンは不要）。W A S D で歩き、1〜6 キーで下のメニューを開けます。\n" +
-                "※ このUnity版は体験用のデモです。ログイン・保存・AI・通話は本番のWeb／サーバーに接続して動きます。", sSmall);
+                "※ 教材・予約・AI・通話は体験用のデモです。操作した内容は保存されません。", sSmall);
             if (Btn(new Rect(r.xMax - 46f - 340f, r.yMax - 34f - 84f, 340f, 84f), "<size=28>3D広場へ参加する</size>", new Color(0.18f, 0.6f, 0.36f)))
                 StartPlaza();
         }
@@ -1273,8 +1341,9 @@ namespace FutureCity
             GUI.Label(new Rect(info.x + 20f, y + 10f, info.width - 300f, 34f), $"学びたいこと：<b>{Join(me.learns)}</b>", sBody);
             GUI.Label(new Rect(info.x + 20f, y + 46f, info.width - 300f, 34f), $"教えられること：{Join(me.teaches)}", sSmall);
             GUI.Label(new Rect(info.x + 20f, y + 82f, info.width - 300f, 34f),
+                webSession != null ? $"お試しの受講完了：{completed.Count}件（保存なし）｜ 年齢は利用しません" :
                 $"受講した教材：{completed.Count}件　｜　年齢（{me.age}歳）の利用：{(me.aiUsesAge ? "する" : "しない")}", sSmall);
-            if (Btn(new Rect(info.xMax - 270f, y + 34f, 250f, 64f), "プロフィールを直す")) SetPanel(Panel.Profile);
+            if (Btn(new Rect(info.xMax - 270f, y + 34f, 250f, 64f), webSession != null ? "プロフィールを見る" : "プロフィールを直す")) SetPanel(Panel.Profile);
             y += 152f;
 
             bool waiting = naviReadyAt > 0f;
@@ -1306,11 +1375,44 @@ namespace FutureCity
             GUI.Label(new Rect(c.x, c.yMax - 30f, c.width, 30f), "※ このデモの提案はルールで作っています。本番ではサーバー経由の生成AIが、同じ画面に提案を返します。", sSmall);
         }
 
-        static string Join(List<string> l) => l.Count == 0 ? "（まだありません）" : string.Join("・", l.ToArray());
+        static string Join(List<string> l) => l.Count == 0 ? "（まだありません）" : string.Join("・", l.ConvertAll(Plain).ToArray());
+
+        static string Plain(string text) => (text ?? "").Replace("<", "＜").Replace(">", "＞");
+
+        void DrawWebProfile()
+        {
+            Color acc = new Color(0.35f, 0.45f, 0.6f);
+            var c = Frame("わたしのプロフィール", acc, 1120f, 720f);
+            bool authenticated = webSession.authenticated;
+            float width = c.width - 30f;
+            string teaches = "<b>教えられること</b>\n" + Join(me.teaches);
+            string learns = "<b>学びたいこと</b>\n" + Join(me.learns);
+            float teachesHeight = Mathf.Max(96f, sBody.CalcHeight(new GUIContent(teaches), width));
+            float learnsHeight = Mathf.Max(96f, sBody.CalcHeight(new GUIContent(learns), width));
+            var view = new Rect(c.x, c.y, c.width, c.height - 90f);
+            Track(view);
+            webProfileScroll = GUI.BeginScrollView(view, webProfileScroll, new Rect(0f, 0f, width, 240f + teachesHeight + learnsHeight));
+            float y = 0f;
+            GUI.Label(new Rect(0f, y, width, 52f), $"<b>{Plain(me.name)}{(authenticated ? "さん" : "で見学中")}</b>", sTitle);
+            y += 68f;
+            GUI.Label(new Rect(0f, y, width, 48f), authenticated
+                ? $"アバター：{WebSessionBridge.AvatarLabel(webSession.profile.avatarId)}（人型の服の色に反映）"
+                : "ログインすると、登録したプロフィールで参加できます。", sBody);
+            y += 68f;
+            GUI.Label(new Rect(0f, y, width, teachesHeight), teaches, sBody);
+            y += teachesHeight + 16f;
+            GUI.Label(new Rect(0f, y, width, learnsHeight), learns, sBody);
+            y += learnsHeight + 16f;
+            GUI.Label(new Rect(0f, y, width, 64f), "登録したプロフィールを表示しています。教材・予約のお試しデータは保存されません。", sSmall);
+            GUI.EndScrollView();
+            if (Btn(new Rect(c.x, c.yMax - 70f, 330f, 64f), authenticated ? "マイページをひらく" : "ログインする", acc))
+                WebSessionBridge.OpenAccount(authenticated);
+        }
 
         // ================================================================== プロフィール
         void DrawProfile()
         {
+            if (webSession != null) { DrawWebProfile(); return; }
             Color acc = new Color(0.35f, 0.45f, 0.6f);
             var c = Frame("わたしのプロフィール", acc, 1240f, 900f);
             float viewH = 2900f + me.quals.Count * 72f + completed.Count * 40f;
