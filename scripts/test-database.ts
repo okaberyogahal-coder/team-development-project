@@ -1,6 +1,7 @@
 import { loadEnvConfig } from "@next/env";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
+import { readdirSync } from "node:fs";
 
 loadEnvConfig(process.cwd());
 const target = process.env.DATABASE_TEST_URL;
@@ -25,5 +26,6 @@ if (process.env.DATABASE_URL) {
 const env = { ...process.env, DATABASE_URL: target, DIRECT_URL: target };
 const migrate = spawnSync(process.execPath, [path.resolve("node_modules/prisma/build/index.js"), "migrate", "deploy"], { env, stdio: "inherit" });
 if (migrate.status !== 0) process.exit(migrate.status || 1);
-const result = spawnSync(process.execPath, ["--import", "tsx", "--test", "tests/database/integration.test.ts"], { env, stdio: "inherit" });
+const files = readdirSync("tests/database").filter(file => file.endsWith(".test.ts")).map(file => path.join("tests/database", file));
+const result = spawnSync(process.execPath, ["--import", "tsx", "--test", ...files], { env, stdio: "inherit" });
 process.exit(result.status || (result.error ? 1 : 0));

@@ -9,7 +9,8 @@
 Unity Hub からこのフォルダを追加して開ける。
 TOP の「ワールドに入る」は `/plaza` の Unity 専用画面へ進む。
 ブラウザー表示には、以下の手順で Web ビルドを作成する必要がある。
-ログイン・通話・複数人同期は未接続。
+Webのログイン本人の表示名・アバター・教えたいこと・学びたいことを反映する。
+未ログインはゲストで見学できる。実通話・複数人同期は未接続。
 
 ```
 unity/
@@ -76,8 +77,38 @@ TOP に戻るリンクと、ワールドだけを別タブで開くリンクも�
 `build:unity` はシーン未作成の場合だけ生成し、Web ビルドを実行して、
 `public/unity/FutureCity/` に出力する。Unity 内の
 Tools > Future City > Build Web for melife からも実行できる。
-Mac 以外や別のインストール先では、環境変数 `UNITY_EDITOR_PATH` に
+Windows と Mac では、`ProjectVersion.txt` のバージョンに一致する
+Unity Hub の標準インストール先を自動で使用する。
+別のインストール先では、環境変数 `UNITY_EDITOR_PATH` に
 Unity 実行ファイルのパスを指定する。
+
+Web Build Support が未導入の場合は、Unity Hub の対象 Editor の
+「モジュールを加える」から追加する。Unity CLI がある環境では次でも追加できる。
+
+```powershell
+unity install-modules --editor-version 6000.4.2f1 --module webgl --yes
+```
+
+## ブラウザーで確認する
+
+Web ビルド後にサイトを3002番ポートで起動し、別のターミナルで実行する。
+このテストは既存のサイトに接続し、旧広場サーバーや認証用テストDBを起動しない。
+
+```powershell
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3002
+# 別のターミナル。Playwright Chromiumを使用する場合はパス指定不要。
+$env:PLAYWRIGHT_EXECUTABLE_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+npm.cmd run test:unity
+```
+
+TOPからの遷移、Unityローダーの起動完了、Canvasの表示、起動時のJavaScript例外を確認する。
+スクリーンショットは `test-results/` に保存する。
+別ポートの場合は `PLAZA_TEST_URL` を指定する。
+
+2026-10-21にWindowsのUnity 6000.4.2f1でWebビルドが成功し、
+`http://127.0.0.1:3002/plaza` で確認した。
+`test:unity` は2件成功。ローダーの完了、広場への参加、日本語UIと3D空間の表示を
+スクリーンショットでも確認した。これは初回起動時の確認であり、後続で追加した本人表示の連携検証は以下の手順に分ける。実通話・複数人同期は未接続。
 
 素材や生成方法の変更をシーンへ反映したい場合は、先に Unity の
 Create Scene を実行する（シーンを作り直すため、手動編集がある場合は注意）。
@@ -92,5 +123,36 @@ Web ビルドは非圧縮で出力するため、圧縮用の Content-Encoding �
 本体が大きいため、配信の最適化は公開先の決定後に行う。
 Unity のキャッシュやビルドではなく、ソースと `.meta` を Git で共有する。
 
-ログイン、通話、他の参加者の同期などは、空間表示とは別途接続が必要。
+実通話、他の参加者の同期、教材・予約などの保存は別途接続が必要。
 同梱 README のデモ機能を、本番の機能として扱わない。
+
+## Webアカウントとの連携
+
+同じサイトの `/api/unity/session` がCookieから本人を確認し、表示用プロフィールだけを返す。
+WebGLテンプレートの `session.js` と `WebSession.jslib` が `WebSessionBridge.cs` に渡し、
+`MiraiWorld.cs` が登録プロフィールと服の色を適用する。メール・目標・資格情報・トークンはUnityへ渡さない。
+Webの登録アバター6種は上部のアイコンと人型の服の色へ対応し、動物型3Dモデルには変更しない。
+Unityのプロフィール画面は登録情報の閲覧用。Editor内での従来のオフラインデモは維持する。
+
+ログインはワールドの上部から行い、マイページから「ワールドに入る」で戻れる。
+上部のログアウトボタンはUnityを閉じずにゲストへ戻す。
+別タブでの認証操作も反映し、表示中の15秒ごとの確認とフォーカス復帰時の確認で失効を検出する。
+通信失敗はゲスト表示に切り替え、再確認ボタンを表示する。
+本人の切り替え時は前のプロフィールとUnity内のお試しデータを消す。
+教材・予約・AI・通話の操作は引き続き保存されないデモである。
+
+生成したWebビルドと本番Webビルドを用意し、独立したローカルテストDBで実際のUnityとの連携を検証する。
+開発用のDBや既存サーバーは利用しない。
+
+```powershell
+npm.cmd run db:test:up
+npm.cmd run build:unity
+npm.cmd run build
+$env:PLAYWRIGHT_EXECUTABLE_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+npm.cmd run test:unity:auth
+```
+
+2026-10-21に連携追加後のUnity Webビルド成功、`test:unity:auth` は2件成功・終了コード0。
+C#適用結果と別タブのログイン・別人切替・ログアウト・通信失敗と復旧・定期照会による期限切れ・
+単独ページを確認した。実際の広場内の本人プロフィールと服の色、ログアウト後のゲスト表示も画像で確認した。
+WebとDBを含む検証記録は [認証の一連操作の検証](../docs/auth-validation-2026-10-21.md) を参照。

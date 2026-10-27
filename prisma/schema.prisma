@@ -68,6 +68,9 @@ enum BookingStatus {
 model User {
   id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email       String?              @unique @db.VarChar(254)
+  name        String               @default("") @db.VarChar(20)
+  emailVerified Boolean            @default(false) @map("email_verified")
+  image       String?
   status      AccountStatus        @default(PENDING)
   createdAt   DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt   DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -81,8 +84,74 @@ model User {
   progress    MaterialProgress[]
   lectures    Lecture[]
   bookings    LectureBooking[]
+  authAccounts AuthAccount[]
+  authSessions AuthSession[]
 
   @@map("users")
+  @@schema("app")
+}
+
+// Better Auth owns credential hashing and session cookies. These tables stay server-only.
+model AuthAccount {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  userId                String    @map("user_id") @db.Uuid
+  password              String?
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at") @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(3)
+  scope                 String?
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+  @@map("auth_accounts")
+  @@schema("app")
+}
+
+model AuthSession {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("auth_sessions")
+  @@schema("app")
+}
+
+model AuthVerification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@map("auth_verifications")
+  @@schema("app")
+}
+
+model AuthRateLimit {
+  id          String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key         String @unique
+  count       Int
+  lastRequest BigInt @map("last_request")
+
+  @@index([lastRequest])
+  @@map("auth_rate_limits")
   @@schema("app")
 }
 

@@ -57,14 +57,14 @@ async function session(capacity = 1) {
   });
 }
 
-test("appスキーマはPUBLICに公開されず、実DBに12テーブル存在する", async () => {
+test("appスキーマはPUBLICに公開されず、実DBに16テーブル存在する", async () => {
   const [result] = await database.$queryRaw<{ tables: bigint; publicUsage: boolean }[]>`
     SELECT (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'app' AND table_type = 'BASE TABLE') AS tables,
       EXISTS(SELECT 1 FROM pg_namespace n,
         LATERAL aclexplode(coalesce(n.nspacl, acldefault('n', n.nspowner))) acl
         WHERE n.nspname = 'app' AND acl.grantee = 0 AND acl.privilege_type = 'USAGE') AS "publicUsage"
   `;
-  assert.equal(result.tables, BigInt(12));
+  assert.equal(result.tables, BigInt(16));
   assert.equal(result.publicUsage, false);
 });
 
