@@ -10,7 +10,7 @@ test('TOPからUnityワールドを開き、TOPへ戻れる', async ({ page }) =
   await expect(page).toHaveURL('/');
 });
 
-test('Unityワールド本体がブラウザー内で起動する', async ({ page }) => {
+test('Unityワールド本体がブラウザー内で起動する', async ({ page }, testInfo) => {
   test.setTimeout(180000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
@@ -23,11 +23,12 @@ test('Unityワールド本体がブラウザー内で起動する', async ({ pag
   await expect(world.locator('#unity-canvas')).toBeVisible();
   await expect(world.locator('#loading')).toBeHidden();
   await page.waitForTimeout(5000);
-  // Unity draws its own controls on the canvas. This point is the observed
-  // 「3D広場へ参加する」 button at the fixed 1440×1000 test viewport.
-  await world.locator('#unity-canvas').click({ position: { x: 1060, y: 755 } });
+  const canvas = world.locator('#unity-canvas');
+  const bounds = await canvas.boundingBox();
+  if (!bounds) throw new Error('Unity canvas is missing');
+  await canvas.click({ position: { x: bounds.width * 0.725, y: bounds.height * 0.875 }, delay: 150 });
   await page.waitForTimeout(2000);
-  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape', { delay: 200 });
   expect(errors).toEqual([]);
-  await page.screenshot({ path: '/private/tmp/melife-unity-world.png' });
+  await page.screenshot({ path: testInfo.outputPath('melife-unity-world.png') });
 });

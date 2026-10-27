@@ -8,7 +8,7 @@
 
 [詳細版の要件定義書を開く](requirements-detail-v0.17.md)
 
-優先度から探す：[Must](#priority-must) / [Should](#priority-should) / [Could](#priority-could) / [Future](#priority-future) / [対象外](#priority-out-of-scope)
+優先度から探す：[Must](#priority-must) / [Should](#priority-should) / [Could](#priority-could) / [Future](#priority-future) / [保留](#priority-pending) / [対象外](#priority-out-of-scope)
 
 見出し・一覧の項目を押すと、該当する説明へ移動する。VS CodeではMarkdownプレビュー（Ctrl+Shift+V）でクリックでき、編集画面ではCtrl+クリックで開ける。
 
@@ -71,6 +71,7 @@
     - [Should](#priority-should)
     - [Could](#priority-could)
     - [Future](#priority-future)
+    - [保留](#priority-pending)
     - [対象外](#priority-out-of-scope)
   - [13.3 主体と権限](#section-13-3)
   - [13.4 共通業務規則](#section-13-4)
@@ -780,7 +781,6 @@ v0.17追加版では、以下の優先度で扱う。
 [詳細版のMust要件へ](requirements-detail-v0.17.md#priority-must)
 
 - [一般向け自由登録・ログイン](requirements-detail-v0.17.md#fr-301)
-- [18歳未満の保護者確認](requirements-detail-v0.17.md#fr-316)
 - [プロフィール登録](requirements-detail-v0.17.md#fr-110)
 - [教えられること・学びたいことの登録](requirements-detail-v0.17.md#fr-110)
 - [実年齢のプロフィール表示](requirements-detail-v0.17.md#fr-314)
@@ -827,6 +827,12 @@ v0.17追加版では、以下の優先度で扱う。
 - 講座以外の活動・イベント予約
 - [スマートフォン・タブレット・スマートウォッチ対応](requirements-detail-v0.17.md#fr-112)
 - 人気の先生の特徴を学習したPRY型AI
+
+<a id="priority-pending"></a>
+
+#### 保留
+
+- [18歳未満の保護者確認（採否を再検討中）](requirements-detail-v0.17.md#fr-316)
 
 <a id="priority-out-of-scope"></a>
 
@@ -1010,6 +1016,8 @@ v0.17追加版では、プロフィールに実年齢を表示する。54歳の�
 <a id="section-13-9"></a>
 
 ### 13.9 18歳未満の保護者確認
+
+2026-10-20時点で採否を再検討中。以下は当初案であり、今回の認証実装の前提にはしない。開発版は当面18歳以上の自己申告を維持する。現在の実装範囲は [認証の実装](authentication.md) を参照する。
 
 v0.17追加版では、18歳未満の利用者は保護者確認後に通常利用できる方針を採用する。
 

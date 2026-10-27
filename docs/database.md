@@ -1,10 +1,10 @@
 # PostgreSQL 基盤
 
-このブランチは永続化の基盤を追加する。ログイン画面・登録画面・Unity・旧広場の通信は、まだ DB に接続しない。認証済み本人と所有権を照合する API は次の実装対象であり、DB のユーザーを作るだけではログインできない。
+永続化の基盤に加え、Webの登録・ログイン・ログアウトとマイページをDBに接続した。Unityはログイン本人の表示用プロフィールを参照する。Better Authによるメール・パスワード認証とプロフィール保存の手順は [認証の実装](./authentication.md) を参照。旧広場・教材・予約の操作APIは引き続き未接続。
 
 ## 構成
 
-- PostgreSQL 17。開発用は Docker Compose、本番は PostgreSQL 接続を提供するマネージドサービスへ切り替える。Supabase は候補で、契約やクラウド上の作成は未実施。
+- 2026-10-27にSupabaseの新規プロジェクト `melife-dev` へ接続した。アプリはSupabaseのPostgreSQLを利用する。接続・起動手順は [Supabase接続](./supabase.md) を参照。
 - Prisma 7.10.1 と `pg` ドライバー。Node.js 22.12 以上の 22.x、または 24 以上を使用する。
 - `prisma/schema.prisma` がモデル定義、`prisma/migrations/` が適用順序を含む変更履歴。CHECK 制約・予約トリガーは第2マイグレーションに手書きで保持する。
 - 全アプリテーブルは `app` スキーマに配置し、PUBLIC のスキーマ権限を取り消す。Supabase の公開 API 対象スキーマへ追加しない。サーバー側の接続を通して扱う。
@@ -41,48 +41,43 @@ erDiagram
 | MaterialProgress | 本人による受講完了と時刻・参照版・題名スナップショット。教材の論理削除後も履歴を残し、完了を自動判定しない |
 | Lecture / LectureSession / LectureBooking | 講座内容・開催日時・予約を分離。予約不要の動画教材と混同しない。開催回の定員は受講者数で、広場の同時接続枠とは別 |
 
-日時は `timestamptz` で保持し、表示時に日本時間などへ変換する。メールは空白を除いて小文字化した値だけを保存できる。ユーザーは既定で `PENDING`。認証・未成年の保護者確認方式が確定するまで自動で `ACTIVE` にしない。
+日時は `timestamptz` で保持し、表示時に日本時間などへ変換する。メールは空白を除いて小文字化した値だけを保存できる。ユーザーは既定で `PENDING`。開発版のログイン・マイページ利用と、予約等の `ACTIVE` を要する権限は分け、自動で `ACTIVE` にしない。保護者確認の採否は再検討中。
+
+認証追加で `User` に認証用項目を追加し、`AuthAccount` / `AuthSession` / `AuthVerification` / `AuthRateLimit` を加えた全16テーブル構成になった。資格情報のハッシュとセッショントークンは専用テーブルでサーバー側だけが扱う。`User` / `AuthIdentity` に平文パスワードを保存しない。
 
 ## ローカルの初回起動
 
-Docker Desktop を起動し、プロジェクトルートで実行する。
+Supabaseのアプリ用接続文字列とCA証明書のパスを `.env.local` に設定する。詳細は [起動手順](./supabase.md#start) を参照。
 
 ```powershell
 npm.cmd ci
 # .env.local が存在しない場合だけコピーする。既存の接続設定は上書きしない。
-Copy-Item .env.example .env.local
-npm.cmd run db:up
-npm.cmd run db:deploy
+if (-not (Test-Path .env.local)) { Copy-Item .env.example .env.local }
+# .env.local の DATABASE_URL と証明書のパスを設定してから続行する。
+npm.cmd run auth:setup
 npm.cmd run db:check
-npm.cmd run db:seed
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3002
 ```
 
-`.env.example` の認証情報は、localhost 限定の開発コンテナー用。本番では使わない。開発用 DB の既定ポートは5434、テスト用は5435。変更時は Compose の `POSTGRES_PORT` / `POSTGRES_TEST_PORT` と対応 URL の両方を変更する。
-
-`db:seed` はローカルの `melife` / `melife_test` にだけ実行可能。`demo@example.invalid` のデモプロフィールを冪等に作成し、認証情報は作らない。既存レコードを書き換えない。
-
-```powershell
-npm.cmd run db:studio   # DB を手元で確認
-npm.cmd run db:stop     # データを残して開発用 DB を停止
-```
-
-データは名前付きボリュームへ保存する。`docker compose down -v` はデータを消すため、日常の停止には使わない。
+日常の起動でマイグレーションは実行しない。作業を終えるときはWebのターミナルでCtrl+Cを押す。再開は `npm.cmd run dev -- --hostname 127.0.0.1 --port 3002`。
 
 ## スキーマ変更と検証
 
 ```powershell
-npm.cmd run db:migrate -- --name describe_change
 npm.cmd run db:generate
-npm.cmd run db:test:up
 npm.cmd run test:db
 npm.cmd test
 npx.cmd tsc --noEmit --incremental false
 npm.cmd run build
 ```
 
-`db:migrate` は開発用。新しい SQL の破壊的変更や手書きトリガーへの影響をレビューし、マイグレーションを Git へ登録する。既に適用した SQL は編集せず、後続マイグレーションで変更する。本番で `db:migrate` / `db push` / `migrate reset` は実行しない。
+スキーマ変更の生成は共有Supabaseとは別のローカル開発用PostgreSQLへ接続した状態で行う。`DATABASE_URL` と `DIRECT_URL` の両方をその専用DBに合わせてから `npm.cmd run db:migrate -- --name describe_change` を使う。新しい SQL の破壊的変更や手書きトリガーへの影響をレビューし、マイグレーションを Git へ登録する。既に適用した SQL は編集せず、後続マイグレーションで変更する。共有環境で `db:migrate` / `db push` / `migrate reset` は実行しない。
 
-`test:db` は明示的な `DATABASE_TEST_URL` を必須とし、localhost の末尾 `_test` の DB だけを許可する。開発用 URL と同じ接続先も拒否する。専用 DB にマイグレーションを適用し、作成した検証データだけを後片付けする。テストコンテナーは tmpfs を使用し、再作成でデータが消える。
+DB統合テストや認証ブラウザーテストを実行する担当者は、ローカルPostgreSQLに空の `melife_test` DBと専用ログインユーザーを別途用意し、その接続文字列を `.env.local` の `DATABASE_TEST_URL` に設定する。これはアプリの通常利用には不要。
+
+`test:db` は明示的な `DATABASE_TEST_URL` を必須とし、localhost の末尾 `_test` の DB だけを許可する。開発用 URL と同じ接続先も拒否する。専用 DB にマイグレーションを適用し、作成した検証データだけを後片付けする。テスト用接続はマイグレーションを適用できる権限が必要。共有Supabaseへ向けるために接続先制限を外さない。
+
+`db:seed` はローカルの `melife` / `melife_test` にだけ実行可能。`demo@example.invalid` のデモプロフィールを冪等に作成し、認証情報は作らない。通常のSupabase接続では実行しない。
 
 実 DB テストでは、初回マイグレーション、制約、メール／認証IDの重複、プロフィール保存の原子性、メディアの所有者整合、教材削除後の履歴、同時予約、取消後の枠解放、締切、定員変更を検証する。
 
@@ -107,13 +102,14 @@ psql $env:DIRECT_URL -v ON_ERROR_STOP=1 -v runtime_role=melife_app -f prisma/gra
 
 ## バックアップ
 
-本番はプロバイダーの自動バックアップを設定し、復元先を別途用意して復元を試す。ローカルの確認例では、PowerShell のバイナリーリダイレクトを避けてコピーする。
+本番はプロバイダーのバックアップを設定し、復元先を別途用意して復元を試す。手元でバックアップを取る担当者は、接続先と互換性のあるPostgreSQLクライアントツールを用意する。PowerShellのバイナリーリダイレクトは使わず、出力先を `pg_dump` に渡す。
+
+以下は `DIRECT_URL` を環境変数として設定済みのシェルで実行する。PostgreSQLのクライアントツールは `.env.local` を自動では読み込まない。
 
 ```powershell
 New-Item -ItemType Directory -Force backups
-docker compose exec -T db pg_dump -U melife -d melife -Fc -f /tmp/melife.dump
-docker compose cp db:/tmp/melife.dump backups/melife.dump
-docker compose exec -T db pg_restore --list /tmp/melife.dump
+pg_dump --dbname $env:DIRECT_URL --schema app --format custom --file backups/melife.dump
+pg_restore --list backups/melife.dump
 ```
 
 `backups/` は Git 対象外。保管・暗号化・保持期間・復元目標は公開運用前に決める。DB バックアップは動画ファイル本体のバックアップを含まない。
@@ -124,7 +120,7 @@ DB 基盤追加時に確認した Next.js 14.2.35 の脆弱性は、Issue #4 対
 
 ## 今回確定しない範囲
 
-- 認証事業者の選定、セッション管理、保護者確認、メール送信、ログイン画面の接続。
+- メール所有者確認・パスワード再設定・未成年の利用条件。保護者確認は採否を再検討中。現在のメール・パスワード認証とセッション管理は [authentication.md](./authentication.md) を参照。
 - 年齢の自動更新・必須化、プロフィールの閲覧範囲、履歴の保持期限とアカウント削除手順。
 - メディア検証・公開停止・署名付き URL 発行。DB は所有者と参照の整合を保つが、公開処理はメディアの READY 状態・種別・認証本人を API 側で検証する必要がある。
 - 教師／会場の予定重複、講座会場と広場枠の調整、講座取消通知、出席と本人完了の業務条件。

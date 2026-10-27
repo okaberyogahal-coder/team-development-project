@@ -6,6 +6,7 @@
     "node": "^22.12.0 || >=24.0.0"
   },
   "scripts": {
+    "auth:setup": "node scripts/auth-setup.mjs",
     "build:unity": "node scripts/build-unity.mjs",
     "dev": "next dev --webpack",
     "build": "prisma generate && next build --webpack",
@@ -18,9 +19,9 @@
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
     "test:smoke": "playwright test --config playwright.smoke.config.ts",
+    "test:unity": "playwright test --config playwright.unity.config.ts",
+    "test:unity:auth": "playwright test --config playwright.unity-auth.config.ts",
     "dev:lan": "node scripts/dev-lan.mjs",
-    "db:up": "docker compose up -d db --wait",
-    "db:stop": "docker compose stop db",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
@@ -28,13 +29,13 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:check": "tsx scripts/db-check.ts",
-    "db:test:up": "docker compose --profile test up -d db-test --wait",
     "test:db": "prisma generate && tsx scripts/test-database.ts"
   },
   "dependencies": {
     "@next/env": "16.4.2",
     "@prisma/adapter-pg": "7.10.1",
     "@prisma/client": "7.10.1",
+    "better-auth": "1.7.11",
     "livekit-client": "^2.15.6",
     "livekit-server-sdk": "^2.19.1",
     "next": "16.4.2",

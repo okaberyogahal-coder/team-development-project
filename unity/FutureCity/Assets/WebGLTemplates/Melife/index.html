@@ -5,15 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ミライフ ワールド</title>
   <style>
-    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#17251f;font-family:system-ui,sans-serif}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#17251f;font-family:system-ui,sans-serif}body{display:flex;flex-direction:column}[hidden]{display:none!important}
+    #session-bar{flex:none;display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;padding:8px 12px;background:#fffdf7;color:#213d35;font-size:14px;min-height:52px;border-bottom:1px solid #c7dace}
+    #session-status{margin-right:auto;overflow-wrap:anywhere}#session-avatar{width:30px;height:30px}
+    #session-bar a,#session-bar button{min-height:36px;padding:7px 12px;border:1px solid #b7d1c2;border-radius:8px;background:#fff;color:#213d35;font:inherit;cursor:pointer;text-decoration:none}
+    #session-bar a:focus-visible,#session-bar button:focus-visible,#unity-canvas:focus-visible{outline:3px solid #0b57d0;outline-offset:-3px}#session-bar button:disabled{cursor:wait;opacity:.6}
+    #session-error{flex-basis:100%;margin:0;color:#a32b20;font-size:13px}.unity-stage{position:relative;flex:1;min-height:0}
     #unity-canvas{width:100%;height:100%;display:block;outline:none}
     #loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:#eef5ef;color:#213d35}
     #loading[hidden]{display:none}h1{font-size:24px;margin:0 0 14px}p{line-height:1.8}progress{width:min(320px,75vw);height:12px;accent-color:#497a60;margin:auto}
   </style>
 </head>
 <body>
+  <div id="session-bar" role="region" aria-label="ワールドのアカウント">
+    <img id="session-avatar" alt="" hidden>
+    <span id="session-status" role="status">ログイン状態を確認しています…</span>
+    <button id="session-retry" type="button" hidden>再確認</button>
+    <a id="session-account" href="/login" target="_top">ログインする</a>
+    <button id="session-logout" type="button" hidden>ログアウト</button>
+    <p id="session-error" role="alert" hidden></p>
+  </div>
+  <div class="unity-stage">
   <canvas id="unity-canvas" tabindex="0" aria-label="ミライフの3Dワールド"></canvas>
   <div id="loading" role="status"><h1>ミライフへようこそ</h1><p id="status">ワールドを読み込んでいます…</p><progress id="progress" max="1" value="0"></progress><p>初回は読み込みに時間がかかる場合があります。</p></div>
+  </div>
+  <script src="session.js"></script>
   <script src="Build/{{{ LOADER_FILENAME }}}"></script>
   <script>
     const canvas = document.getElementById('unity-canvas');
@@ -41,6 +57,7 @@
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
       }, value => { document.getElementById('progress').value = value; }).then(instance => {
         window.unityInstance = instance;
+        window.melifeUnityReady(instance);
         loading.hidden = true;
         document.body.dataset.unityState = 'ready';
       }).catch(showError);

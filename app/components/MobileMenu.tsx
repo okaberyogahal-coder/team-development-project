@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { homeNavItems } from "./home-nav";
 
-export function MobileMenu() {
+export function MobileMenu({ authenticated = false }: { authenticated?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -31,7 +31,7 @@ export function MobileMenu() {
             {item.label}
           </a>
         ))}
-        <a href="/login" onClick={() => setIsOpen(false)}>ログイン</a>
+        <a href={authenticated ? "/account" : "/login"} onClick={() => setIsOpen(false)}>{authenticated ? "マイページ" : "ログイン"}</a>
       </nav>
     </div>
   );
