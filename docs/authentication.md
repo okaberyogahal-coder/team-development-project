@@ -52,7 +52,7 @@ Unityの連携は `GET /api/unity/session` が同一オリジンのHttpOnly Cook
 
 Unity側はJavaScriptとC#のブリッジで表示を更新する。別タブでの登録・ログイン・ログアウトは、個人情報を含まないBroadcastChannel通知を受けてサーバーへ再照会する。表示中は15秒ごととフォーカス復帰時にも照会する。失効・停止・削除・確認の通信失敗時は前の本人情報を消してゲストへ切り替え、通信失敗は再確認ボタンを表示する。本人の切り替えではUnity内のお試し履歴・予約・投稿も消す。Unityからの識別子を将来の操作APIの認可根拠にはしない。
 
-登録アバターはワールド上部のアイコンと人型アバターの服の色に対応する。動物の3Dモデルへの変換やプロフィール編集は未実装。Unity用の手順と実ビルド検証は [Unity共有手順](../unity/README.md) を参照。
+登録アバターはワールド上部のアイコンと人型アバターの服の色に対応する。動物の3Dモデルへの変換は未実装。Webからのプロフィール編集は下記の2026-10-28追記を参照。Unity用の手順と実ビルド検証は [Unity共有手順](../unity/README.md) を参照。
 
 ```powershell
 npm.cmd run test:db
@@ -76,3 +76,15 @@ npm.cmd run test:smoke
 Supabase Authの採用は別判断。将来認証方式を変える場合は、既存のハッシュがそのまま利用できると仮定せず、本人確認を経た資格情報の再設定や `AuthIdentity` との紐づけ、既存セッションの失効を設計・検証する。
 
 参考：[Better AuthのNext.js連携](https://www.better-auth.com/docs/integrations/next)、[Prismaアダプター](https://www.better-auth.com/docs/adapters/prisma)、[Next.js認証ガイド](https://nextjs.org/docs/app/guides/authentication)。
+
+## 本人プロフィールの編集（2026-10-28）
+
+マイページの「プロフィールを編集」から `/account/edit` を開く。ニックネーム（20文字）、興味・学びたいこと・教えられること（各10項目、各30文字）、得意なこと・目標（各500文字）を編集する。分野は1項目ずつ追加・削除し、名前に読点が含まれていても勝手に分割しない。空欄の分野は保存しない。
+
+`GET /api/account/profile` はログイン本人の編集用データだけを返す。`PATCH` はOrigin、ログイン状態、読み込み時の本人ID、許可フィールド、入力制約、更新回数制限を確認する。クライアントから別人のIDを保存対象として指定できない。ログイン利用者が変わった場合は409で止め、入力を保持する。
+
+既存の `UserProfile.version` と `LearningPreferences.version` を用いて競合を検知し、本人名・プロフィール・設定を1トランザクションで更新する。競合時には途中の更新もロールバックする。メール・パスワード・外見・年齢・紹介文・AI年齢利用設定はこのAPIで変更しない。DBスキーマの追加変更は不要。
+
+保存後はマイページへ戻り、既存の認証状態変更通知で、起動中のUnityにも表示名と教えたいこと・学びたいことを再取得させる。得意なこと・目標は本人用であり、Unity用APIの返却項目には追加しない。
+
+検証は専用ローカルPostgreSQL（`*_test`）を使う。`npm run test:account` は入力・HTTP権限の単体試験、`npm run test:db` はDB保存・競合時ロールバックを含む試験。独立した `DATABASE_TEST_URL` を設定し、`npm run build` 後に `npx playwright test --config playwright.profile.config.ts` で画面を検証する。実Unityへの反映確認には事前の `npm run build:unity` が必要。共有Supabaseの既存アカウントを試験で変更しない。

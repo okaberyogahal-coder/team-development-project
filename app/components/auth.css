@@ -306,3 +306,15 @@
 .account-details dd { margin: 0; white-space: pre-wrap; }
 .account-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
 .account-screen { overflow-y: auto; }
+
+.profile-edit-fields{border:0;padding:0;margin:18px 0;display:grid;gap:18px;min-width:0}
+.profile-edit-fields input,.profile-edit-fields textarea{width:100%;box-sizing:border-box}
+.profile-edit-screen form{padding-bottom:8px}
+.profile-edit-screen .account-actions{margin:20px 0}
+.profile-save-notice{padding:12px 16px;background:#e7f4ec;border-radius:12px;color:#205c3e}
+
+.profile-topic-group{border:0;padding:0;margin:0;min-width:0}
+.profile-topic-group legend{font-weight:700;margin-bottom:8px}
+.profile-topic-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.profile-topic-row input,.profile-topic-row textarea{flex:1;min-width:0}
+.profile-topic-remove{flex:none;border:1px solid #adcfe4;border-radius:8px;padding:8px;background:#fff;color:#153b78;font:inherit;font-size:12px;cursor:pointer}

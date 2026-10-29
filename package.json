@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:plaza": "tsx --test tests/plaza/*.test.ts",
-    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo",
+    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo && npm run test:account",
     "dev:plaza": "tsx server/plaza/index.ts",
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
@@ -32,7 +32,8 @@
     "test:db": "prisma generate && tsx scripts/test-database.ts",
     "test:ai-navi": "node --import tsx --test tests/ai-navi/*.test.ts",
     "dev:ai-navi": "node scripts/dev-ai-navi.mjs",
-    "test:local-demo": "node --import tsx --test tests/local-demo/*.test.ts"
+    "test:local-demo": "node --import tsx --test tests/local-demo/*.test.ts",
+    "test:account": "node --import tsx --test tests/account/*.test.ts"
   },
   "dependencies": {
     "@next/env": "16.4.2",
