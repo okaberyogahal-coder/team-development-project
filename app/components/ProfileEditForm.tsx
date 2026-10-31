@@ -4,6 +4,7 @@ import {useEffect,useRef,useState} from 'react';
 import {useRouter} from 'next/navigation';
 import {profileEditInput,type AccountProfile,type ProfileFields} from '../../shared/account-profile';
 import {notifyAuthChanged} from '../../shared/auth/events';
+import {ageBadge} from '../../shared/profile-demographics';
 
 type Draft=ProfileFields;
 type Editor={draft:Draft;profileVersion:number;preferencesVersion:number;ownerId:string};
@@ -26,10 +27,10 @@ export function ProfileEditForm(){
     if(response.status===401){router.replace('/login');return;}
     if(!response.ok)throw new Error('プロフィールを読み込めませんでした。');
     const body=await response.json() as AccountProfile&{ownerId:string};
-    const data=profileEditInput(Object.fromEntries(Object.entries(body).filter(([key])=>key!=='ownerId')));
+    const data=profileEditInput(Object.fromEntries(Object.entries(body).filter(([key])=>key!=='ownerId')),true);
     if(typeof body.ownerId!=='string'||!body.ownerId)throw new Error('プロフィールを確認できませんでした。');
     if(controller.signal.aborted)return;
-    setEditor({ownerId:body.ownerId,profileVersion:data.profileVersion,preferencesVersion:data.preferencesVersion,draft:{nickname:data.nickname,interests:data.interests.length?data.interests:[''],wantsToLearn:data.wantsToLearn.length?data.wantsToLearn:[''],teaches:data.teaches.length?data.teaches:[''],strengths:data.strengths,goal:data.goal}});
+    setEditor({ownerId:body.ownerId,profileVersion:data.profileVersion,preferencesVersion:data.preferencesVersion,draft:{gender:data.gender,age:data.age,nickname:data.nickname,interests:data.interests.length?data.interests:[''],wantsToLearn:data.wantsToLearn.length?data.wantsToLearn:[''],teaches:data.teaches.length?data.teaches:[''],strengths:data.strengths,goal:data.goal}});
     setError('');
    }catch{if(!controller.signal.aborted)setError('プロフィールを読み込めませんでした。もう一度お試しください。');}
    finally{if(!controller.signal.aborted)setLoading(false);}
@@ -65,6 +66,8 @@ export function ProfileEditForm(){
    <fieldset disabled={busy} className="profile-edit-fields">
     <legend className="sr-only">編集するプロフィール</legend>
     <div className="form-field"><label htmlFor="profile-nickname">ニックネーム（必須）</label><input id="profile-nickname" autoComplete="nickname" required maxLength={20} value={editor.draft.nickname} onChange={event=>change('nickname',event.target.value)}/><span className="auth-field-hint">20文字以内</span></div>
+    <div className="form-field"><label htmlFor="profile-gender">性別（必須）</label><select id="profile-gender" required value={editor.draft.gender??''} onChange={event=>change('gender',event.target.value==='male'?'male':event.target.value==='female'?'female':null)}><option value="">選択してください</option><option value="male">男性</option><option value="female">女性</option></select></div>
+    <div className="form-field"><label htmlFor="profile-age">年齢（必須・本人のみ）</label><input id="profile-age" type="number" required min={18} max={130} step={1} value={editor.draft.age??''} onChange={event=>change('age',event.target.value===''?null:Number(event.target.value))}/><span className="auth-field-hint">18歳以上が対象です。プロフィールには実年齢ではなく年齢バッジを表示します。</span><span role="status">年齢バッジ：{ageBadge(editor.draft.age)??'未設定'}</span></div>
     {tagFields.map(([key,label])=><fieldset className="profile-topic-group" key={key}>
      <legend>{label}</legend>
      {editor.draft[key].map((value,index)=><div className="profile-topic-row form-field" key={index}>

@@ -8,7 +8,7 @@ const password='profile-edit-test-password-123';
 test.afterAll(async()=>{try{await db.user.deleteMany({where:{email:{in:emails}}});}finally{await db.$disconnect();}});
 async function register(page:Page,nickname='写真のひと'){
  const email=`profile-${randomUUID()}@example.invalid`;emails.push(email);
- const response=await page.request.post('/api/account/signup',{headers:{Origin:origin},data:{email,password,confirmation:password,nickname,avatar:'cat',adult:true,terms:true,privacy:true,interests:['写真'],teaches:[],wantsToLearn:[],strengths:'',goal:''}});
+ const response=await page.request.post('/api/account/signup',{headers:{Origin:origin},data:{email,password,confirmation:password,nickname,avatar:'cat',gender:"male",age:30,adult:true,terms:true,privacy:true,interests:['写真'],teaches:[],wantsToLearn:[],strengths:'',goal:''}});
  expect(response.ok()).toBe(true);expect((await response.json()).signedIn).toBe(true);
  return await db.user.findUniqueOrThrow({where:{email}});
 }
@@ -89,4 +89,38 @@ test('saved profile changes reach an already running Unity world',async({page,co
   const applied=await world.locator('body').evaluate(()=>(window as Window&{melifeAppliedSession?:{nickname:string;teaches:string[]}}).melifeAppliedSession);
   expect(applied?.nickname).toBe('ワールドへ反映');expect(applied?.teaches).toEqual(['写真撮影']);
  }finally{await worldPage.close();}
+});
+
+
+test('demographics persist and Unity receives a badge without exact age',async({page})=>{
+ const user=await register(page);await open(page);
+ await page.getByLabel('性別（必須）').selectOption('female');
+ await page.getByLabel('年齢（必須・本人のみ）').fill('59');
+ await page.getByRole('button',{name:'変更を保存',exact:true}).click();
+ await expect(page).toHaveURL(/\/account\?updated=1$/);
+ await expect(page.locator('.account-details')).toContainText('ミドルシニア');
+ await expect(page.locator('.account-details')).not.toContainText('59歳');
+ const row=await db.userProfile.findUniqueOrThrow({where:{userId:user.id}});
+ expect(row.gender).toBe('female');expect(row.age).toBe(59);
+ const session=await (await page.request.get('/api/unity/session')).json();
+ expect(session.profile.gender).toBe('female');expect(session.profile.ageBadge).toBe('ミドルシニア');
+ expect(session.profile).not.toHaveProperty('age');
+ await page.goto('/account/edit');
+ await expect(page.getByLabel('性別（必須）')).toHaveValue('female');
+ await expect(page.getByLabel('年齢（必須・本人のみ）')).toHaveValue('59');
+});
+
+test('existing users must complete demographics before world entry',async({page})=>{
+ const user=await register(page);
+ await db.userProfile.update({where:{userId:user.id},data:{gender:null,age:null}});
+ const session=await (await page.request.get('/api/unity/session')).json();
+ expect(session).toEqual({authenticated:false,profile:null,requiresProfileCompletion:true});
+ await page.goto('/plaza');await expect(page).toHaveURL(/\/account\/edit$/);
+ await expect(page.getByLabel('性別（必須）')).toHaveValue('');
+ await expect(page.getByLabel('年齢（必須・本人のみ）')).toHaveValue('');
+ await page.getByLabel('性別（必須）').selectOption('male');
+ await page.getByLabel('年齢（必須・本人のみ）').fill('18');
+ await page.getByRole('button',{name:'変更を保存',exact:true}).click();
+ await expect(page).toHaveURL(/\/account\?updated=1$/);
+ await expect(page.locator('.account-details')).toContainText('ユース');
 });

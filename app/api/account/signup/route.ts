@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       const created = await result.json() as { user: { id: string } };
       const userId = created.user.id;
       await tx.userProfile.create({ data: {
-        userId, nickname: input.nickname, avatarId: input.avatar,
+        userId, nickname: input.nickname, avatarId: input.avatar, gender: input.gender, age: input.age, ageUpdatedAt: new Date(),
         teaches: input.teaches, wantsToLearn: input.wantsToLearn,
       } });
       await tx.learningPreferences.create({ data: { userId, interests: input.interests, strengths: input.strengths, goal: input.goal } });

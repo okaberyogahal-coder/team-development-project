@@ -21,6 +21,12 @@ namespace FutureCity
         {
             var avatar = player != null && player.body != null ? player.body.GetComponent<ImportedAvatar>() : null;
             if (avatar == null || avatar.Wardrobe == null) return y;
+            if (avatar.MissingGenderModel)
+            {
+                GUI.Label(new Rect(x, y, width, 48f), "女性アバターは準備中です。着ぐるみは共通で使用できます。", creatingWebAvatar ? WardrobeSmall : sSmall);
+                y += 56f;
+                height -= 56f;
+            }
             var catalog = avatar.Wardrobe;
             var appearance = avatar.Appearance;
             if (creatingWebAvatar) return DrawAvatarWardrobe(avatar, x, y, width, height);

@@ -5,6 +5,8 @@ import { AuthShell } from "../components/AuthShell";
 import { LogoutButton } from "../components/LogoutButton";
 import { getCurrentUser } from "../../server/auth/server";
 
+import {ageBadge} from '../../shared/profile-demographics';
+
 export const metadata: Metadata = { title: "マイページ | ミライフ ME LIFE", robots: { index: false, follow: false } };
 
 export default async function AccountPage({searchParams}:{searchParams:Promise<{updated?:string}>}) {
@@ -14,7 +16,10 @@ export default async function AccountPage({searchParams}:{searchParams:Promise<{
   return <AuthShell><section className="auth-form-screen account-screen">
     <div className="auth-form-title"><p className="auth-title-kicker">あなたの「好き」の続きを、ここから。</p><h1 className="form-heading">こんにちは、{user.profile?.nickname || "利用者"}さん。</h1><p className="auth-form-description">ログインしています。</p></div>
     {updated==="1"&&<p role="status" className="profile-save-notice">プロフィールを保存しました。</p>}
+    {(!user.profile?.gender||!ageBadge(user.profile?.age))&&<p role="status">性別・年齢の登録が必要です。プロフィールを編集してください。</p>}
     <dl className="account-details">
+      <div><dt>性別</dt><dd>{user.profile?.gender==='male'?'男性':user.profile?.gender==='female'?'女性':'未設定'}</dd></div>
+      <div><dt>年齢バッジ</dt><dd>{ageBadge(user.profile?.age)||'未設定'}</dd></div>
       <div><dt>メールアドレス</dt><dd>{user.email}</dd></div>
       <div><dt>興味のある分野</dt><dd>{user.preferences?.interests.join("、") || "未設定"}</dd></div>
       <div><dt>学びたいこと</dt><dd>{user.profile?.wantsToLearn.join("、") || "未設定"}</dd></div>

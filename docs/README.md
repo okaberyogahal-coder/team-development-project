@@ -109,3 +109,5 @@ Gitで共有するファイル、Webビルド、本人プロフィールの接�
 2. 変更点を説明したい場合は `feature-change-list.md` を見る。
 3. 実装する機能が決まったら `requirements-detail-v0.17.md` で細かい条件を確認する。
 4. ミライフ広場や通話を確認する場合は `metaverse-design.md` と `plaza-testing.md` を見る。
+
+- [2026-10-29共有アバター素材の確認](./avatar-asset-review-2026-10-29.md)：受領ブランチ・ZIPと導入済み素材の比較、既存システムとの互換性、Unityテスト結果。

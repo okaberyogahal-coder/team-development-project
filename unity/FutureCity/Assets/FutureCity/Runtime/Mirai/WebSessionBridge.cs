@@ -11,6 +11,8 @@ namespace FutureCity
         public string userId;
         public string nickname;
         public string avatarId;
+        public string gender;
+        public string ageBadge;
         public string[] teaches;
         public string[] wantsToLearn;
     }

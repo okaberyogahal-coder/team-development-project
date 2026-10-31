@@ -32,3 +32,20 @@
 .world-viewer-toolbar nav{display:flex;align-items:center;gap:12px}
 .world-viewer-toolbar nav a{font-size:12px;text-decoration:underline;text-underline-offset:3px}
 .world-page .world-viewer-toolbar button{padding:6px 12px;font-size:12px}
+
+/* The host owns one toolbar; the iframe keeps its standalone account bar as fallback. */
+.world-page .world-viewer-toolbar{display:flex;flex-wrap:nowrap;gap:12px;min-height:52px;padding:6px 16px;overflow-x:auto;border-bottom:1px solid #d6e7ed}
+.world-viewer-toolbar .home-brand-logo{display:block;width:108px;flex:0 0 108px}
+.world-viewer-toolbar .home-brand-logo-image{display:block;width:100%;height:auto}
+.world-session-name{display:flex;align-items:center;gap:6px;flex:1;min-width:90px;max-width:none;font-size:12px;white-space:nowrap}
+.world-session-name span{overflow:hidden;text-overflow:ellipsis}
+.world-session-name img{flex:none}
+.world-page .world-viewer-toolbar nav{display:flex;flex:none;align-items:center;gap:8px;margin-left:auto}
+.world-page .world-viewer-toolbar .world-header-control{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:108px;height:36px;flex:0 0 108px;margin:0;padding:0 8px;border:1px solid #adc8db;border-radius:9px;background:#fff;color:#153b78;font-size:12px;font-weight:700;line-height:1.2;text-decoration:none;white-space:nowrap}
+.world-page .world-viewer-toolbar .world-header-control:hover{background:#eef6ff}
+.world-page .world-viewer-toolbar .world-header-control:focus-visible{outline:3px solid #153b78;outline-offset:2px}
+.world-page .world-viewer-toolbar .world-fullscreen-control{background:#0755cf;border-color:#153b78;color:#fff}
+.world-page .world-viewer-toolbar .world-fullscreen-control:hover{background:#0645a8}
+.world-session-error{display:flex;gap:12px;align-items:center;padding:8px 16px;background:#fff0ee;color:#a02e2e;font-size:12px}
+.world-session-error p{margin:0}
+@media(max-width:700px){.world-page .world-viewer-toolbar{gap:8px;padding:5px 10px}.world-viewer-toolbar .home-brand-logo{width:84px;flex-basis:84px}.world-session-name{min-width:70px}.world-page .world-viewer-toolbar nav{gap:6px}.world-page .world-viewer-toolbar .world-header-control{width:92px;flex-basis:92px}}

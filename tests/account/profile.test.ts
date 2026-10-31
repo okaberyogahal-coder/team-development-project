@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {profileEditInput} from '../../shared/account-profile';
 import {createProfileHandlers,ProfileConflictError} from '../../server/account/profile-handler';
-const input={nickname:'  みらい  ',interests:['写真','写真'],wantsToLearn:['園芸'],teaches:[],strengths:'聞くこと',goal:'花を撮る',profileVersion:1,preferencesVersion:2};
+const input={gender:'male',age:30,nickname:'  みらい  ',interests:['写真','写真'],wantsToLearn:['園芸'],teaches:[],strengths:'聞くこと',goal:'花を撮る',profileVersion:1,preferencesVersion:2};
 const request=(body:unknown=input,origin='http://localhost:3002')=>new Request('http://localhost:3002/api/account/profile',{method:'PATCH',headers:{origin,'Content-Type':'application/json','X-Profile-Owner':'session-user'},body:JSON.stringify(body)});
 test('profile validation trims and deduplicates without accepting identity or credentials',()=>{
  const parsed=profileEditInput(input);assert.equal(parsed.nickname,'みらい');assert.deepEqual(parsed.interests,['写真']);
@@ -31,3 +31,5 @@ test('conflicts and storage failures are distinguished without leaking details',
  const response=await createProfileHandlers({...deps,save:async()=>{throw new Error('database-password-secret');}}).PATCH(request());
  assert.equal(response.status,503);assert.ok(!(await response.text()).includes('database-password-secret'));
 });
+
+test('legacy profiles load for editing but require demographics on save',()=>{const legacy={...input,gender:null,age:null};assert.equal(profileEditInput(legacy,true).gender,null);assert.throws(()=>profileEditInput(legacy));});

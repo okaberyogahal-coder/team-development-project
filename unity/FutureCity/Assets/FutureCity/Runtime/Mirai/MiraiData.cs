@@ -16,7 +16,7 @@ namespace FutureCity
     public class MiraiProfile
     {
         public string name;
-        public int age;                     // 実年齢を表示（54歳なら54歳）
+        public int age;                     // 本人入力。公開表示はAgeBadgeLabelで年齢バッジへ変換
         public string bio;
         public List<string> teaches = new List<string>();
         public List<string> learns = new List<string>();

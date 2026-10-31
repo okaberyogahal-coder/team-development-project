@@ -1,3 +1,4 @@
+import {demographicInput} from '../profile-demographics';
 export const MIN_PASSWORD_LENGTH = 12;
 export const CONSENT_VERSION = "development-2026-10-20";
 export const AUTH_AVATARS = ["sprout", "cat", "bear", "rabbit", "penguin", "fox"] as const;
@@ -39,7 +40,7 @@ export function signupInput(value: unknown) {
     throw new AuthInputError("アバターを選び直してください。");
   }
   return {
-    email, password: data.password, nickname: text(data.nickname, 20, true), avatar: data.avatar,
+    ...demographicInput(data), email, password: data.password, nickname: text(data.nickname, 20, true), avatar: data.avatar,
     interests: tags(data.interests), teaches: tags(data.teaches), wantsToLearn: tags(data.wantsToLearn),
     strengths: text(data.strengths, 500), goal: text(data.goal, 500),
   };

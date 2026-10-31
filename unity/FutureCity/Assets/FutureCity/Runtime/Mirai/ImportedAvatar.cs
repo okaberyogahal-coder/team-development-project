@@ -17,6 +17,37 @@ namespace FutureCity
         int visualVariant = -1;
         AvatarWardrobeCatalog wardrobe;
         AvatarAppearance appearance;
+        string gender;
+        GameObject[] defaultVariants;
+        AvatarWardrobeCatalog defaultWardrobe;
+        bool missingGenderModel;
+        public string Gender => gender;
+        public bool MissingGenderModel => missingGenderModel;
+
+        public void SetGender(string value)
+        {
+            value = value == "male" || value == "female" ? value : null;
+            if (gender == value) return;
+            if (defaultVariants == null) { defaultVariants = variants; defaultWardrobe = wardrobe; }
+            var choice = Appearance;
+            gender = value;
+            var female = value == "female" ? Resources.LoadAll<GameObject>("FutureCityAvatars/FemaleCharacters") : null;
+            var femaleWardrobe = value == "female" ? Resources.Load<AvatarWardrobeCatalog>("FutureCityAvatars/FemaleWardrobe") : null;
+            missingGenderModel = value == "female" && (female == null || female.Length == 0 || femaleWardrobe == null);
+            variants = value == "female" && !missingGenderModel ? female : defaultVariants;
+            wardrobe = value == "female" && !missingGenderModel ? femaleWardrobe : defaultWardrobe;
+            Array.Sort(variants, (a, b) => StringComparer.Ordinal.Compare(a.name, b.name));
+            visualVariant = -1;
+            SetVisual(0);
+            if (choice != null) ApplyAppearance(choice);
+            UpdateGenderVisibility();
+        }
+
+        void UpdateGenderVisibility()
+        {
+            // The installed animal suit is shared. A missing normal female model stays hidden.
+            if (visual != null) visual.SetActive(!missingGenderModel || (appearance != null && appearance.costume == 1));
+        }
 
         public AvatarWardrobeCatalog Wardrobe => wardrobe;
         public AvatarAppearance Appearance => appearance == null ? null : appearance.Copy();
@@ -139,6 +170,7 @@ namespace FutureCity
                 }
             }
             selected = -1;
+            UpdateGenderVisibility();
         }
 
         public void UpdateMotion(float speed, bool sitting)

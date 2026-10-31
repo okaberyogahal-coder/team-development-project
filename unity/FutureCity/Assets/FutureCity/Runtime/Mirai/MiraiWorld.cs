@@ -172,6 +172,8 @@ namespace FutureCity
                 SetPanel(Panel.Intro);
             }
             ApplyAvatarColor();
+            if (player != null && player.body != null)
+                player.body.GetComponent<ImportedAvatar>()?.SetGender(authenticated ? session.profile.gender : null);
             return new AppliedWebPlayer
             {
                 revision = session.revision,
@@ -793,7 +795,7 @@ namespace FutureCity
                 float d = Vector3.Distance(camPos, c.HeadPosition);
                 if (d > 14f || !ToGui(c.HeadPosition + Vector3.up * 0.3f, s, out var p)) continue;
                 var pr = c.profile;
-                TagAt(p, $"<b>{pr.name}さん</b> {pr.age}歳 <size=16><color=#888888>デモ</color></size>");
+                TagAt(p, $"<b>{pr.name}さん</b> {AgeBadgeLabel(pr.age)} <size=16><color=#888888>デモ</color></size>");
             }
         }
 
@@ -841,7 +843,7 @@ namespace FutureCity
             Color col = new Color(0.25f, 0.55f, 0.35f);
             if (focus != null)
             {
-                title = $"{focus.profile.name}さん（{focus.profile.age}歳）";
+                title = $"{focus.profile.name}さん（{AgeBadgeLabel(focus.profile.age)}）";
                 sub = "プロフィールを見ることができます（デモ人物）";
                 button = "プロフィールを見る（E）";
             }
@@ -1323,7 +1325,7 @@ namespace FutureCity
                 if (why == null) continue;
                 if (x + 360f > c.xMax) { x = c.x; y += 74f; }
                 if (y > c.yMax - 64f) break;
-                if (Btn(new Rect(x, y, 350f, 64f), $"{p.name}さん（{p.age}歳）<size=17>\n{why}</size>")) { personView = p; SetPanel(Panel.Person); }
+                if (Btn(new Rect(x, y, 350f, 64f), $"{p.name}さん（{AgeBadgeLabel(p.age)}）<size=17>\n{why}</size>")) { personView = p; SetPanel(Panel.Person); }
                 x += 362f;
             }
         }
@@ -1377,6 +1379,8 @@ namespace FutureCity
 
         static string Join(List<string> l) => l.Count == 0 ? "（まだありません）" : string.Join("・", l.ConvertAll(Plain).ToArray());
 
+        public static string AgeBadgeLabel(int age) => age < 18 || age > 130 ? "未設定" : age < 30 ? "ユース" : age < 50 ? "ミドル" : age < 60 ? "ミドルシニア" : "シニア";
+
         static string Plain(string text) => (text ?? "").Replace("<", "＜").Replace(">", "＞");
 
         void DrawWebProfile()
@@ -1396,7 +1400,7 @@ namespace FutureCity
             GUI.Label(new Rect(0f, y, width, 52f), $"<b>{Plain(me.name)}{(authenticated ? "さん" : "で見学中")}</b>", sTitle);
             y += 68f;
             GUI.Label(new Rect(0f, y, width, 48f), authenticated
-                ? $"アバター：{WebSessionBridge.AvatarLabel(webSession.profile.avatarId)}（人型の服の色に反映）"
+                ? $"年齢バッジ：{Plain(webSession.profile.ageBadge ?? "未設定")}　性別：{(webSession.profile.gender == "female" ? "女性" : webSession.profile.gender == "male" ? "男性" : "未設定")}"
                 : "ログインすると、登録したプロフィールで参加できます。", sBody);
             y += 68f;
             GUI.Label(new Rect(0f, y, width, teachesHeight), teaches, sBody);
@@ -1423,10 +1427,10 @@ namespace FutureCity
             me.name = GUI.TextField(new Rect(x + 200f, y, 400f, 52f), me.name, 20, sInput);
             y += 70f;
             GUI.Label(new Rect(x, y + 8f, 200f, 40f), "<b>年齢</b>", sBody);
-            if (Btn(new Rect(x + 200f, y, 64f, 56f), "－", null, me.age > 0)) me.age--;
+            if (Btn(new Rect(x + 200f, y, 64f, 56f), "－", null, me.age > 18)) me.age--;
             GUI.Label(new Rect(x + 270f, y + 8f, 120f, 40f), $"<b>{me.age}歳</b>", sCenter);
             if (Btn(new Rect(x + 396f, y, 64f, 56f), "＋", null, me.age < 130)) me.age++;
-            GUI.Label(new Rect(x + 480f, y + 4f, iw - 480f, 60f), $"ほかの利用者のプロフィールに「{me.age}歳」と表示されます。", sSmall);
+            GUI.Label(new Rect(x + 480f, y + 4f, iw - 480f, 60f), $"プロフィールには「{AgeBadgeLabel(me.age)}」バッジを表示します。", sSmall);
             y += 76f;
 
             y = DrawWardrobe(x, y, iw);
@@ -1522,7 +1526,7 @@ namespace FutureCity
             Color acc = new Color(0.35f, 0.45f, 0.6f);
             var c = Frame($"{p.name}さんのプロフィール", acc, 1100f, 860f);
             float y = c.y;
-            GUI.Label(new Rect(c.x, y, c.width, 50f), $"<size=32><b>{p.name}さん</b></size>　<size=26>{p.age}歳</size>　<size=18><color=#888888>デモ人物（実際の参加者ではありません）</color></size>", sTitle);
+            GUI.Label(new Rect(c.x, y, c.width, 50f), $"<size=32><b>{p.name}さん</b></size>　<size=26>{AgeBadgeLabel(p.age)}</size>　<size=18><color=#888888>デモ人物（実際の参加者ではありません）</color></size>", sTitle);
             y += 60f;
             GUI.Label(new Rect(c.x, y, c.width, 44f), p.bio, sBody);
             y += 56f;

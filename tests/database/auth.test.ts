@@ -103,7 +103,7 @@ test("同時リクエストでも認証回数の上限を超えて許可しな�
 });
 
 test("登録入力は必須同意・年齢申告・配列上限をサーバーで検証する", () => {
-  const input = { email: " TEST@example.invalid ", password, confirmation: password, nickname: "利用者", avatar: "cat", adult: true, terms: true, privacy: true, interests: [], teaches: [], wantsToLearn: [], strengths: "", goal: "" };
+  const input = { email: " TEST@example.invalid ", password, confirmation: password, nickname: "利用者", avatar: "cat", gender: "male", age: 30, adult: true, terms: true, privacy: true, interests: [], teaches: [], wantsToLearn: [], strengths: "", goal: "" };
   assert.equal(signupInput(input).email, "test@example.invalid");
   for (const bad of [{ adult: false }, { terms: false }, { privacy: false }, { avatar: "unknown" }, { interests: Array(11).fill("写真") }, { password: "short" }, { nickname: " " }]) {
     assert.throws(() => signupInput({ ...input, ...bad }));

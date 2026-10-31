@@ -11,7 +11,7 @@ const origin = 'http://127.0.0.1:3012';
 function registration() {
   const email = `${randomUUID()}@example.invalid`;
   emails.push(email);
-  return { email, password, confirmation: password, adult: true, terms: true, privacy: true, nickname: '学び仲間', avatar: 'cat', interests: ['写真'], wantsToLearn: ['園芸'], teaches: ['料理'], strengths: '写真を撮ること', goal: '本人だけの目標' };
+  return { email, password, confirmation: password, gender: "male", age: 30, adult: true, terms: true, privacy: true, nickname: '学び仲間', avatar: 'cat', interests: ['写真'], wantsToLearn: ['園芸'], teaches: ['料理'], strengths: '写真を撮ること', goal: '本人だけの目標' };
 }
 
 const post = (request: APIRequestContext, path: string, data: unknown, requestOrigin = origin) => request.post(path, { data, headers: { Origin: requestOrigin } });
@@ -26,6 +26,8 @@ async function fillSignup(page: Page, data: ReturnType<typeof registration>) {
   await page.getByLabel('アカウント情報の保存に同意します').check();
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await page.getByLabel('ニックネーム', { exact: true }).fill(data.nickname);
+  await page.getByLabel('性別（必須）').selectOption(data.gender);
+  await page.getByLabel('年齢（必須・本人のみ）').fill(String(data.age));
   await page.getByRole('button', { name: 'アバター 2', exact: true }).click();
   await page.locator('.auth-topics-interests').getByRole('button', { name: '写真', exact: true }).click();
   await page.locator('#interests').fill(data.interests.join('、'));
@@ -69,7 +71,7 @@ test('UnityにはCookie本人の表示用プロフィールだけを返し、ゲ
   const response = await request.get(`/api/unity/session?userId=${randomUUID()}`);
   expect(response.headers()['cache-control']).toBe('no-store');
   expect(await response.json()).toEqual({ authenticated: true, profile: {
-    userId: user.id, nickname: data.nickname, avatarId: data.avatar,
+    userId: user.id, nickname: data.nickname, avatarId: data.avatar, gender:data.gender, ageBadge:"ミドル",
     teaches: data.teaches, wantsToLearn: data.wantsToLearn,
   } });
   expect((await post(request, '/api/auth/sign-out', {})).ok()).toBe(true);

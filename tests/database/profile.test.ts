@@ -8,7 +8,7 @@ const url=new URL(process.env.DATABASE_URL||'');
 assert.ok(['localhost','127.0.0.1','[::1]'].includes(url.hostname)&&url.pathname.endsWith('_test'));
 const db=createDatabase(url.href);const ids:string[]=[];
 after(async()=>{try{await db.user.deleteMany({where:{id:{in:ids}}});}finally{await db.$disconnect();}});
-async function user(){const result=await db.user.create({data:{email:`profile-${randomUUID()}@example.invalid`,name:'変更前',profile:{create:{nickname:'変更前',avatarId:'cat',bio:'保持する紹介',age:30}},preferences:{create:{interests:['写真'],useAgeForAi:true}}}});ids.push(result.id);return result;}
+async function user(){const result=await db.user.create({data:{email:`profile-${randomUUID()}@example.invalid`,name:'変更前',profile:{create:{nickname:'変更前',avatarId:'cat',bio:'保持する紹介',age:30,gender:'male'}},preferences:{create:{interests:['写真'],useAgeForAi:true}}}});ids.push(result.id);return result;}
 test('profile and preferences persist together, preserving uneditable fields and other accounts',async()=>{
  const first=await user(),other=await user();const before=await readAccountProfile(db,first.id);const {ownerId,...input}=before;assert.equal(ownerId,first.id);
  const saved=await saveAccountProfile(db,first.id,{...input,nickname:'新しい名前',teaches:['写真'],wantsToLearn:['花'],strengths:'聞くこと',goal:'毎日撮影'});
@@ -36,5 +36,14 @@ test('stale edits and suspended accounts cannot save',async()=>{
 test('accounts without profile records can create their initial profile atomically',async()=>{
  const first=await db.user.create({data:{name:'未設定'}});ids.push(first.id);
  const {ownerId,...input}=await readAccountProfile(db,first.id);assert.equal(ownerId,first.id);assert.equal(input.profileVersion,0);
- const result=await saveAccountProfile(db,first.id,{...input,nickname:'初回保存'});assert.equal(result.profileVersion,1);assert.equal(result.preferencesVersion,1);
+ const result=await saveAccountProfile(db,first.id,{...input,gender:'female',age:18,nickname:'初回保存'});assert.equal(result.profileVersion,1);assert.equal(result.preferencesVersion,1);
+});
+
+test('gender and adult age persist while AI consent remains independent',async()=>{
+ const first=await user();const input=await readAccountProfile(db,first.id);
+ const saved=await saveAccountProfile(db,first.id,{...input,gender:'female',age:60});
+ assert.equal(saved.gender,'female');assert.equal(saved.age,60);
+ const row=await db.userProfile.findUniqueOrThrow({where:{userId:first.id}});
+ assert.ok(row.ageUpdatedAt);assert.equal(row.gender,'female');
+ assert.equal((await db.learningPreferences.findUniqueOrThrow({where:{userId:first.id}})).useAgeForAi,true);
 });

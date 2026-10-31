@@ -8,6 +8,42 @@ namespace FutureCity.Tests
 {
     public class WardrobeTests
     {
+        [TestCase(17, "未設定")]
+        [TestCase(18, "ユース")]
+        [TestCase(29, "ユース")]
+        [TestCase(30, "ミドル")]
+        [TestCase(49, "ミドル")]
+        [TestCase(50, "ミドルシニア")]
+        [TestCase(59, "ミドルシニア")]
+        [TestCase(60, "シニア")]
+        public void AgeBadgeUsesAdultBoundaries(int age, string expected)
+            => Assert.That(MiraiWorld.AgeBadgeLabel(age), Is.EqualTo(expected));
+
+        [Test]
+        public void MissingFemaleModelIsExplicitAndAnimalSuitRemainsShared()
+        {
+            var person = ImportedAvatar.TryBuild(null, "GenderTest", 1f, 30, false);
+            try
+            {
+                var avatar = person.GetComponent<ImportedAvatar>();
+                avatar.SetGender("female");
+                Assert.That(avatar.MissingGenderModel, Is.True, "Update this fixture when female assets are installed.");
+                Assert.That(person.transform.Find("Visual").gameObject.activeSelf, Is.False);
+                var choice = avatar.Appearance;
+                choice.costume = 1;
+                avatar.ApplyAppearance(choice);
+                Assert.That(person.transform.Find("Visual").gameObject.activeSelf, Is.True);
+                choice.costume = 0;
+                avatar.ApplyAppearance(choice);
+                Assert.That(person.transform.Find("Visual").gameObject.activeSelf, Is.False);
+                avatar.SetGender("male");
+                Assert.That(avatar.MissingGenderModel, Is.False);
+                Assert.That(person.transform.Find("Visual").gameObject.activeSelf, Is.True);
+                Assert.That(person.transform.childCount, Is.EqualTo(1));
+            }
+            finally { Object.DestroyImmediate(person); }
+        }
+
         [Test]
         public void AllFreePackPartsAreSelectableIncludingFacesAccessoriesGlovesAndCostumes()
         {
