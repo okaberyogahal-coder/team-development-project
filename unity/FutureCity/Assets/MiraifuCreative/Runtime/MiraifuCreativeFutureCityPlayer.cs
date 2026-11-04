@@ -1,6 +1,7 @@
+using System;
 using System.Collections;
+using System.Reflection;
 using UnityEngine;
-using FutureCity;
 
 /// <summary>
 /// Swaps only the third-person player appearance; FutureCity controls the world,
@@ -16,7 +17,8 @@ public sealed class MiraifuCreativeFutureCityPlayer : MonoBehaviour
     [Tooltip("Offset the character feet from the generated player's ground.")]
     public float feetOffsetY = 0f;
 
-    private PlayerWalker walker;
+    private Component walker;
+    private FieldInfo bodyField;
     private Animator avatarAnimator;
     private Vector3 lastPlayerPosition;
     private bool wasMoving;
@@ -29,16 +31,34 @@ public sealed class MiraifuCreativeFutureCityPlayer : MonoBehaviour
         // FutureCityBootstrap creates Player and the original avatar in Awake().
         yield return null;
 #if UNITY_2023_1_OR_NEWER
-        walker = FindFirstObjectByType<PlayerWalker>();
+        var comps = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None);
 #else
-        walker = FindObjectOfType<PlayerWalker>();
+        var comps = FindObjectsOfType<MonoBehaviour>();
 #endif
+        foreach (var c in comps)
+        {
+            if (c != null && c.GetType().Name == "PlayerWalker")
+            {
+                walker = c;
+                bodyField = c.GetType().GetField("body", BindingFlags.Public | BindingFlags.Instance);
+                break;
+            }
+        }
+
         if (walker == null || creativeAvatarPrefab == null)
         {
             Debug.LogError("Miraifu: no FutureCity PlayerWalker or Creative Avatar prefab; keep existing player unchanged.");
             yield break;
         }
-        var original = walker.body;
+
+        var currentBody = bodyField?.GetValue(walker) as Transform;
+        if (currentBody != null && currentBody.GetComponentInChildren<MiraifuCreativeAvatar>(true) != null)
+        {
+            Debug.Log("Miraifu: Creative Avatar is already integrated into PlayerWalker.");
+            yield break;
+        }
+
+        var original = currentBody;
         var pivot = new GameObject("MiraifuCreativeWalkingBody").transform;
         pivot.SetParent(walker.transform, false);
         pivot.localPosition = Vector3.zero;
@@ -49,7 +69,7 @@ public sealed class MiraifuCreativeFutureCityPlayer : MonoBehaviour
         appearance.transform.localPosition = new Vector3(0f, feetOffsetY, 0f);
         appearance.transform.localRotation = Quaternion.Euler(0f, visualYawOffset, 0f);
         appearance.transform.localScale = Vector3.one;
-        walker.body = pivot;
+        bodyField?.SetValue(walker, pivot);
 
         // Only remove the default primitive avatar *after* the new avatar exists.
         if (original != null && original != pivot)

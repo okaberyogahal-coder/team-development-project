@@ -60,6 +60,9 @@ namespace FutureCity
         public Material[] bakedMaterials;
         public Material bakedSkybox;
 
+        [Header("プレイヤーアバター（着せ替え3DアバターPrefab）")]
+        public GameObject creativeAvatarPrefab;
+
         public MaterialLibrary Library { get; private set; }
         public CityGenerator City { get; private set; }
         public PhotoBackdrop Backdrop { get; private set; }
@@ -202,10 +205,30 @@ namespace FutureCity
             player.runSpeed = runSpeed;
             player.lookSensitivity = mouseSensitivity;
 
-            // 三人称で表示する標準アバター（服の色は入場画面で選べる）
-            var avatar = MiraiAvatar.Build(Library, playerGo.transform, "PlayerAvatar", 1f,
-                                           new Color(0.98f, 0.82f, 0.6f), Mat.SignOrange, false, 78);   // はるこさん（78歳）
-            player.body = avatar.transform;
+            // プレイヤーアバター（着せ替え3DアバターPrefab優先、未設定時は標準アバター）
+            var avatarPrefab = creativeAvatarPrefab;
+            if (avatarPrefab == null)
+            {
+#if UNITY_EDITOR
+                avatarPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/MiraifuCreativeGenerated/MiraifuCreativeAvatar.prefab");
+#endif
+            }
+
+            if (avatarPrefab != null)
+            {
+                var avatarInstance = Instantiate(avatarPrefab, playerGo.transform, false);
+                avatarInstance.name = "MiraifuCreativeAvatar";
+                avatarInstance.transform.localPosition = Vector3.zero;
+                avatarInstance.transform.localRotation = Quaternion.identity;
+                player.body = avatarInstance.transform;
+            }
+            else
+            {
+                // 三人称で表示する標準アバター（フォールバック）
+                var avatar = MiraiAvatar.Build(Library, playerGo.transform, "PlayerAvatar", 1f,
+                                               new Color(0.98f, 0.82f, 0.6f), Mat.SignOrange, false, 78);   // はるこさん（78歳）
+                player.body = avatar.transform;
+            }
             player.Place(campus.Spawn, campus.SpawnYaw);
             cam.transform.SetPositionAndRotation(campus.Spawn + new Vector3(0f, 3f, -5f), Quaternion.Euler(15f, campus.SpawnYaw, 0f));
 

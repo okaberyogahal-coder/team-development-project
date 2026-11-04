@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Runtime.InteropServices;
 
 // This file is independent of the asset publisher's Editor-only customization tool.
 // The editor utility bakes Mesh references into this component, so the references
@@ -35,6 +36,11 @@ public class MiraifuCreativeAvatar : MonoBehaviour
     public Material clothingMaterial;
     public AvatarChoice current = new AvatarChoice();
 
+    public bool HasUserChoice { get; private set; }
+#if UNITY_WEBGL && !UNITY_EDITOR
+    [DllImport("__Internal")] private static extern void MiraifuAvatarReady();
+#endif
+
     private void Awake()
     {
         // JS SendMessage targets this exact GameObject name.
@@ -42,6 +48,14 @@ public class MiraifuCreativeAvatar : MonoBehaviour
     }
 
     private void Start()
+    {
+        ApplyInitialChoice();
+#if UNITY_WEBGL && !UNITY_EDITOR
+        MiraifuAvatarReady();
+#endif
+    }
+
+    private void ApplyInitialChoice()
     {
         string url = Application.absoluteURL;
         if (!string.IsNullOrEmpty(url))
@@ -75,6 +89,7 @@ public class MiraifuCreativeAvatar : MonoBehaviour
         {
             var incoming = JsonUtility.FromJson<AvatarChoice>(json);
             if (incoming == null) return;
+            HasUserChoice = true;
             current = incoming;
             ApplyCurrent();
         }

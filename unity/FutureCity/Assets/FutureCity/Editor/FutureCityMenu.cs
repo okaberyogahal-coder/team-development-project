@@ -54,6 +54,8 @@ namespace FutureCity.EditorTools
                 var boot = go.AddComponent<FutureCityBootstrap>();
                 boot.bakedMaterials = baked;
                 boot.bakedSkybox = sky;
+                var avatarPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/MiraifuCreativeGenerated/MiraifuCreativeAvatar.prefab");
+                if (avatarPrefab != null) boot.creativeAvatarPrefab = avatarPrefab;
 
                 RenderSettings.skybox = sky;
                 RenderSettings.sun = sun;
@@ -164,6 +166,8 @@ namespace FutureCity.EditorTools
             var boot = go.AddComponent<FutureCityBootstrap>();
             boot.bakedMaterials = baked;
             boot.bakedSkybox = sky;
+            var avatarPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/MiraifuCreativeGenerated/MiraifuCreativeAvatar.prefab");
+            if (avatarPrefab != null) boot.creativeAvatarPrefab = avatarPrefab;
             RenderSettings.skybox = sky;
             Undo.RegisterCreatedObjectUndo(go, "Add Future City");
             Selection.activeGameObject = go;

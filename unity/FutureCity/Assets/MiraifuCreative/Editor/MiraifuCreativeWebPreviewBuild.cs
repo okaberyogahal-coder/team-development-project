@@ -41,14 +41,13 @@ public static class MiraifuCreativeWebPreviewBuild
         avatar.transform.rotation = Quaternion.Euler(0,180,0);
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
-        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-        string website = Path.Combine(projectRoot,"Miraifu_Website");
-        if (!Directory.Exists(website))
-        {
-            EditorUtility.DisplayDialog("Miraifu", "miraihu/Miraifu_Website フォルダが見つからないよ。先にWebサイトのファイルを入れてね。", "OK");
-            return;
-        }
-        string output = Path.Combine(website,"unity-preview");
+
+        PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Disabled;
+        PlayerSettings.WebGL.template = "PROJECT:Melife";
+        PlayerSettings.runInBackground = true;
+
+        string output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../public/unity/AvatarPreview"));
+        Directory.CreateDirectory(output);
         Debug.Log("Miraifu: Creative 3D Preview WebGL build starting: " + output);
         BuildPlayerOptions options = new BuildPlayerOptions
         {
@@ -62,8 +61,8 @@ public static class MiraifuCreativeWebPreviewBuild
             BuildReport report = BuildPipeline.BuildPlayer(options);
             if (report != null && report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
             {
-                Debug.Log("Miraifu: Unity preview WebGL built at " + output + ". NEXT: Run 'python3 patch_unity_preview.py' inside Miraifu_Website, then refresh Chrome.");
-                EditorUtility.DisplayDialog("3Dプレビューのビルド完了", "次はMacのターミナルで miraihu/Miraifu_Website に移動し、python3 patch_unity_preview.py を実行してね。既存のFutureCityのunity/は触っていないよ。", "OK");
+                Debug.Log("Miraifu: Unity preview WebGL built successfully at " + output);
+                EditorUtility.DisplayDialog("3Dプレビューのビルド完了", "3DアバタープレビューのWebGLビルドが完了しました！\nブラウザで http://localhost:3000/avatar を開いて確認できます。", "OK");
             }
             else
             {

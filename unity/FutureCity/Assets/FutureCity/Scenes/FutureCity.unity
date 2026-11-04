@@ -415,6 +415,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: c4947b95dbed44dacbce8088e3610b51, type: 2}
   - {fileID: 2100000, guid: 5eb6e497f3e5e4e619e7b625ac0f720b, type: 2}
   bakedSkybox: {fileID: 2100000, guid: 568d43797485c4552a5ef1a7e731b48f, type: 2}
+  creativeAvatarPrefab: {fileID: 4798818551223296156, guid: 8bbec7902c1f54b5595fb39809baabc8, type: 3}
 --- !u!4 &1658423186
 Transform:
   m_ObjectHideFlags: 0

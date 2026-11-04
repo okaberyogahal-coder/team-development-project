@@ -211,7 +211,26 @@ namespace FutureCity
                 ? WebSessionBridge.AvatarColor(webSession.profile.avatarId)
                 : webSession != null ? WebSessionBridge.AvatarColor("sprout") : AvatarColors[avatarChoice];
             if (player == null || player.body == null) return;
-            PersonFactory.SetSuitColor(player.body, me.color);   // 胴と両腕の服の色
+
+            var creative = player.body.GetComponentInChildren<global::MiraifuCreativeAvatar>(true);
+            if (creative != null)
+            {
+                // Custom clothing is independent of the account's icon avatar.
+                // Session refreshes must never replace a user-selected outfit.
+                if (creative.HasUserChoice)
+                {
+                    if (ColorUtility.TryParseHtmlString(creative.current.topColor, out var selected))
+                        me.color = selected;
+                    return;
+                }
+                if (creative.current == null) creative.current = new global::MiraifuCreativeAvatar.AvatarChoice();
+                creative.current.topColor = "#" + ColorUtility.ToHtmlStringRGB(me.color);
+                creative.ApplyCurrent();
+            }
+            else
+            {
+                PersonFactory.SetSuitColor(player.body, me.color);   // 胴と両腕の服の色
+            }
         }
 
         void SetPanel(Panel p)
@@ -960,7 +979,11 @@ namespace FutureCity
             GUI.Label(new Rect(x, y, iw - 380f, 100f),
                 "マウスを動かすだけで見回せます（ボタンは不要）。W A S D で歩き、1〜6 キーで下のメニューを開けます。\n" +
                 "※ 教材・予約・AI・通話は体験用のデモです。操作した内容は保存されません。", sSmall);
-            if (Btn(new Rect(r.xMax - 46f - 340f, r.yMax - 34f - 84f, 340f, 84f), "<size=28>3D広場へ参加する</size>", new Color(0.18f, 0.6f, 0.36f)))
+            float btnY = r.yMax - 34f - 84f;
+            bool authed = webSession != null && webSession.authenticated;
+            if (Btn(new Rect(r.xMax - 46f - 340f - 240f - 16f, btnY, 240f, 84f), authed ? "<size=22>マイページ</size>" : "<size=22>ログインする</size>", new Color(0.25f, 0.45f, 0.65f)))
+                WebSessionBridge.OpenAccount(authed);
+            if (Btn(new Rect(r.xMax - 46f - 340f, btnY, 340f, 84f), "<size=28>3D広場へ参加する</size>", new Color(0.18f, 0.6f, 0.36f)))
                 StartPlaza();
         }
 
@@ -1402,6 +1425,8 @@ namespace FutureCity
 
             GUI.Label(new Rect(x, y + 8f, 200f, 40f), "<b>表示名</b>", sBody);
             me.name = GUI.TextField(new Rect(x + 200f, y, 400f, 52f), me.name, 20, sInput);
+            if (Btn(new Rect(x + iw - 240f, y, 240f, 52f), "ログインする", acc))
+                WebSessionBridge.OpenAccount(false);
             y += 70f;
             GUI.Label(new Rect(x, y + 8f, 200f, 40f), "<b>年齢</b>", sBody);
             if (Btn(new Rect(x + 200f, y, 64f, 56f), "－", null, me.age > 0)) me.age--;
