@@ -1,0 +1,542 @@
+{
+  "unityPy": "1.25.4",
+  "source": "public/unity/AvatarPreview/Build/AvatarPreview.data",
+  "sourceSha256": "c47679bcb676a1fd8dda5f2c95794f8a4dda99930606cf17bf279aecbecea720",
+  "extractedSha256": "dfcdcbee948a6783b3d41c1e315dacbf21f327a060b9393b64687c680aa97e91",
+  "meshes": [
+    {
+      "name": "Gloves",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Full_body",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Hairstyle_Male_001",
+      "vertices": 1056,
+      "submeshes": 1,
+      "indices": 4407
+    },
+    {
+      "name": "Male_emotion_angry_003",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "Male_emotion_usual_001",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "Pacifier_001",
+      "vertices": 478,
+      "submeshes": 1,
+      "indices": 1272
+    },
+    {
+      "name": "Shoe_Slippers_005",
+      "vertices": 1134,
+      "submeshes": 1,
+      "indices": 2940
+    },
+    {
+      "name": "Pants_010",
+      "vertices": 1443,
+      "submeshes": 1,
+      "indices": 4056
+    },
+    {
+      "name": "Male_emotion_happy_002",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "Outwear_043",
+      "vertices": 1111,
+      "submeshes": 1,
+      "indices": 5262
+    },
+    {
+      "name": "Mustache_003",
+      "vertices": 154,
+      "submeshes": 1,
+      "indices": 912
+    },
+    {
+      "name": "Shoe_Slippers_002",
+      "vertices": 416,
+      "submeshes": 1,
+      "indices": 1836
+    },
+    {
+      "name": "Pants_009",
+      "vertices": 972,
+      "submeshes": 1,
+      "indices": 2628
+    },
+    {
+      "name": "Body_011",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "Outwear_004",
+      "vertices": 1125,
+      "submeshes": 1,
+      "indices": 2880
+    },
+    {
+      "name": "Hairstyle_Male_005",
+      "vertices": 510,
+      "submeshes": 1,
+      "indices": 2622
+    },
+    {
+      "name": "Headphones_002",
+      "vertices": 156,
+      "submeshes": 1,
+      "indices": 768
+    },
+    {
+      "name": "Mustache_011",
+      "vertices": 252,
+      "submeshes": 1,
+      "indices": 1344
+    },
+    {
+      "name": "Shoe_Sneakers_009",
+      "vertices": 2654,
+      "submeshes": 1,
+      "indices": 11556
+    },
+    {
+      "name": "Mustache",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Glasses_004",
+      "vertices": 986,
+      "submeshes": 1,
+      "indices": 5088
+    },
+    {
+      "name": "Glasses_006",
+      "vertices": 1377,
+      "submeshes": 2,
+      "indices": 3744
+    },
+    {
+      "name": "Accessories",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Hat",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Clown_nose_001",
+      "vertices": 98,
+      "submeshes": 1,
+      "indices": 576
+    },
+    {
+      "name": "T_Shirt",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Glasses",
+      "vertices": 4,
+      "submeshes": 1,
+      "indices": 6
+    },
+    {
+      "name": "Outwear_050",
+      "vertices": 770,
+      "submeshes": 1,
+      "indices": 4458
+    },
+    {
+      "name": "elderly-man_body_0",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "elderly-man_face_0",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "elderly-man_face_1",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "elderly-man_face_2",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "elderly-man_hair_0",
+      "vertices": 1056,
+      "submeshes": 1,
+      "indices": 4407
+    },
+    {
+      "name": "elderly-man_hair_1",
+      "vertices": 510,
+      "submeshes": 1,
+      "indices": 2622
+    },
+    {
+      "name": "elderly-man_hair_2",
+      "vertices": 1594,
+      "submeshes": 1,
+      "indices": 7446
+    },
+    {
+      "name": "elderly-woman_body_0",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "elderly-woman_face_0",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "elderly-woman_face_1",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "elderly-woman_face_2",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "elderly-woman_hair_0",
+      "vertices": 1648,
+      "submeshes": 1,
+      "indices": 4407
+    },
+    {
+      "name": "elderly-woman_hair_1",
+      "vertices": 1102,
+      "submeshes": 1,
+      "indices": 2622
+    },
+    {
+      "name": "elderly-woman_hair_2",
+      "vertices": 2186,
+      "submeshes": 1,
+      "indices": 7446
+    },
+    {
+      "name": "middle-aged-man_body_0",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "middle-aged-man_face_0",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "middle-aged-man_face_1",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "middle-aged-man_face_2",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "middle-aged-man_hair_0",
+      "vertices": 1056,
+      "submeshes": 1,
+      "indices": 4407
+    },
+    {
+      "name": "middle-aged-man_hair_1",
+      "vertices": 510,
+      "submeshes": 1,
+      "indices": 2622
+    },
+    {
+      "name": "middle-aged-man_hair_2",
+      "vertices": 1594,
+      "submeshes": 1,
+      "indices": 7446
+    },
+    {
+      "name": "middle-aged-woman_body_0",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "middle-aged-woman_face_0",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "middle-aged-woman_face_1",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "middle-aged-woman_face_2",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "middle-aged-woman_hair_0",
+      "vertices": 1648,
+      "submeshes": 1,
+      "indices": 7947
+    },
+    {
+      "name": "middle-aged-woman_hair_1",
+      "vertices": 1102,
+      "submeshes": 1,
+      "indices": 6162
+    },
+    {
+      "name": "middle-aged-woman_hair_2",
+      "vertices": 2186,
+      "submeshes": 1,
+      "indices": 10986
+    },
+    {
+      "name": "original_accessory_0",
+      "vertices": 98,
+      "submeshes": 1,
+      "indices": 576
+    },
+    {
+      "name": "original_accessory_1",
+      "vertices": 156,
+      "submeshes": 1,
+      "indices": 768
+    },
+    {
+      "name": "original_accessory_2",
+      "vertices": 154,
+      "submeshes": 1,
+      "indices": 912
+    },
+    {
+      "name": "original_accessory_3",
+      "vertices": 252,
+      "submeshes": 1,
+      "indices": 1344
+    },
+    {
+      "name": "original_accessory_4",
+      "vertices": 478,
+      "submeshes": 1,
+      "indices": 1272
+    },
+    {
+      "name": "original_body_0",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "original_costume_clown_0",
+      "vertices": 2724,
+      "submeshes": 1,
+      "indices": 7398
+    },
+    {
+      "name": "original_costume_clown_1",
+      "vertices": 1108,
+      "submeshes": 1,
+      "indices": 4092
+    },
+    {
+      "name": "original_costume_rabbit_0",
+      "vertices": 2328,
+      "submeshes": 1,
+      "indices": 7068
+    },
+    {
+      "name": "original_face_0",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "original_face_1",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "original_face_2",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "original_glasses_0",
+      "vertices": 986,
+      "submeshes": 1,
+      "indices": 5088
+    },
+    {
+      "name": "original_glasses_1",
+      "vertices": 1377,
+      "submeshes": 2,
+      "indices": 3744
+    },
+    {
+      "name": "original_hair_0",
+      "vertices": 1056,
+      "submeshes": 1,
+      "indices": 4407
+    },
+    {
+      "name": "original_hair_1",
+      "vertices": 510,
+      "submeshes": 1,
+      "indices": 2622
+    },
+    {
+      "name": "original_hair_2",
+      "vertices": 1594,
+      "submeshes": 1,
+      "indices": 7446
+    },
+    {
+      "name": "original_outerwear_0",
+      "vertices": 1125,
+      "submeshes": 1,
+      "indices": 2880
+    },
+    {
+      "name": "original_outerwear_1",
+      "vertices": 1111,
+      "submeshes": 1,
+      "indices": 5262
+    },
+    {
+      "name": "original_outerwear_2",
+      "vertices": 770,
+      "submeshes": 1,
+      "indices": 4458
+    },
+    {
+      "name": "original_pants_0",
+      "vertices": 972,
+      "submeshes": 1,
+      "indices": 2628
+    },
+    {
+      "name": "original_pants_1",
+      "vertices": 1443,
+      "submeshes": 1,
+      "indices": 4056
+    },
+    {
+      "name": "original_pants_2",
+      "vertices": 341,
+      "submeshes": 1,
+      "indices": 912
+    },
+    {
+      "name": "original_shoes_0",
+      "vertices": 416,
+      "submeshes": 1,
+      "indices": 1836
+    },
+    {
+      "name": "original_shoes_1",
+      "vertices": 1134,
+      "submeshes": 1,
+      "indices": 2940
+    },
+    {
+      "name": "original_shoes_2",
+      "vertices": 2654,
+      "submeshes": 1,
+      "indices": 11556
+    },
+    {
+      "name": "young-woman_body_0",
+      "vertices": 2109,
+      "submeshes": 1,
+      "indices": 9654
+    },
+    {
+      "name": "young-woman_face_0",
+      "vertices": 320,
+      "submeshes": 1,
+      "indices": 948
+    },
+    {
+      "name": "young-woman_face_1",
+      "vertices": 375,
+      "submeshes": 1,
+      "indices": 1068
+    },
+    {
+      "name": "young-woman_face_2",
+      "vertices": 354,
+      "submeshes": 1,
+      "indices": 1116
+    },
+    {
+      "name": "young-woman_hair_0",
+      "vertices": 1648,
+      "submeshes": 1,
+      "indices": 7947
+    },
+    {
+      "name": "young-woman_hair_1",
+      "vertices": 1102,
+      "submeshes": 1,
+      "indices": 6162
+    },
+    {
+      "name": "young-woman_hair_2",
+      "vertices": 2186,
+      "submeshes": 1,
+      "indices": 10986
+    }
+  ]
+}

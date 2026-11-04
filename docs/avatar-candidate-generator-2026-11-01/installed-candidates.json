@@ -1,0 +1,51 @@
+[
+  {
+    "id": "young-woman",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-woman/20261101-124140-146-23d93327/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-woman/20261101-124140-146-23d93327/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-woman/20261101-124140-146-23d93327/Comparison.unity",
+    "files": 191
+  },
+  {
+    "id": "young-man",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-man/20261101-124148-647-34730be1/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-man/20261101-124148-647-34730be1/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-man/20261101-124148-647-34730be1/Comparison.unity",
+    "files": 191
+  },
+  {
+    "id": "middle-aged-man",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/middle-aged-man/20261101-124156-809-e8da578f/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/middle-aged-man/20261101-124156-809-e8da578f/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/middle-aged-man/20261101-124156-809-e8da578f/Comparison.unity",
+    "files": 191
+  },
+  {
+    "id": "middle-aged-woman",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/middle-aged-woman/20261101-124205-018-c24da1e7/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/middle-aged-woman/20261101-124205-018-c24da1e7/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/middle-aged-woman/20261101-124205-018-c24da1e7/Comparison.unity",
+    "files": 191
+  },
+  {
+    "id": "elderly-man",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/elderly-man/20261101-124213-278-9203cc81/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/elderly-man/20261101-124213-278-9203cc81/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/elderly-man/20261101-124213-278-9203cc81/Comparison.unity",
+    "files": 191
+  },
+  {
+    "id": "elderly-woman",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/elderly-woman/20261101-124221-409-b40d4ffb/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/elderly-woman/20261101-124221-409-b40d4ffb/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/elderly-woman/20261101-124221-409-b40d4ffb/Comparison.unity",
+    "files": 191
+  },
+  {
+    "id": "young-woman",
+    "candidate": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-woman/20261101-124229-656-c366ae31/Candidate.asset",
+    "prefab": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-woman/20261101-124229-656-c366ae31/Avatar.prefab",
+    "scene": "unity/FutureCity/Assets/MiraifuAvatarDraftCandidates/young-woman/20261101-124229-656-c366ae31/Comparison.unity",
+    "files": 191
+  }
+]

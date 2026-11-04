@@ -1,4 +1,7 @@
 mergeInto(LibraryManager.library, {
+  MiraifuAvatarCatalog: function (json) {
+    if (typeof window.miraifuAvatarCatalog === 'function') window.miraifuAvatarCatalog(UTF8ToString(json));
+  },
   MiraifuAvatarReady: function () {
     if (typeof window.miraifuAvatarReady === 'function') window.miraifuAvatarReady();
   },

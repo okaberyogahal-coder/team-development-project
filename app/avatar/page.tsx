@@ -1,16 +1,20 @@
 import type { Metadata } from 'next';
+import { getAvatarDevelopmentAssets } from '../../server/avatar-development-assets';
 import Link from 'next/link';
 import { Logo } from '../components/Logo';
 import { getCurrentUser } from '../../server/auth/server';
 import { AvatarCustomizer } from './AvatarCustomizer';
 import './avatar.css';
+import { getRegisteredAvatarGender, resolveAvatarGender } from '../../shared/avatar-candidates';
 
 export const metadata: Metadata = {
   title: 'アバター作成・編集 | ミライフ',
   description: '自分らしい3Dアバターに着せ替えて、未来都市ミライフへ参加しましょう。',
 };
 
-export default async function AvatarPage() {
+export default async function AvatarPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const query = await searchParams;
+  const genderState = resolveAvatarGender(getRegisteredAvatarGender(), query.avatarGenderFixture, process.env.NODE_ENV === 'development');
   const user = await getCurrentUser();
 
   return (
@@ -36,7 +40,7 @@ export default async function AvatarPage() {
         </div>
       </header>
 
-      <AvatarCustomizer />
+      <AvatarCustomizer genderState={genderState} assets={getAvatarDevelopmentAssets()} />
     </main>
   );
 }

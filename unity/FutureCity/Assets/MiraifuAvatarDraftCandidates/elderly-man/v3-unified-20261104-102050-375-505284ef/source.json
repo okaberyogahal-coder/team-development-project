@@ -1,0 +1,329 @@
+{
+    "format": "MiraifuAvatarEditorDraft",
+    "version": "3",
+    "modelId": "elderly-man",
+    "sourceKind": "shipped",
+    "sourceHash": "16687f5d3730e0fbfdd6614983aa362dc7a9cc4c0a5153fcce1b23cc4bba23cb",
+    "referenceHash": "c47679bcb676a1fd8dda5f2c95794f8a4dda99930606cf17bf279aecbecea720",
+    "faceBaseExpressions": [
+        0,
+        1,
+        2
+    ],
+    "designStart": {
+        "format": "MiraifuEditorDesignStart",
+        "version": "1",
+        "unified": true,
+        "bodySourceHash": "20567deedb531436bc343b6a028c3cfbb5484f034c02ef2702f5a58d680e1e9c",
+        "faceSourceHash": "1ebfcd497fd74e677da8138447962ae8e803a318e574c60eca21bb7d2959dd26",
+        "expressionFiles": [
+            "docs/avatar-editor-tool-2026-11-01/drafts/young-woman-face-angry-01.json",
+            "docs/avatar-editor-tool-2026-11-01/drafts/young-woman-face-smile-01.json",
+            "docs/avatar-editor-tool-2026-11-01/drafts/young-woman-face-calm-01.json"
+        ],
+        "expressionShas": [
+            "c5514796105a3e99adf15000acc9b1ba1eee2215e81266dab92b660f8988688a",
+            "d4188cc5e80e6cbffc402e8e57ec8bc22af134a6e0addfe6ee3e08ce25a2e9d4",
+            "691b2c1f497bf91298351598f7cc2ba5d832ecf8b9d78b1df0f6a66cccd7ddd0"
+        ],
+        "hairMeshGuids": [
+            "1f6994392e9e14bb88d020b467b273b5",
+            "dc810efced13d436ab5ba457579e2151",
+            "09cd57ab7aa21404b8741a2b9cea4be0"
+        ],
+        "hairMeshShas": [
+            "61b538bf8715e1ee5858d4f0cb81181b53224d238c476527203b6b067ccde6a4",
+            "7a8c8516a8d71e78d8af12fae94253f718af5a430225b33e8874a1f7aeabfd3f",
+            "f9706e07932ab7f6e0b69bbdf4556da90159720946684814d390759f15d30584"
+        ],
+        "appearanceGuid": "fb109d3b794fc45aea27c07a8554e406",
+        "structure": {
+            "headWidth": 0.0,
+            "headHeight": 0.0,
+            "headDepth": 0.0,
+            "neckWidth": 0.0,
+            "shoulders": 0.0,
+            "torsoWidth": 0.0,
+            "torsoDepth": 0.0,
+            "hips": 0.0,
+            "arms": 0.0,
+            "legs": 0.0
+        },
+        "folds": {
+            "enabled": true,
+            "length": 34.900001525878909,
+            "width": 5.0,
+            "contrast": 35.0,
+            "x": 2.200000047683716,
+            "y": 1.399999976158142,
+            "angle": 12.0,
+            "curve": 0.699999988079071
+        },
+        "eyebrowColor": "#9CA3AF"
+    },
+    "face": {
+        "eyeWidth": -32.0,
+        "eyeHeight": -32.0,
+        "eyeSpacing": 4.0,
+        "eyeY": -1.0,
+        "eyeAngle": 0.0,
+        "eyeAngleL": 0.0,
+        "eyeAngleR": 0.0,
+        "browThickness": 0.0,
+        "browWidth": 22.0,
+        "browAngle": 7.0,
+        "browCurve": -2.0,
+        "noseSize": -1.0,
+        "noseWidth": -10.0,
+        "noseProjection": 13.0,
+        "mouthSize": 4.0,
+        "mouthThickness": 0.0,
+        "smile": 0.30000001192092898,
+        "cheek": 10.0,
+        "jaw": -2.700000047683716,
+        "outline": -1.0,
+        "mouthY": 2.0,
+        "philtrum": 1.100000023841858
+    },
+    "hair": [
+        {
+            "fringeLength": 0.0,
+            "fringeWidth": 0.0,
+            "fringeSweep": 0.0,
+            "fringeRound": 0.0,
+            "length": 0.0,
+            "sideVolume": 0.0,
+            "tipRound": 0.0,
+            "volume": 0.0,
+            "fringeThickness": 0.0,
+            "fringeClump": 0.0,
+            "fringeBlend": 0.0,
+            "sideDrop": 0.0,
+            "crownBulge": 0.0,
+            "backRound": 0.0,
+            "tipFlare": 0.0,
+            "tipCurl": 0.0,
+            "stepSmoothing": 0.0,
+            "sideBlend": 0.0,
+            "sideBackBlend": 0.0,
+            "backSmooth": 0.0,
+            "tipsSmooth": 0.0,
+            "surfaceSmooth": 0.0,
+            "smoothingRange": 0.0
+        },
+        {
+            "fringeLength": 0.0,
+            "fringeWidth": 0.0,
+            "fringeSweep": 0.0,
+            "fringeRound": 0.0,
+            "length": 0.0,
+            "sideVolume": 0.0,
+            "tipRound": 0.0,
+            "volume": 0.0,
+            "fringeThickness": 0.0,
+            "fringeClump": 0.0,
+            "fringeBlend": 0.0,
+            "sideDrop": 0.0,
+            "crownBulge": 0.0,
+            "backRound": 0.0,
+            "tipFlare": 0.0,
+            "tipCurl": 0.0,
+            "stepSmoothing": 0.0,
+            "sideBlend": 0.0,
+            "sideBackBlend": 0.0,
+            "backSmooth": 0.0,
+            "tipsSmooth": 0.0,
+            "surfaceSmooth": 0.0,
+            "smoothingRange": 0.0
+        },
+        {
+            "fringeLength": 0.0,
+            "fringeWidth": 0.0,
+            "fringeSweep": 0.0,
+            "fringeRound": 0.0,
+            "length": 0.0,
+            "sideVolume": 0.0,
+            "tipRound": 0.0,
+            "volume": 0.0,
+            "fringeThickness": 0.0,
+            "fringeClump": 0.0,
+            "fringeBlend": 0.0,
+            "sideDrop": 0.0,
+            "crownBulge": 0.0,
+            "backRound": 0.0,
+            "tipFlare": 0.0,
+            "tipCurl": 0.0,
+            "stepSmoothing": 0.0,
+            "sideBlend": 0.0,
+            "sideBackBlend": 0.0,
+            "backSmooth": 0.0,
+            "tipsSmooth": 0.0,
+            "surfaceSmooth": 0.0,
+            "smoothingRange": 0.0
+        }
+    ],
+    "expressions": [
+        {
+            "eyeWidth": 9.0,
+            "eyeHeight": -2.0,
+            "eyeSpacing": 0.0,
+            "eyeY": 0.0,
+            "eyeAngle": -30.0,
+            "eyeAngleL": 0.0,
+            "eyeAngleR": 0.0,
+            "browThickness": 85.0,
+            "browWidth": -14.59999942779541,
+            "browAngle": 0.0,
+            "browCurve": 9.5,
+            "noseSize": 0.0,
+            "noseWidth": 0.0,
+            "noseProjection": 0.0,
+            "mouthSize": 0.0,
+            "mouthThickness": 0.0,
+            "smile": 0.0,
+            "cheek": 0.0,
+            "jaw": 0.0,
+            "outline": 0.0,
+            "mouthY": 0.0,
+            "philtrum": 10.0
+        },
+        {
+            "eyeWidth": 0.0,
+            "eyeHeight": 0.0,
+            "eyeSpacing": 0.0,
+            "eyeY": 0.0,
+            "eyeAngle": -11.0,
+            "eyeAngleL": 0.0,
+            "eyeAngleR": 0.0,
+            "browThickness": 0.0,
+            "browWidth": 0.0,
+            "browAngle": -25.0,
+            "browCurve": 0.0,
+            "noseSize": 0.0,
+            "noseWidth": 0.0,
+            "noseProjection": 0.0,
+            "mouthSize": 0.0,
+            "mouthThickness": -15.0,
+            "smile": 0.0,
+            "cheek": 0.0,
+            "jaw": 0.0,
+            "outline": 0.0,
+            "mouthY": 0.0,
+            "philtrum": 0.0
+        },
+        {
+            "eyeWidth": 30.0,
+            "eyeHeight": -16.0,
+            "eyeSpacing": 0.0,
+            "eyeY": 0.0,
+            "eyeAngle": -28.0,
+            "eyeAngleL": 0.0,
+            "eyeAngleR": 0.0,
+            "browThickness": 38.0,
+            "browWidth": -16.100000381469728,
+            "browAngle": 0.0,
+            "browCurve": 1.4600000381469727,
+            "noseSize": 22.0,
+            "noseWidth": 0.0,
+            "noseProjection": 0.0,
+            "mouthSize": 0.0,
+            "mouthThickness": 0.0,
+            "smile": 0.0,
+            "cheek": 0.0,
+            "jaw": 0.0,
+            "outline": 0.0,
+            "mouthY": 0.0,
+            "philtrum": 9.199999809265137
+        }
+    ],
+    "wardrobe": {
+        "top": 0,
+        "pants": 0,
+        "shoes": 0,
+        "costume": -1,
+        "tops": [
+            {
+                "sleeveLength": 0.0,
+                "sleeveWidth": 0.0,
+                "torsoWidth": 0.0,
+                "hemLength": 0.0,
+                "shoulder": 0.0
+            },
+            {
+                "sleeveLength": 0.0,
+                "sleeveWidth": 0.0,
+                "torsoWidth": 0.0,
+                "hemLength": 0.0,
+                "shoulder": 0.0
+            },
+            {
+                "sleeveLength": 0.0,
+                "sleeveWidth": 0.0,
+                "torsoWidth": 0.0,
+                "hemLength": 0.0,
+                "shoulder": 0.0
+            }
+        ],
+        "trousers": [
+            {
+                "waist": 0.0,
+                "thigh": 0.0,
+                "hemWidth": 0.0,
+                "length": 0.0
+            },
+            {
+                "waist": 0.0,
+                "thigh": 0.0,
+                "hemWidth": 0.0,
+                "length": 0.0
+            },
+            {
+                "waist": 0.0,
+                "thigh": 0.0,
+                "hemWidth": 0.0,
+                "length": 0.0
+            }
+        ],
+        "footwear": [
+            {
+                "size": 0.0,
+                "width": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            {
+                "size": 0.0,
+                "width": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            },
+            {
+                "size": 0.0,
+                "width": 0.0,
+                "y": 0.0,
+                "z": 0.0
+            }
+        ],
+        "costumes": [
+            {
+                "size": 0.0,
+                "fit": 0.0,
+                "hatY": 0.0,
+                "hatZ": 0.0
+            },
+            {
+                "size": 0.0,
+                "fit": 0.0,
+                "hatY": 0.0,
+                "hatZ": 0.0
+            }
+        ]
+    },
+    "skinColor": "",
+    "hairColor": "",
+    "overrideHairColor": false,
+    "previewHair": 1,
+    "previewExpression": 0,
+    "expandedInitialized": true,
+    "garmentHash": "91eddb4ce9d87fdc68af3b7e39a6f0d3fca61df82b302d2dd3a38752b9650d63"
+}

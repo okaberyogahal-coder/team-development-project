@@ -8,6 +8,7 @@
   "scripts": {
     "auth:setup": "node scripts/auth-setup.mjs",
     "build:unity": "node scripts/build-unity.mjs",
+    "build:unity:v3": "node scripts/build-v3-unity.mjs",
     "dev": "next dev --webpack",
     "build": "prisma generate && next build --webpack",
     "postinstall": "prisma generate",

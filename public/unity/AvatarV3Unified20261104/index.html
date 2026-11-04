@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ミライフ v3 アバタープレビュー</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #edf5fa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    canvas { display: block; width: 100%; height: 100%; outline: none; }
+    #loading { position: absolute; inset: 0; display: grid; place-content: center; background: #edf5fa; color: #17364c; font-size: 13px; text-align: center; padding: 24px; line-height: 1.6; }
+    #loading[hidden] { display: none; }
+    .spinner { width: 32px; height: 32px; border: 3px solid #bfdbfe; border-top-color: #2563eb; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="0" aria-label="3Dアバター"></canvas>
+  <div id="loading" role="status">
+    <div class="spinner"></div>
+    <div id="loading-text">3Dアバターを読み込んでいます…</div>
+  </div>
+  <script src="bridge.js"></script>
+  <script>
+    (function() {
+      var loaderUrl = 'Build/AvatarV3Unified20261104.loader.js';
+      var textEl = document.getElementById('loading-text');
+      var canvas = document.getElementById('unity-canvas');
+      var isStarting = false;
+
+      function tryLoad() {
+        if (isStarting) return;
+        fetch(loaderUrl, { method: 'HEAD' })
+          .then(function(res) {
+            if (res.ok) {
+              isStarting = true;
+              textEl.textContent = '3Dアバターエンジンを起動しています…';
+              var script = document.createElement('script');
+              script.src = loaderUrl;
+              script.onload = function() {
+                if (typeof createUnityInstance !== 'function') {
+                  textEl.innerHTML = '<strong>起動エラー</strong><br>Unityローダーが見つかりませんでした。再読み込みしてください。';
+                  return;
+                }
+                document.body.dataset.unityState = 'loading';
+                createUnityInstance(canvas, {
+                  dataUrl: 'Build/AvatarV3Unified20261104.data',
+                  frameworkUrl: 'Build/AvatarV3Unified20261104.framework.js',
+                  codeUrl: 'Build/AvatarV3Unified20261104.wasm',
+                  streamingAssetsUrl: 'StreamingAssets',
+                  companyName: 'Miraifu',
+                  productName: 'Miraifu v3 Unified Development',
+                  productVersion: '20261104',
+                  devicePixelRatio: Math.min(window.devicePixelRatio || 1, 1.5)
+                }, function(progress) {
+                  textEl.textContent = '3Dアバターを読み込み中… (' + Math.round(progress * 100) + '%)';
+                }).then(function(instance) {
+                  window.unityInstance = instance;
+                  document.body.dataset.unityState = 'ready';
+                  document.getElementById('loading').hidden = true;
+                }).catch(function(error) {
+                  document.body.dataset.unityState = 'error';
+                  textEl.innerHTML = '<strong>3Dの起動に失敗しました。</strong><br>' + (error && error.message ? error.message : '再読み込みしてください。');
+                  console.error(error);
+                });
+              };
+              script.onerror = function() {
+                isStarting = false;
+                textEl.innerHTML = '<strong>スクリプト読み込みエラー</strong><br>ローダーの読み込みに失敗しました。';
+              };
+              document.body.appendChild(script);
+            } else {
+              textEl.innerHTML = '<strong>3Dプレビューを準備中…</strong><br><br>' +
+                'v3専用WebGLプレイヤーをビルドしています。<br>' +
+                '<small style="color:#64748b">Unityエディタのメニュー「<strong>Tools &gt; Miraifu &gt; ★ v3 WebGLプレイヤーのビルド</strong>」を実行してください。<br>' +
+                '（ビルドが完了すると自動的にこの画面でプレビューが起動します）</small>';
+              setTimeout(tryLoad, 3000);
+            }
+          })
+          .catch(function() {
+            textEl.innerHTML = '<strong>3Dプレビュー待機中…</strong><br><br>' +
+              '<small style="color:#64748b">Unityエディタのメニュー「<strong>Tools &gt; Miraifu &gt; ★ v3 WebGLプレイヤーのビルド</strong>」を実行してください。</small>';
+            setTimeout(tryLoad, 3000);
+          });
+      }
+
+      tryLoad();
+    })();
+  </script>
+</body>
+</html>

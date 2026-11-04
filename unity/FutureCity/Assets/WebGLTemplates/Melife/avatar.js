@@ -2,6 +2,13 @@
   'use strict';
   var latest = null;
   var ready = false;
+  var catalog = null;
+  function sendCatalog() {
+    if (catalog) window.parent.postMessage({ type: 'miraifu:avatar-catalog', catalog: catalog }, window.location.origin);
+  }
+  window.miraifuAvatarCatalog = function (json) {
+    try { catalog = JSON.parse(json); sendCatalog(); } catch (_) {}
+  };
 
   function accept(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return;
@@ -21,6 +28,7 @@
   window.addEventListener('message', function (event) {
     if (event.origin !== window.location.origin || event.source !== window.parent) return;
     if (event.data && event.data.type === 'miraifu:avatar') accept(event.data.choice);
+    if (event.data && event.data.type === 'miraifu:catalog-request') sendCatalog();
   });
   // C# announces that the actual avatar object has completed Start, which may
   // happen before createUnityInstance resolves or after the city creates it.

@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29a17ee6157a44cbb458570b6ab15cf0, type: 3}
+  m_Name: Appearance
+  m_EditorClassIdentifier: Assembly-CSharp::MiraifuAppearancePrototype.MiraifuAppearanceSet
+  modelId: elderly-man
+  baselineCandidateGuid: 24d02f803160840e49d8fa906a612039
+  baselineJsonSha: 472a41edb0691c7b22ee1c724014e5d466d525df0b26224d56c8074dabfaf649
+  recipeSha: b817eab27411a40c0d21495f02fcdd18df8719281b4fcd2669f941bc843dafc9
+  glasses:
+  - label: Glasses_004
+    mesh: {fileID: 4300000, guid: 3fcaa8241e73b479694323d1af14ff25, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Glasses_006
+    mesh: {fileID: 4300000, guid: b23f594f07ce44630993e516116b04db, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+    - {fileID: 2100000, guid: 4ba83d4bb5e700a4ead22c818c99b364, type: 2}
+  accessories:
+  - label: Clown_nose_001
+    mesh: {fileID: 4300000, guid: 8bf1dc54ce4e647dfb20e840a6b5aeff, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Headphones_002
+    mesh: {fileID: 4300000, guid: c86ee1f6912404535a5822cb847d57cf, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Mustache_003
+    mesh: {fileID: 4300000, guid: 2271b75ea998b4af0bfde9fa9904cb21, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Mustache_011
+    mesh: {fileID: 4300000, guid: a531b93eec1c04975864a06eb926db8f, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Pacifier_001
+    mesh: {fileID: 4300000, guid: f18df4d9837604aaca0ba866eb76ece7, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  hats:
+  - label: Hat_010
+    mesh: {fileID: 4300000, guid: 0f3f2137b75f2450681d9a769ee3fb92, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Hat_Single_008
+    mesh: {fileID: 4300000, guid: eac06937e0a6d41f6aa5d4a6b6b2ba27, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Hat_Single_013
+    mesh: {fileID: 4300000, guid: 52c425558483a443685ec35a99f8b592, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+    - {fileID: 2100000, guid: 4ba83d4bb5e700a4ead22c818c99b364, type: 2}
+  - label: Hat_Single_016
+    mesh: {fileID: 4300000, guid: b503db2f81d2e46b19a64324cb5480d0, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  defaults:
+    modelId: elderly-man
+    glasses: -1
+    accessory: -1
+    hat: -1
+    hideHairWithHat: 1
+    glassesFits:
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    accessoryFits:
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    hatFits:
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+  headBoneIndex: 9
