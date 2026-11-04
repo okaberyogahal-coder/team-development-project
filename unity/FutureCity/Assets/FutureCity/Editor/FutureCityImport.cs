@@ -36,11 +36,13 @@ namespace FutureCity.EditorTools
     {
         public const string TexturesKey = "/Resources/FutureCityTextures/";
         public const string BackdropKey = "/Resources/FutureCityBackdrop/";
+        public const string AnimeKey = "/Resources/FutureCityAnime/";
 
         static string Norm(string p) => p.Replace('\\', '/');
         public static bool IsTexture(string p) => Norm(p).Contains(TexturesKey);
         public static bool IsBackdrop(string p) => Norm(p).Contains(BackdropKey);
-        public static bool IsOurs(string p) => IsTexture(p) || IsBackdrop(p);
+        public static bool IsAnime(string p) => Norm(p).Contains(AnimeKey);
+        public static bool IsOurs(string p) => IsTexture(p) || IsBackdrop(p) || IsAnime(p);
 
         static bool IsCutout(string name) =>
             name.StartsWith("Foliage_Albedo") || name.StartsWith("Flowers_Albedo") || name.StartsWith("Grass_Albedo");
@@ -75,6 +77,33 @@ namespace FutureCity.EditorTools
                 return ch;
             }
 
+            if (IsAnime(path))
+            {
+                // アニメ調：葉・花はアルファで切り抜き（遠くでも葉が痩せないミップマップ）、雲はデータ（リニア・圧縮なし）
+                bool clouds = name.StartsWith("MT_Clouds");
+                bool cut = name.StartsWith("MT_Leaves") || name.StartsWith("MT_Flowers");
+                Set(ref ch, ti.textureType, TextureImporterType.Default, v => ti.textureType = v);
+                Set(ref ch, ti.textureShape, TextureImporterShape.Texture2D, v => ti.textureShape = v);
+                Set(ref ch, ti.sRGBTexture, !clouds, v => ti.sRGBTexture = v);
+                Set(ref ch, ti.mipmapEnabled, true, v => ti.mipmapEnabled = v);
+                Set(ref ch, ti.anisoLevel, clouds ? 2 : 8, v => ti.anisoLevel = v);
+                Set(ref ch, ti.filterMode, FilterMode.Trilinear, v => ti.filterMode = v);
+                Set(ref ch, ti.npotScale, TextureImporterNPOTScale.None, v => ti.npotScale = v);
+                if (clouds)
+                {
+                    Set(ref ch, ti.wrapModeU, TextureWrapMode.Repeat, v => ti.wrapModeU = v);
+                    Set(ref ch, ti.wrapModeV, TextureWrapMode.Clamp, v => ti.wrapModeV = v);
+                }
+                else Set(ref ch, ti.wrapMode, cut ? TextureWrapMode.Clamp : TextureWrapMode.Repeat, v => ti.wrapMode = v);
+                Set(ref ch, ti.maxTextureSize, clouds ? 4096 : 2048, v => ti.maxTextureSize = v);
+                Set(ref ch, ti.textureCompression, clouds ? TextureImporterCompression.Uncompressed : TextureImporterCompression.CompressedHQ,
+                    v => ti.textureCompression = v);
+                Set(ref ch, ti.alphaIsTransparency, cut, v => ti.alphaIsTransparency = v);
+                Set(ref ch, ti.mipMapsPreserveCoverage, cut, v => ti.mipMapsPreserveCoverage = v);
+                if (cut) Set(ref ch, ti.alphaTestReferenceValue, 0.45f, v => ti.alphaTestReferenceValue = v);
+                if (!cut && !clouds) Set(ref ch, ti.alphaSource, TextureImporterAlphaSource.None, v => ti.alphaSource = v);
+                return ch;
+            }
             bool normal = name.EndsWith("_Normal");
             bool mask = name.EndsWith("_Mask");
             bool cutout = IsCutout(name);

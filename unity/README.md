@@ -1,3 +1,15 @@
+# 2026-11-04 新版の適用
+
+10月30日版の配布物（3分割ZIPを展開したFutureCity）を、既存のプロフィール編集・年齢バッジ・アバター着替えを含むコードへ統合した。新しいアニメ調の広場・家具・遠景・草木・シェーダーと、Fで切り替える戦闘モードを含む。
+
+- 更新作業は`feature/futurecity-anime-update`。元の作業ディレクトリは`.worktrees/profile-demographics-migration`。
+- 既存の`.meta`、認証・プロフィールのブリッジ、Webテンプレート、日本語フォント、アバター素材を保持する。通常の更新でAssets全体を削除しない。
+- シーンの手動編集を保つため、配布READMEのCreate Sceneによる全再生成は行わない。更新用の`Tools > Future City > Apply October 2026 Anime Update`で既存シーンのAnime StyleとCombat Modeを有効にする。
+- 元の配布説明は[FutureCity/README.md](./FutureCity/README.md)、変更点は[改修レポート](./FutureCity/docs/グラフィック改修レポート_2026-10-30.md)。生成スクリプトは`FutureCity/tools/`へ保存し、今回は実行していない。
+- 受け入れ記録は[新版の統合記録](../docs/unity-update-2026-11-04.md)。以下の古い受領・検証記録とは日付を分けて読む。
+
+---
+
 # ミライフ Unity 空間
 
 メンバーから受け取った `FutureCity_Unity_1of2.zip` と

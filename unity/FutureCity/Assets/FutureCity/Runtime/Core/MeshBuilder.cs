@@ -15,6 +15,35 @@ namespace FutureCity
         readonly List<Vector3> norms = new List<Vector3>(8192);
         readonly List<Vector2> uvs = new List<Vector2>(8192);
         readonly SortedDictionary<int, List<int>> subs = new SortedDictionary<int, List<int>>();
+        // 頂点カラー（RGB=色むら、A=環境遮蔽）と UV2（x=風の効き）。アニメ調のシェーダーが使う。
+        // 「今の値」を決めておくと、それ以降に足した頂点にその値が入る（必要になるまで配列は作らない）
+        List<Color32> cols;
+        List<Vector2> uv2s;
+        Color32 curColor = new Color32(255, 255, 255, 255);
+        Vector2 curUV2 = Vector2.zero;
+
+        /// <summary>これから足す頂点の色（RGB=色むら、A=環境遮蔽 255=遮蔽なし）</summary>
+        public Color32 VertexColor
+        {
+            get { return curColor; }
+            set { if (cols == null) cols = new List<Color32>(verts.Capacity); PadExtras(); curColor = value; }
+        }
+
+        /// <summary>これから足す頂点の UV2（x=風でゆれる量 0〜1）</summary>
+        public Vector2 VertexUV2
+        {
+            get { return curUV2; }
+            set { if (uv2s == null) uv2s = new List<Vector2>(verts.Capacity); PadExtras(); curUV2 = value; }
+        }
+
+        /// <summary>頂点カラーを必ず書き出す（MiraiToon は色がないメッシュでも白として扱えるように）</summary>
+        public static bool AlwaysEmitColors = false;
+
+        void PadExtras()
+        {
+            if (cols != null) while (cols.Count < verts.Count) cols.Add(curColor);
+            if (uv2s != null) while (uv2s.Count < verts.Count) uv2s.Add(curUV2);
+        }
 
         public bool IsEmpty => verts.Count == 0;
         public int VertexCount => verts.Count;
@@ -521,6 +550,10 @@ namespace FutureCity
             m.SetVertices(verts);
             m.SetNormals(norms);
             m.SetUVs(0, uvs);
+            if (cols == null && AlwaysEmitColors) cols = new List<Color32>(verts.Count);
+            PadExtras();
+            if (cols != null && cols.Count == verts.Count) m.SetColors(cols);
+            if (uv2s != null && uv2s.Count == verts.Count) m.SetUVs(1, uv2s);
             m.subMeshCount = subs.Count;
             slots = new int[subs.Count];
             int k = 0;

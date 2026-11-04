@@ -119,6 +119,8 @@ namespace FutureCity
         // ------------------------------------------------------------------ ロビー
         void BuildLobby(MeshBuilder s)
         {
+            // アニメ調：噴水・ベンチ・花壇・街灯をデザインしたモデルで作る（席の位置は同じ）
+            if (AnimeProps.Active) { MiraiPlaza.Lobby(this, s); return; }
             Vector3 L = W(0f, 0f, DeckTop + 0.06f);
             s.AddExtrusion(W(0f, 0f), MeshBuilder.Circle(18f, 72), MeshBuilder.Circle(18f, 72), 0.06f, 0f, S(Mat.Plaster), S(Mat.Paving), new Vector2(8f, 8f), true, true);
 
@@ -164,8 +166,12 @@ namespace FutureCity
         void Bench(MeshBuilder s, Vector3 p, float yawFacing)
         {
             var rot = Quaternion.Euler(0f, yawFacing, 0f);
-            s.AddBox(p, new Vector3(2.2f, 0.45f, 0.6f), yawFacing, S(Mat.Plaster), S(Mat.Wood), T);
-            s.AddBox(p + rot * new Vector3(0f, 0.45f, -0.28f), new Vector3(2.2f, 0.5f, 0.08f), yawFacing, S(Mat.Wood), S(Mat.Wood), T);
+            if (AnimeProps.Active) AnimeProps.Add("BenchGarden", p, yawFacing, 1f, 1);   // 白い石の脚＋木の座面（前＝+Z）
+            else
+            {
+                s.AddBox(p, new Vector3(2.2f, 0.45f, 0.6f), yawFacing, S(Mat.Plaster), S(Mat.Wood), T);
+                s.AddBox(p + rot * new Vector3(0f, 0.45f, -0.28f), new Vector3(2.2f, 0.5f, 0.08f), yawFacing, S(Mat.Wood), S(Mat.Wood), T);
+            }
             Seats.Add(p + rot * new Vector3(0f, 0f, 0.7f));
             BenchSeats.Add(p);
             BenchYaw.Add(yawFacing);
@@ -181,6 +187,7 @@ namespace FutureCity
             bool alongZ = Mathf.Abs(g.x) < 0.1f;           // 南北の通路上か
             float yaw = alongZ ? 0f : 90f;
             Vector3 lat = alongZ ? Vector3.right : Vector3.forward;
+            if (AnimeProps.Active) { MiraiPlaza.Gate(this, s, f, p, yaw, lat, alongZ); return; }
 
             // 足もとの丸い目印
             s.AddExtrusion(p, MeshBuilder.Circle(2.6f, 40), MeshBuilder.Circle(2.6f, 40), 0.03f, 0f, S(sign), S(sign), T, true, true);
@@ -215,6 +222,13 @@ namespace FutureCity
                 center = floor, half = new Vector2(hx - 0.4f, hz - 0.4f),
                 door = rc + new Vector3(0f, 0.1f, doorZ - sz * 2.2f)
             });
+
+            if (AnimeProps.Active)
+            {
+                // アニメ調：Blender で作った建物（床・壁・ガラス・屋根・ひさし・看板が一体。色の帯は部屋の色）と家具
+                AnimeRoom(s, rc, sx, sz, hz, doorW, sign, kind);
+                return;
+            }
 
             // 床
             s.AddBox(rc, new Vector3(hx * 2f + 0.6f, 0.08f, hz * 2f + 0.6f), 0f, S(Mat.Plaster), S(Mat.Wood), T);
@@ -295,6 +309,84 @@ namespace FutureCity
             }
         }
 
+        /// <summary>
+        /// アニメ調の交流室。建物は 1 つのモデル（RoomPavilion：入口は -Z 側）で、ロビー側に入口が向くように回す。
+        /// 家具も Blender のモデル（カフェのテーブルといす・カウンター・机・ボード・ソファ・作業台・棚・イーゼル）。
+        /// 部屋の位置・広さ・入口・当たり判定の考え方は従来と同じ（MiraiRoom の判定・扉の位置もそのまま）。
+        /// </summary>
+        void AnimeRoom(MeshBuilder s, Vector3 rc, int sx, int sz, float hz, float doorW, Mat sign, RoomKind kind)
+        {
+            float doorZ = -sz * hz;
+            float zBack = sz * hz;
+            float yaw = sz > 0 ? 0f : 180f;                 // モデルの入口（-Z）をロビー側へ
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            string accent = MiraiPlaza.AccentOf(sign);
+            AnimeProps.AddRemapped("RoomPavilion", rc, yaw, 1, "Accent", accent);
+            // 入口の玄関マット（部屋の色）
+            s.AddBox(rc + new Vector3(0f, 0.08f, doorZ - sz * 1.4f), new Vector3(doorW, 0.02f, 2f), 0f, S(sign), S(sign), T);
+            // 屋上の植え込み（屋根の後ろ半分と両脇）
+            foreach (var q in new[] { new Vector2(-6.6f, 5.4f), new Vector2(6.6f, 5.4f), new Vector2(-2.6f, 6.3f), new Vector2(2.6f, 6.3f),
+                                      new Vector2(-7.4f, -3.8f), new Vector2(7.4f, -3.8f), new Vector2(0f, 4.2f) })
+            {
+                var lp = rot * new Vector3(q.x, 3.66f, q.y);
+                PropFactory.Shrub(s, rc + lp, 0.85f + 0.1f * Mathf.Abs(q.x % 2f), (Mathf.RoundToInt(q.x + q.y) & 1) == 0 ? Mat.Greenery : Mat.FlowerPink);
+            }
+            // ロビーから扉への小道
+            Vector3 from = W(sx * 12.7f, sz * 12.7f);
+            Vector3 to = rc + new Vector3(0f, 0f, doorZ - sz * 1.6f);
+            Vector3 d = to - from; d.y = 0f;
+            float pathYaw = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg;
+            s.AddBox((from + to) * 0.5f, new Vector3(3.6f, 0.045f, d.magnitude), pathYaw, S(Mat.Plaster), S(Mat.Paving), new Vector2(8f, 8f));
+
+            var F = rc + Up * 0.08f;
+            switch (kind)
+            {
+                case RoomKind.Cafe:
+                    int ti = 0;
+                    foreach (var t in new[] { new Vector2(-4.5f, 2.5f), new Vector2(0f, 3.5f), new Vector2(4.5f, 2.5f), new Vector2(-3f, -2.5f), new Vector2(3f, -2.5f) })
+                        AnimeProps.Add("CafeSet", F + new Vector3(t.x, 0f, t.y * sz), 25f * (ti++), 1f, 1);
+                    AnimeProps.Add("CafeCounter", F + new Vector3(0f, 0f, zBack - sz * 1.2f), yaw, 1f, 1);
+                    PropFactory.Shrub(s, F + new Vector3(-7.5f, 0f, zBack - sz * 1.2f), 1.2f, Mat.Greenery);
+                    PropFactory.Shrub(s, F + new Vector3(7.5f, 0f, zBack - sz * 1.2f), 1.2f, Mat.FlowerPink);
+                    break;
+                case RoomKind.Study:
+                    AnimeProps.Add("StudyBoard", F + new Vector3(0f, 0f, zBack - sz * 0.45f), yaw, 1f, 1);
+                    for (int r = 0; r < 2; r++)
+                    for (int col = -1; col <= 1; col++)
+                        AnimeProps.Add("StudyDesk", F + new Vector3(col * 4f, 0f, zBack - sz * (3.6f + r * 2.8f)), yaw, 1f, 1);
+                    PropFactory.Shrub(s, F + new Vector3(-7.6f, 0f, zBack - sz * 1.0f), 1.1f, Mat.Greenery);
+                    PropFactory.Shrub(s, F + new Vector3(7.6f, 0f, zBack - sz * 1.0f), 1.1f, Mat.FlowerYellow);
+                    break;
+                case RoomKind.Story:
+                    s.AddExtrusion(F, MeshBuilder.Circle(4.5f, 64), MeshBuilder.Circle(4.5f, 64), 0.02f, 0f, S(Mat.FlowerPurple), S(Mat.FlowerPurple), T, true, true);
+                    for (int k = 0; k < 6; k++)
+                    {
+                        float ang = k * 60f + 30f;
+                        var dir = Quaternion.Euler(0f, ang, 0f) * Vector3.forward;
+                        AnimeProps.Add("LoungeSofa", F + dir * 3.4f, ang + 180f, 1f, 1);
+                    }
+                    AnimeProps.Add("CoffeeTable", F, 0f, 1f, 1);
+                    PropFactory.Shrub(s, F + new Vector3(-7.5f, 0f, zBack - sz * 1.2f), 1.3f, Mat.FlowerPurple);
+                    PropFactory.Shrub(s, F + new Vector3(7.5f, 0f, zBack - sz * 1.2f), 1.3f, Mat.Greenery);
+                    break;
+                default: // Hobby
+                    for (int k = -1; k <= 1; k += 2)
+                    {
+                        AnimeProps.Add("HobbyTable", F + new Vector3(k * 3.5f, 0f, 0.5f * sz), 0f, 1f, 1);
+                        PropFactory.Shrub(s, F + new Vector3(k * 3.5f - 1.3f, 0.82f, 0.5f * sz), 0.35f, Mat.FlowerYellow);
+                    }
+                    AnimeProps.Add("CraftShelf", F + new Vector3(0f, 0f, zBack - sz * 0.6f), yaw, 1f, 1);
+                    for (int k = -1; k <= 1; k += 2)
+                    {
+                        var e = F + new Vector3(k * 6.5f, 0f, -2.5f * sz);
+                        Vector3 toC = F - e;
+                        float ey = Mathf.Atan2(-toC.x, -toC.z) * Mathf.Rad2Deg;   // モデルの前（-Z）を部屋の中央へ
+                        AnimeProps.Add("Easel", e, ey, 1f, 1);
+                    }
+                    break;
+            }
+        }
+
         static void Wall(MeshBuilder s, Vector3 mid, Vector3 size, float wallH)
         {
             s.AddBox(mid, new Vector3(size.x, 1.0f, size.z), 0f, S(Mat.Plaster), S(Mat.Plaster), T);
@@ -346,15 +438,17 @@ namespace FutureCity
 
             // 藤棚（南西）
             Vector3 pg = W(-22f, -52f);
-            for (int ix = -1; ix <= 1; ix++)
+            bool anime = AnimeProps.Active;
+            if (anime) AnimeProps.Add("WisteriaPergola", pg, 0f, 1f, 1);   // 白い柱＋弧を描く木の梁（花と葉は下の Foliage）
+            for (int ix = -1; ix <= 1 && !anime; ix++)
             for (int iz = -1; iz <= 1; iz += 2)
                 s.AddBox(pg + new Vector3(ix * 5f, 0f, iz * 3f), new Vector3(0.25f, 2.8f, 0.25f), 0f, S(Mat.Wood), S(Mat.Wood), T);
-            for (int iz = -1; iz <= 1; iz += 2)
+            for (int iz = -1; iz <= 1 && !anime; iz += 2)
                 s.AddBox(pg + new Vector3(0f, 2.8f, iz * 3f), new Vector3(10.6f, 0.25f, 0.3f), 0f, S(Mat.Wood), S(Mat.Wood), T, true);
             var wfol = Foliage.For(pg);
             for (float x = -5f; x <= 5.01f; x += 0.9f)
             {
-                s.AddBox(pg + new Vector3(x, 3.05f, 0f), new Vector3(0.15f, 0.15f, 7f), 0f, S(Mat.Wood), S(Mat.Wood), T, true);
+                if (!anime) s.AddBox(pg + new Vector3(x, 3.05f, 0f), new Vector3(0.15f, 0.15f, 7f), 0f, S(Mat.Wood), S(Mat.Wood), T, true);
                 if (wfol == null)
                     for (float z = -2.6f; z <= 2.61f; z += 1.3f)
                         s.AddBox(pg + new Vector3(x + 0.45f, 2.45f, z), new Vector3(0.35f, 0.6f, 0.35f), 0f, S(Mat.FlowerPurple), S(Mat.FlowerPurple), T, true);
@@ -386,7 +480,8 @@ namespace FutureCity
             for (int r = 0; r < 4; r++)
             {
                 var bp = vg + new Vector3(0f, 0f, -4.5f + r * 3f);
-                s.AddBox(bp, new Vector3(9f, 0.6f, 1.6f), 0f, S(Mat.Wood), S(Foliage.Active ? Mat.Soil : Mat.Bark), T);
+                if (AnimeProps.Active) AnimeProps.Add("RaisedBed", bp, 0f, 1f, 1);   // 角の丸い木の花壇（土の上面）
+                else s.AddBox(bp, new Vector3(9f, 0.6f, 1.6f), 0f, S(Mat.Wood), S(Foliage.Active ? Mat.Soil : Mat.Bark), T);
                 for (float x = -3.8f; x <= 3.81f; x += 1.2f)
                     PropFactory.Shrub(s, bp + new Vector3(x, 0.6f, 0f), 0.55f, (r % 2 == 0) ? Mat.Greenery : (x < 0f ? Mat.FlowerPink : Mat.FlowerYellow));
             }
@@ -427,6 +522,7 @@ namespace FutureCity
 
         void Parasol(MeshBuilder s, Vector3 p, Mat color)
         {
+            if (AnimeProps.Active) { AnimeProps.AddRemapped("Parasol", p, 0f, 1, "Accent", MiraiPlaza.AccentOf(color)); return; }
             s.AddExtrusion(p, MeshBuilder.Circle(0.06f, 8), MeshBuilder.Circle(0.06f, 8), 2.4f, 0f, S(Mat.Plaster), S(Mat.Plaster), T, true, false);
             s.AddExtrusion(p + Up * 2.2f, MeshBuilder.Circle(1.6f, 12), MeshBuilder.Circle(0.05f, 12), 0.7f, 0f, S(color), S(color), T, false, true, true);
         }
@@ -434,6 +530,13 @@ namespace FutureCity
         void BuildWelcomeArch(MeshBuilder s)
         {
             Vector3 a = W(0f, -Half + 3f);
+            if (AnimeProps.Active)
+            {
+                AnimeProps.Add("WelcomeArch", a + Vector3.up * 0.05f, 0f, 1f, 1);
+                for (int sg = -1; sg <= 1; sg += 2)
+                    PropFactory.Shrub(s, a + Vector3.right * (sg * 6.6f), 1.25f, sg < 0 ? Mat.FlowerYellow : Mat.FlowerPink);
+                return;
+            }
             for (int sg = -1; sg <= 1; sg += 2)
             {
                 s.AddExtrusion(a + Vector3.right * (sg * 4.2f), MeshBuilder.Circle(0.4f, 16), MeshBuilder.Circle(0.35f, 16), 5f, 0f, S(Mat.Plaster), S(Mat.Plaster), T, true, true);

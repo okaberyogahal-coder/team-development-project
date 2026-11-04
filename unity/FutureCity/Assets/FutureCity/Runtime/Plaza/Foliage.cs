@@ -21,7 +21,14 @@ namespace FutureCity
         /// <summary>葉のカードを作る準備ができているか（false のときは PropFactory が従来の形で作る）</summary>
         public static bool Active => chunks != null;
 
+        /// <summary>
+        /// アニメ調：樹冠をいくつかの「かたまり」に分け、かたまりごとに丸く陰影がつくようにする。
+        /// 頂点カラーに環境遮蔽（内側・下側ほど暗い）、UV2 に風の効きを入れる。
+        /// </summary>
+        public static bool AnimeMode;
+
         public static void Begin() => chunks = new Dictionary<long, MeshBuilder>();
+        public static void Begin(bool anime) { AnimeMode = anime; Begin(); }
 
         /// <summary>位置 p の葉を入れるメッシュ。Begin() していなければ null</summary>
         public static MeshBuilder For(Vector3 p)
@@ -115,6 +122,77 @@ namespace FutureCity
             }
         }
 
+        static Color32 C32(float r, float g, float b, float a)
+        {
+            return new Color32((byte)Mathf.Clamp(r * 255f, 0f, 255f), (byte)Mathf.Clamp(g * 255f, 0f, 255f),
+                               (byte)Mathf.Clamp(b * 255f, 0f, 255f), (byte)Mathf.Clamp(a * 255f, 0f, 255f));
+        }
+
+        /// <summary>
+        /// アニメ調の樹冠：中央の大きなかたまり＋まわりの小さなかたまり。
+        /// 法線は「かたまりの中心から外向き」と「樹冠全体の外向き」を混ぜる → ふんわりした丸い陰影が、かたまりごとに出る。
+        /// 内側・下側のカードほど暗く（頂点カラーの A）、外側ほど風でゆれる（UV2.x）。
+        /// </summary>
+        public static void ClumpCanopy(MeshBuilder fol, Vector3 center, Vector3 radii, int clumps, int cards, float cardSize,
+                                       int q0, int q1, System.Random r, int slot, Color tint, float upBias = 0.35f, float windScale = 1f)
+        {
+            int perClump = Mathf.Max(6, cards / Mathf.Max(1, clumps));
+            for (int c = 0; c < clumps; c++)
+            {
+                Vector3 cc, cr;
+                if (c == 0) { cc = center + Up * (radii.y * 0.18f); cr = radii * 0.66f; }
+                else
+                {
+                    float a = (c - 1) / (float)Mathf.Max(1, clumps - 1) * Mathf.PI * 2f + Range(r, -0.35f, 0.35f);
+                    float h = Range(r, -0.42f, 0.5f);
+                    var d = new Vector3(Mathf.Cos(a), h, Mathf.Sin(a));
+                    cc = center + Vector3.Scale(d, radii) * Range(r, 0.5f, 0.62f);
+                    cr = radii * Range(r, 0.4f, 0.52f);
+                }
+                int n = c == 0 ? (int)(perClump * 1.4f) : perClump;
+                for (int i = 0; i < n; i++)
+                {
+                    Vector3 dir = RandomUnit(r);
+                    if (dir.y < -0.2f && F(r) < 0.5f) dir.y = -dir.y * 0.5f;     // 下向きの面は少なめ
+                    // ほとんどのカードはかたまりの表面近くに、外を向けて並べる（輪郭が葉の形のなめらかな丸になる）
+                    bool inner = F(r) < 0.22f;
+                    float t = inner ? Range(r, 0.35f, 0.75f) : Range(r, 0.8f, 1.02f);
+                    Vector3 pos = cc + Vector3.Scale(dir, cr) * t;
+                    Vector3 cn = (dir + RandomUnit(r) * (inner ? 0.9f : 0.42f)).normalized;
+                    Vector3 right = Vector3.Cross(cn, Mathf.Abs(cn.y) > 0.95f ? Vector3.right : Up).normalized;
+                    Vector3 upv = Vector3.Cross(right, cn).normalized;
+                    float rot = Range(r, 0f, Mathf.PI * 2f);
+                    Vector3 rr = right * Mathf.Cos(rot) + upv * Mathf.Sin(rot);
+                    Vector3 uu = Vector3.Cross(cn, rr).normalized;
+                    float hsz = cardSize * Range(r, 0.8f, 1.25f) * 0.5f;
+                    QuadUV(F(r) < 0.5f ? q0 : q1, out var mn, out var mx);
+                    Vector3 hr = rr * hsz, hu = uu * hsz;
+                    // 樹冠の中での位置：外側ほど明るく、上ほど明るい
+                    Vector3 g = pos - center;
+                    var gl = new Vector3(g.x / Mathf.Max(radii.x, 0.01f), g.y / Mathf.Max(radii.y, 0.01f), g.z / Mathf.Max(radii.z, 0.01f));
+                    float outer = Mathf.Clamp01(gl.magnitude);
+                    float ao = Mathf.Clamp01(0.42f + 0.38f * outer + 0.22f * Mathf.Clamp(gl.y, -1f, 1f));
+                    float v = Range(r, 0.92f, 1.06f);
+                    float warm = Mathf.Clamp01(gl.y) * 0.06f;   // 上のほうは少し黄みに（日の当たる葉先）
+                    fol.VertexColor = C32(tint.r * v * (1f + warm), tint.g * v * (1f + warm * 0.5f), tint.b * v * (1f - warm), ao);
+                    fol.VertexUV2 = new Vector2((0.25f + 0.75f * outer) * windScale, 0f);
+                    Vector3 p0 = pos - hr - hu, p1 = pos + hr - hu, p2 = pos + hr + hu, p3 = pos - hr + hu;
+                    fol.AddCard(pos, hr, hu, mn, mx, slot,
+                                ClumpNormal(p0, cc, cr, center, radii, upBias), ClumpNormal(p1, cc, cr, center, radii, upBias),
+                                ClumpNormal(p2, cc, cr, center, radii, upBias), ClumpNormal(p3, cc, cr, center, radii, upBias));
+                }
+            }
+            fol.VertexColor = new Color32(255, 255, 255, 255);
+            fol.VertexUV2 = Vector2.zero;
+        }
+
+        static Vector3 ClumpNormal(Vector3 p, Vector3 cc, Vector3 cr, Vector3 center, Vector3 radii, float upBias)
+        {
+            Vector3 a = CanopyNormal(p, cc, cr, upBias * 0.6f);
+            Vector3 b = CanopyNormal(p, center, radii, upBias);
+            return (a * 0.62f + b * 0.38f).normalized;
+        }
+
         // ------------------------------------------------------------------ 幹と枝
         /// <summary>少しすぼまり、わずかに傾いた幹。UV は一周で 0〜1（樹皮の継ぎ目が出ない）</summary>
         public static void Trunk(MeshBuilder b, Vector3 p, float r0, float r1, float h, System.Random r, int segs = 12)
@@ -172,6 +250,15 @@ namespace FutureCity
             var radii = new Vector3(2.35f * sc, 1.85f * sc, 2.35f * sc) * s;
             Vector3 cc = p + Up * (trunkH + 1.25f * s);
             int cards = Mathf.Clamp((int)(150 * s * s), 50, 260);
+            if (AnimeMode)
+            {
+                // 木ごとに緑の色合いを少し変える（同じ木が並んで見えないように）
+                float hue = Range(r, -1f, 1f);
+                var tint = new Color(1f + hue * 0.05f, 1f + hue * 0.02f, 1f - hue * 0.06f);
+                ClumpCanopy(fol, cc, radii * 1.05f, 5 + r.Next(3), (int)(cards * 1.5f), 1.3f * s, LeafA, LeafB, r,
+                            lighterLeaves ? (int)Mat.GlowLeaf : (int)Mat.FoliageAtlas, tint);
+                return;
+            }
             Canopy(fol, cc, radii, cards, 1.75f * s, lighterLeaves ? LeafB : LeafA, LeafB, r);
         }
 
@@ -190,6 +277,13 @@ namespace FutureCity
             }
             var radii = new Vector3(3.0f, 1.45f, 3.0f) * s * Range(r, 0.92f, 1.08f);
             Vector3 cc = p + Up * (trunkH + 1.2f * s);
+            if (AnimeMode)
+            {
+                float v = Range(r, 0.96f, 1.04f);
+                ClumpCanopy(fol, cc, Vector3.Scale(radii, new Vector3(1.02f, 1.12f, 1.02f)), 6 + r.Next(3), Mathf.Clamp((int)(300 * s * s), 110, 460), 1.12f * s,
+                            Blossom, Blossom, r, (int)Mat.Sakura, new Color(v, v * Range(r, 0.97f, 1.02f), v), 0.45f, 0.8f);
+                return;
+            }
             Canopy(fol, cc, radii, Mathf.Clamp((int)(170 * s * s), 60, 280), 1.6f * s, Blossom, Blossom, r, 0.45f);
         }
 
@@ -199,6 +293,19 @@ namespace FutureCity
             var r = Rand(p, 3);
             Trunk(b, p, 0.13f * s, 0.08f * s, 1.6f * s, r, 8);
             var radii = new Vector3(0.95f, 3.1f, 0.95f) * s;
+            if (AnimeMode)
+            {
+                // 糸杉：縦に重ねた 3 つのかたまり（先がとがる）。濃い緑
+                var tint = new Color(0.62f, 0.78f, 0.7f);
+                for (int k = 0; k < 3; k++)
+                {
+                    float y = (1.9f + k * 1.55f) * s;
+                    float rad = (1.0f - k * 0.22f) * s;
+                    ClumpCanopy(fol, p + Up * y, new Vector3(rad, 1.3f * s, rad), 2, Mathf.Clamp((int)(46 * s * s), 20, 80), 0.95f * s,
+                                SmallLeaf, LeafA, r, (int)Mat.FoliageAtlas, tint, 0.15f, 0.5f);
+                }
+                return;
+            }
             Canopy(fol, p + Up * 3.5f * s, radii, Mathf.Clamp((int)(95 * s * s), 40, 160), 1.0f * s, SmallLeaf, SmallLeaf, r, 0.15f);
         }
 
@@ -208,6 +315,13 @@ namespace FutureCity
             var r = Rand(p, 4);
             var radii = new Vector3(0.85f, 0.62f, 0.85f) * s;
             Vector3 cc = p + Up * (0.6f * s);
+            if (AnimeMode)
+            {
+                float hue = Range(r, -1f, 1f);
+                ClumpCanopy(fol, cc, radii * 1.08f, 3, Mathf.Max(18, (int)(46 * s * s)), 0.78f * s, LeafA, SmallLeaf, r,
+                            (int)Mat.FoliageAtlas, new Color(0.9f + hue * 0.05f, 0.95f, 0.9f - hue * 0.05f), 0.3f, 0.45f);
+            }
+            else
             Canopy(fol, cc, radii, Mathf.Max(12, (int)(34 * s * s)), 0.85f * s, SmallLeaf, F(r) < 0.5f ? SmallLeaf : LeafA, r, 0.3f);
             if (flower >= 0)
             {
@@ -237,6 +351,7 @@ namespace FutureCity
             if (palette == null || palette.Length == 0) palette = AllFlowers;
             var rot = Quaternion.Euler(0f, yaw, 0f);
             int n = Mathf.Max(2, Mathf.RoundToInt(sizeX * sizeZ * density));
+            if (AnimeMode) fol.VertexUV2 = new Vector2(0.45f, 0f);
             for (int i = 0; i < n; i++)
             {
                 var local = new Vector3(Range(r, -0.5f, 0.5f) * sizeX * 0.9f, 0f, Range(r, -0.5f, 0.5f) * sizeZ * 0.9f);
@@ -254,11 +369,13 @@ namespace FutureCity
                     fol.AddCard(pos + Up * (h * 0.5f), right * (w * 0.5f), Up * (h * 0.5f), mn, mx, S(Mat.FlowerAtlas), nn, nn, nn, nn);
                 }
             }
+            if (AnimeMode) fol.VertexUV2 = Vector2.zero;
         }
 
         /// <summary>藤棚などから垂れ下がる花（紫の区画を上下逆さに使う）</summary>
         public static void HangingFlowers(MeshBuilder fol, Vector3 topCenter, float sizeX, float sizeZ, int count, System.Random r)
         {
+            if (AnimeMode) fol.VertexUV2 = new Vector2(0.6f, 0f);
             for (int i = 0; i < count; i++)
             {
                 Vector3 pos = topCenter + new Vector3(Range(r, -0.5f, 0.5f) * sizeX, 0f, Range(r, -0.5f, 0.5f) * sizeZ);
@@ -269,12 +386,19 @@ namespace FutureCity
                 Vector3 nn = (Vector3.Cross(right, Up) * 0.5f + Up * 0.5f).normalized;
                 fol.AddCard(pos - Up * (len * 0.5f), right * (len * 0.32f), Up * (len * 0.5f), flipMn, flipMx, S(Mat.FlowerAtlas), nn, nn, nn, nn);
             }
+            if (AnimeMode) fol.VertexUV2 = Vector2.zero;
         }
 
         // ------------------------------------------------------------------ 生け垣
         /// <summary>刈り込んだ生け垣：葉の質感の箱に、輪郭をやわらげる葉のカードを散らす</summary>
         public static void Hedge(MeshBuilder b, MeshBuilder fol, Vector3 basePos, Vector3 size, float yaw, Vector2 tile)
         {
+            // アニメ調：四角い箱ではなく、ふっくらしたかたまりの連なり＋表面の葉（向きが X/Z にそろった生け垣のみ）
+            if (AnimeMode && fol != null && Mathf.Abs(Mathf.DeltaAngle(0f, Mathf.Round(yaw / 90f) * 90f - yaw)) < 0.01f)
+            {
+                HedgeAnime(b, fol, basePos, size, yaw);
+                return;
+            }
             b.AddBox(basePos, size, yaw, S(Mat.Greenery), S(Mat.Greenery), tile);
             if (fol == null) return;
             var r = Rand(basePos, 5);
@@ -309,6 +433,63 @@ namespace FutureCity
                 Vector3 nn = (rot * outward * 0.7f + Up * 0.3f).normalized;
                 fol.AddCard(pos, right * h, uu * h, mn, mx, S(Mat.FoliageAtlas), nn, nn, nn, nn);
             }
+        }
+
+        /// <summary>
+        /// アニメ調の生け垣：重なりあう楕円体のかたまりを並べ（上の線がゆるく波打つ）、表面に葉のカードを外向きに貼る。
+        /// 法線は「かたまりの外向き」と「生け垣全体の外向き（上と横）」を混ぜて、やわらかい陰影にする。当たり判定は本体（b）に入る。
+        /// </summary>
+        static void HedgeAnime(MeshBuilder b, MeshBuilder fol, Vector3 basePos, Vector3 size, float yaw)
+        {
+            var r = Rand(basePos, 6);
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            Vector3 ls = Quaternion.Inverse(rot) * size;                 // 回す前の大きさ（90° 単位なので成分の入れかえだけ）
+            ls = new Vector3(Mathf.Abs(ls.x), Mathf.Abs(ls.y), Mathf.Abs(ls.z));
+            bool alongX = ls.x >= ls.z;
+            float len = alongX ? ls.x : ls.z, wid = alongX ? ls.z : ls.x, hgt = ls.y;
+            Vector3 axis = rot * (alongX ? Vector3.right : Vector3.forward);
+            Vector3 across = rot * (alongX ? Vector3.forward : Vector3.right);
+            float spacing = Mathf.Clamp(wid * 0.75f, 0.6f, 1.1f);
+            int n = Mathf.Max(2, Mathf.CeilToInt(len / spacing));
+            var tint = new Color(0.80f, 0.88f, 0.80f);
+            for (int i = 0; i < n; i++)
+            {
+                float t = (i + 0.5f) / n - 0.5f;
+                float hh = hgt * Range(r, 0.9f, 1.08f);
+                float ra = spacing * Range(r, 1.05f, 1.25f), rw = wid * Range(r, 0.5f, 0.56f), rh = hh * 0.56f;
+                Vector3 c = basePos + axis * (t * (len - spacing * 0.6f)) + across * Range(r, -0.04f, 0.04f) * wid + Up * (hh * 0.5f);
+                // 世界の軸での半径（生け垣の向きに合わせて入れかえ）
+                Vector3 axAbs = new Vector3(Mathf.Abs(axis.x), 0f, Mathf.Abs(axis.z));
+                Vector3 radii = axAbs * ra + new Vector3(1f - axAbs.x, 0f, 1f - axAbs.z) * rw + Up * rh;
+                b.AddSphere(c, radii, 7, 12, S(Mat.Greenery));
+                // 表面の葉（上と両側。下向きは少なめ）
+                int cards = Mathf.Clamp((int)(ra * rh * 44f), 10, 28);
+                for (int k = 0; k < cards; k++)
+                {
+                    Vector3 dir = RandomUnit(r);
+                    if (dir.y < -0.15f) dir.y = -dir.y * 0.4f;
+                    Vector3 pos = c + Vector3.Scale(dir, radii) * Range(r, 0.86f, 1.03f);
+                    if (pos.y < basePos.y + 0.08f) continue;
+                    Vector3 cn = (dir + RandomUnit(r) * 0.45f).normalized;
+                    Vector3 right = Vector3.Cross(cn, Mathf.Abs(cn.y) > 0.95f ? Vector3.right : Up).normalized;
+                    Vector3 upv = Vector3.Cross(right, cn).normalized;
+                    float a = Range(r, 0f, Mathf.PI * 2f);
+                    Vector3 rr = right * Mathf.Cos(a) + upv * Mathf.Sin(a);
+                    Vector3 uu = Vector3.Cross(cn, rr).normalized;
+                    float hs = Range(r, 0.24f, 0.36f);
+                    QuadUV(F(r) < 0.6f ? SmallLeaf : LeafA, out var mn, out var mx);
+                    // かたまりの外向き＋生け垣の外向き（上・横）を混ぜた法線。下ほど暗く（AO）
+                    Vector3 body = (Up * 0.8f + across * Mathf.Sign(Vector3.Dot(pos - c, across)) * 0.6f).normalized;
+                    Vector3 nrm = (CanopyNormal(pos, c, radii, 0.25f) * 0.65f + body * 0.35f).normalized;
+                    float ao = Mathf.Clamp01(0.55f + 0.45f * Mathf.Clamp01((pos.y - basePos.y) / Mathf.Max(hgt, 0.1f)));
+                    float v = Range(r, 0.92f, 1.06f);
+                    fol.VertexColor = C32(tint.r * v, tint.g * v, tint.b * v, ao);
+                    fol.VertexUV2 = new Vector2(0.15f, 0f);
+                    fol.AddCard(pos, rr * hs, uu * hs, mn, mx, S(Mat.FoliageAtlas), nrm, nrm, nrm, nrm);
+                }
+            }
+            fol.VertexColor = new Color32(255, 255, 255, 255);
+            fol.VertexUV2 = Vector2.zero;
         }
     }
 }
