@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 // Run against the local website after generating its Unity Web build.
 export default defineConfig({
   testDir: './tests/browser',
-  testMatch: 'unity-entry.spec.ts',
+  testMatch: ['unity-entry.spec.ts', 'unity-anime-update.spec.ts'],
   workers: 1,
   timeout: 30000,
   use: {

@@ -54,6 +54,12 @@ namespace FutureCity
         public static bool LookWanted = false;
         /// <summary>直前のマウス操作がドラッグ（見回し）だった → クリック移動にしない</summary>
         public bool LastPressWasDrag { get; private set; }
+        /// <summary>このフレームのクリックは「見回しモードにもどる」ために使った（撃つ・歩くに使わない）</summary>
+        public bool ClickConsumed { get; private set; }
+
+        // 戦闘モードの肩ごしの視点
+        float shoulder;
+        float baseFov = -1f;
 
         // クリック移動
         Vector3? autoTarget;
@@ -145,6 +151,7 @@ namespace FutureCity
         void Update()
         {
             // パネルを開いている間は止まる（文字入力と移動が混ざらない）。カーソルを出してボタンを押せるようにする
+            ClickConsumed = false;
             if (MiraiWorld.UIOpen)
             {
                 if (FreeLook) SetFreeLook(false);
@@ -186,7 +193,7 @@ namespace FutureCity
                 pressing = dragging = false;
             }
             if (InputBridge.Held(FKey.Q)) yaw -= keyTurnSpeed * dt;
-            if (InputBridge.Held(FKey.E) && !MiraiWorld.PromptVisible) yaw += keyTurnSpeed * dt;
+            if (InputBridge.Held(FKey.E) && !MiraiWorld.PromptVisible && !CombatSystem.Active) yaw += keyTurnSpeed * dt;   // 戦闘モードの E はパンチ
             float sc = InputBridge.Scroll;
             if (sc != 0f && !MiraiWorld.PointerOverUI)
                 cameraDistance = Mathf.Clamp(cameraDistance - sc * 0.7f, minDistance, maxDistance);
@@ -224,6 +231,7 @@ namespace FutureCity
             }
 
             float speed = InputBridge.Held(FKey.Shift) ? runSpeed : walkSpeed;
+            if (CombatSystem.Aiming) speed = walkSpeed * 0.6f;   // ねらっている間はゆっくり
             Vector3 target = input.sqrMagnitude > 0.0001f ? Vector3.ClampMagnitude(input, 1f) * speed : Vector3.zero;
             if (input.sqrMagnitude > 1.01f) target = input.normalized * speed;
             // 加速・減速をなめらかに（指数補間）
@@ -238,9 +246,11 @@ namespace FutureCity
             vy += gravity * dt;
             cc.Move((planarVel + Vector3.up * vy) * dt);
 
-            // 体を進む方向へ（なめらかに回す）
+            // 体を進む方向へ（なめらかに回す）。戦闘モードでは、いつも視点の向き（照準の方）を向く
             float sp = planarVel.magnitude;
-            if (sp > 0.3f)
+            if (CombatSystem.Active)
+                bodyYaw = Mathf.LerpAngle(bodyYaw, camYaw, 1f - Mathf.Exp(-14f * dt));
+            else if (sp > 0.3f)
             {
                 float want = Mathf.Atan2(planarVel.x, planarVel.z) * Mathf.Rad2Deg;
                 bodyYaw = Mathf.LerpAngle(bodyYaw, want, 1f - Mathf.Exp(-10f * dt));
@@ -255,7 +265,8 @@ namespace FutureCity
         void Look(Vector2 md)
         {
             yaw += md.x * lookSensitivity;
-            pitch = Mathf.Clamp(pitch - md.y * lookSensitivity, minPitch, maxPitch);
+            float lo = CombatSystem.Active ? -40f : minPitch;   // 戦闘モードでは上もねらえる
+            pitch = Mathf.Clamp(pitch - md.y * lookSensitivity, lo, maxPitch);
         }
 
         void LateUpdate()
@@ -274,7 +285,16 @@ namespace FutureCity
             float lk = 1f - Mathf.Exp(-lookSmoothing * dt);
             camYaw = Mathf.LerpAngle(camYaw, yaw, lk);
             camPitch = Mathf.Lerp(camPitch, pitch, lk);
-            smoothDistance = Mathf.Lerp(smoothDistance, cameraDistance, 1f - Mathf.Exp(-8f * dt));
+            // 戦闘モード：肩ごしの近い視点（ねらう間はさらに寄ってズーム）
+            bool combat = CombatSystem.Active, aim = combat && CombatSystem.Aiming;
+            if (!combat) pitch = Mathf.Max(pitch, minPitch);
+            float wantDist = combat ? (aim ? 1.7f : 2.9f) : cameraDistance;
+            smoothDistance = Mathf.Lerp(smoothDistance, wantDist, 1f - Mathf.Exp(-8f * dt));
+            shoulder = Mathf.Lerp(shoulder, combat ? (aim ? 0.62f : 0.5f) : 0f, 1f - Mathf.Exp(-8f * dt));
+            if (baseFov < 0f) baseFov = cam.fieldOfView;
+            float wantFov = aim ? baseFov * 0.74f : baseFov;
+            if (combat || Mathf.Abs(cam.fieldOfView - baseFov) > 0.01f)
+                cam.fieldOfView = Mathf.Abs(cam.fieldOfView - wantFov) < 0.02f ? wantFov : Mathf.Lerp(cam.fieldOfView, wantFov, 1f - Mathf.Exp(-10f * dt));
 
             // 注視点：水平はぴったり、高さは段差でガクッとしないようになめらかに
             Vector3 rawPivot = transform.position + Vector3.up * pivotHeight;
@@ -288,14 +308,24 @@ namespace FutureCity
 
             // 建物・壁があれば手前に寄る。デモ人物は無視し、寄る・離れるともになめらかに
             int mask = ~(1 << PeopleLayer);
+            Vector3 pivot = smoothPivot;
+            if (shoulder > 0.01f)
+            {
+                // 肩ごし：注視点を右へずらす（右に壁があれば、ずらす量を減らす）
+                Vector3 right = rot * Vector3.right;
+                float sh = shoulder;
+                if (Physics.SphereCast(smoothPivot, 0.15f, right, out RaycastHit sideHit, shoulder, mask, QueryTriggerInteraction.Ignore))
+                    sh = Mathf.Max(0f, sideHit.distance - 0.05f);
+                pivot = smoothPivot + right * sh;
+            }
             float allowed = smoothDistance;
-            if (Physics.SphereCast(smoothPivot, 0.2f, dir, out RaycastHit hit, smoothDistance, mask, QueryTriggerInteraction.Ignore))
+            if (Physics.SphereCast(pivot, 0.2f, dir, out RaycastHit hit, smoothDistance, mask, QueryTriggerInteraction.Ignore))
                 allowed = Mathf.Max(0.6f, hit.distance - 0.1f);
             float rate = allowed < camDist ? 18f : 4f;
             camDist = Mathf.Lerp(camDist, allowed, 1f - Mathf.Exp(-rate * dt));
             if (camDist > allowed + 0.4f) camDist = allowed + 0.4f;   // 壁を大きく突き抜けない
 
-            cam.transform.SetPositionAndRotation(smoothPivot + dir * camDist, rot);
+            cam.transform.SetPositionAndRotation(pivot + dir * camDist, rot);
             if (body != null) body.gameObject.SetActive(camDist > 0.9f);
         }
     }

@@ -78,6 +78,12 @@ namespace FutureCity
         static GameObject Person(MaterialLibrary lib, Transform root, int age, System.Random rnd, int idx)
         {
             var go = PersonFactory.Build(lib, root, "Person" + idx + "_" + age, AgeScale(age), Clothes[rnd.Next(Clothes.Length)], age, false, null);
+            // 戦闘モードのビームが当たるように、すり抜けられる当たり判定（トリガー）だけ付ける。歩く・カメラ・クリックの邪魔はしない
+            var trig = go.AddComponent<CapsuleCollider>();
+            trig.isTrigger = true;
+            trig.center = new Vector3(0f, 0.9f, 0f);
+            trig.height = 1.8f;
+            trig.radius = 0.3f;
             SetLayer(go.transform, PlayerWalker.PeopleLayer);
             return go;
         }

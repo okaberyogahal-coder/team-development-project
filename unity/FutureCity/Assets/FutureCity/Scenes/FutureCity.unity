@@ -349,6 +349,7 @@ MonoBehaviour:
   runSpeed: 6
   mouseSensitivity: 1.2
   startTime: 10.5
+  animeStyle: 1
   photoBackdrop: 1
   backdropExposure: 0
   autoRotateBackdrop: 1
@@ -357,6 +358,7 @@ MonoBehaviour:
   realtimeReflections: 1
   postProcessing: 1
   ambientPeople: 1
+  combatMode: 1
   lawnGrass: 1
   renderScale: 1
   bakedMaterials:

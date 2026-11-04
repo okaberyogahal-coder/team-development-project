@@ -76,6 +76,70 @@ namespace FutureCity
 
         public static bool IsURP => GraphicsSettings.currentRenderPipeline != null;
 
+        /// <summary>アニメ調（MiraiToon シェーダー）の材質を使っているか</summary>
+        public bool IsAnime { get; private set; }
+        MiraiToonMaterials.Set anime;
+        readonly HashSet<string> warnedNames = new HashSet<string>();
+
+        /// <summary>モデルの材質名（"Stone" "Leaf" など）に対応する材質。アニメ調でないときは近い従来の材質</summary>
+        public Material Model(string name)
+        {
+            if (anime != null && anime.named.TryGetValue(name, out var m)) return m;
+            if (anime != null && warnedNames.Add(name)) Debug.LogWarning("[FutureCity] 材質名が見つかりません: " + name + "（白い石で代用）");
+            switch (name)
+            {
+                case "Wood": case "WoodDark": return Get(Mat.Wood);
+                case "Leaf": case "LeafLight": case "Needle": return Get(Mat.FoliageAtlas);
+                case "Blossom": return Get(Mat.Sakura);
+                case "Flowers": return Get(Mat.FlowerAtlas);
+                case "Bark": return Get(Mat.Bark);
+                case "Soil": return Get(Mat.Soil);
+                case "Water": return Get(Mat.Water);
+                case "Lake": return Get(Mat.Lake);
+                case "Glass": return Get(Mat.GlassClear);
+                case "Gold": case "Metal": return Get(Mat.Metal);
+                case "OrbGlow": return Get(Mat.SunOrb);
+                case "Emissive": case "EmissiveCool": return Get(Mat.WarmLight);
+                case "Lawn": case "Grass": return Get(Mat.Grass);
+                case "Hedge": return Get(Mat.Greenery);
+                case "Paving": return Get(Mat.PastelPaving);
+                case "Fabric": return Get(Mat.Fabric);
+                case "Accent1": return Get(Mat.SignBlue);
+                case "Accent2": return Get(Mat.SignOrange);
+                case "Accent3": return Get(Mat.SignPink);
+                case "Accent4": return Get(Mat.SignGreen);
+                default: return Get(Mat.Plaster);
+            }
+        }
+
+        public Material[] ModelMaterials(string[] names)
+        {
+            var r = new Material[names.Length];
+            for (int i = 0; i < names.Length; i++) r[i] = Model(names[i]);
+            return r;
+        }
+
+        /// <summary>
+        /// 材質一式を作る。anime=true でアニメ調（MiraiToon）。MiraiToon が使えない環境（Built-in パイプラインなど）では
+        /// 自動で従来の実写風にもどる。
+        /// </summary>
+        public static MaterialLibrary Create(Material[] baked, Material bakedSky, int seed, bool anime)
+        {
+            if (anime && MiraiToonMaterials.Available)
+            {
+                var al = new MaterialLibrary();
+                al.anime = MiraiToonMaterials.Build(null);
+                for (int i = 0; i < al.mats.Length; i++) al.mats[i] = al.anime.slots[i];
+                al.Textures.AddRange(al.anime.textures);
+                al.Skybox = al.anime.sky;
+                al.IsAnime = true;
+                al.HasPhotoTextures = false;
+                al.Capture();
+                return al;
+            }
+            return Create(baked, bakedSky, seed);
+        }
+
         public static MaterialLibrary Create(Material[] baked, Material bakedSky, int seed)
         {
             var lib = new MaterialLibrary();
@@ -85,6 +149,8 @@ namespace FutureCity
                     if (m == null || m.shader == null) { ok = false; break; }
             // パイプラインが焼き込み時から変わっていたら作り直す
             if (ok && IsURP != baked[0].shader.name.StartsWith("Universal")) ok = false;
+            // アニメ調で焼き込んだ材質（MiraiToon）は、実写風では使わない
+            if (ok && baked[(int)Mat.Plaster].shader.name.StartsWith("MiraiToon")) ok = false;
 
             if (ok)
             {

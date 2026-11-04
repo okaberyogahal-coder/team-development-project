@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -10,7 +11,6 @@ namespace FutureCity
     /// </summary>
     public static class PersonFactory
     {
-        static readonly Vector2 T = new Vector2(4f, 4f);
         static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
         static readonly int ColorId = Shader.PropertyToID("_Color");
 
@@ -79,6 +79,88 @@ namespace FutureCity
             return go.transform;
         }
 
+        // ------------------------------------------------------------------ アニメ調の人物（Blender で作った部品）
+        static readonly Color[] Trims =
+        {
+            new Color(0.98f, 0.96f, 0.90f), new Color(0.98f, 0.82f, 0.48f), new Color(0.72f, 0.90f, 1.0f),
+            new Color(0.74f, 0.96f, 0.84f), new Color(1.0f, 0.80f, 0.86f)
+        };
+        static readonly Color[] EyeColors =
+        {
+            new Color(0.50f, 0.30f, 0.18f), new Color(0.78f, 0.52f, 0.22f), new Color(0.28f, 0.50f, 0.86f),
+            new Color(0.22f, 0.62f, 0.62f), new Color(0.52f, 0.38f, 0.80f), new Color(0.32f, 0.24f, 0.22f)
+        };
+        static readonly Color[] AnimeHair =
+        {
+            new Color(0.20f, 0.19f, 0.27f), new Color(0.36f, 0.24f, 0.18f), new Color(0.55f, 0.36f, 0.22f),
+            new Color(0.24f, 0.21f, 0.30f), new Color(0.80f, 0.60f, 0.36f)
+        };
+        static readonly string[] HairStyles = { "ChrHairShort", "ChrHairBob", "ChrHairPony", "ChrHairLong", "ChrHairShort", "ChrHairBob" };
+
+        /// <summary>アニメ調の人物の部品（Resources/FutureCityModels/Chr*.bytes）がそろっているか</summary>
+        static bool AnimeReady(MaterialLibrary lib)
+        {
+            return lib.IsAnime && MiraiModels.Has("ChrTorso") && MiraiModels.Has("ChrHead") && MiraiModels.Has("ChrLeg")
+                   && MiraiModels.Has("ChrShin") && MiraiModels.Has("ChrSleeve") && MiraiModels.Has("ChrHairShort");
+        }
+
+        static GameObject ModelPart(MaterialLibrary lib, string model, string name, Transform parent, Color c, bool shadows = true)
+        {
+            var m = MiraiModels.Get(model);
+            if (m == null) return null;
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = m.mesh;
+            var mr = go.AddComponent<MeshRenderer>();
+            mr.sharedMaterials = lib.ModelMaterials(m.subNames);
+            mr.shadowCastingMode = shadows ? ShadowCastingMode.On : ShadowCastingMode.Off;
+            Tint(go, c);
+            return go;
+        }
+
+        /// <summary>
+        /// アニメ調の人物の部品を置く。部品名・関節の位置は従来と同じ（Suit・Hip・LegL/LegR・ArmL/ArmR・Head）なので、
+        /// 歩く・座る動き（PersonAnimator）、服の色替え（SetSuitColor）、当たり判定はそのまま使える。
+        /// </summary>
+        static void BuildAnime(MaterialLibrary lib, Transform t, int h, int age, float scale, Color suit, Color skin, Color pants, Color shoe)
+        {
+            Color hair = age >= 70 ? new Color(0.88f, 0.88f, 0.90f) : age >= 55 ? new Color(0.64f, 0.62f, 0.66f)
+                       : AnimeHair[(h / 13) % AnimeHair.Length];
+            ModelPart(lib, "ChrTorso", "Suit", t, suit);
+            ModelPart(lib, "ChrTrim", "Trim", t, Trims[(h / 17) % Trims.Length]);
+            ModelPart(lib, "ChrHip", "Hip", t, pants);
+            for (int sg = -1; sg <= 1; sg += 2)
+            {
+                // 太もも（股関節）＋ひざ（すね・靴）。座るとひざが曲がる
+                var pv = Pivot(sg < 0 ? "LegL" : "LegR", t, new Vector3(sg * 0.09f, 0.84f, 0f));
+                ModelPart(lib, "ChrLeg", "Leg", pv, pants);
+                var knee = Pivot("Knee", pv, new Vector3(0f, -0.40f, 0f));
+                ModelPart(lib, "ChrShin", "Shin", knee, pants);
+                ModelPart(lib, "ChrShoe", "Shoe", knee, shoe);
+            }
+            for (int sg = -1; sg <= 1; sg += 2)
+            {
+                // 肩は従来より内側（アニメの体つき：なで肩・細身）
+                var pv = Pivot(sg < 0 ? "ArmL" : "ArmR", t, new Vector3(sg * 0.205f, 1.30f, 0f));
+                ModelPart(lib, "ChrSleeve", "Sleeve", pv, suit);
+                ModelPart(lib, "ChrHand", "Hand", pv, skin);
+            }
+            var head = Pivot("Head", t, new Vector3(0f, 1.405f, 0f));
+            // 子どもは頭を少し大きく（アニメの頭身）
+            if (scale < 0.97f) head.localScale = Vector3.one * Mathf.Pow(1f / Mathf.Max(scale, 0.5f), 0.55f);
+            ModelPart(lib, "ChrHead", "Face", head, skin);
+            ModelPart(lib, "ChrFace", "FaceDetail", head, Color.white, false);
+            ModelPart(lib, "ChrEyes", "Eyes", head, EyeColors[(h / 23) % EyeColors.Length], false);
+            // ご年配の方はおだんご・短め・ボブ。それ以外は 6 種類から
+            string style = age >= 70 ? (h % 2 == 0 ? "ChrHairBun" : (h / 3) % 2 == 0 ? "ChrHairShort" : "ChrHairBob")
+                         : HairStyles[(h / 3) % HairStyles.Length];
+            if (!MiraiModels.Has(style)) style = "ChrHairShort";
+            // 髪は頂点色で「頭頂のつやの輪＝1.0、ほか＝0.8」の明るさにしてあるので、色は少し明るめに渡す
+            ModelPart(lib, style, "Hair", head, new Color(hair.r * 1.22f, hair.g * 1.22f, hair.b * 1.22f, 1f));
+            if (age >= 68 || h % 7 == 0)
+                ModelPart(lib, "ChrGlasses", "Glasses", head, new Color(0.22f, 0.18f, 0.20f));
+        }
+
         /// <summary>
         /// 人物を作る。age で髪の色・めがね・姿勢を変える。halo は「デモ人物」の目印（任意）。
         /// </summary>
@@ -90,6 +172,12 @@ namespace FutureCity
             int h = Hash(name);
             var root = new GameObject(name);
             root.transform.SetParent(parent, false);
+            if (AnimeReady(lib))
+            {
+                BuildAnime(lib, root.transform, h, age, scale, suit, Skins[h % Skins.Length], Pants[(h / 7) % Pants.Length],
+                           (h / 11) % 2 == 0 ? new Color(0.95f, 0.95f, 0.95f) : new Color(0.30f, 0.25f, 0.24f));
+                return Finish(lib, root, scale, age, addCollider, halo);
+            }
             int m = (int)Mat.Matte;
             // 服（上着・袖・ズボン）は布目の質感。実写テクスチャがないときは従来のつや消し
             bool hasFabric = lib.HasPhotoTextures;
@@ -173,7 +261,12 @@ namespace FutureCity
                 gl.AddTube(new[] { new Vector3(-0.012f, 0.188f, 0.114f), new Vector3(0.012f, 0.188f, 0.114f) }, 0.004f, 6, m);
                 Part(gl, "Glasses", head, lib, new Color(0.15f, 0.13f, 0.12f));
             }
+            return Finish(lib, root, scale, age, addCollider, halo);
+        }
 
+        /// <summary>目印の輪・当たり判定・動き（従来の人物・アニメ調の人物で共通）</summary>
+        static GameObject Finish(MaterialLibrary lib, GameObject root, float scale, int age, bool addCollider, Mat? halo)
+        {
             if (halo.HasValue)
             {
                 var hb = new MeshBuilder();
@@ -205,8 +298,12 @@ namespace FutureCity
     {
         public int age = 40;
         public bool sitting;
+        /// <summary>動いている人物の一覧（パンチの相手さがしなど）</summary>
+        public static readonly List<PersonAnimator> All = new List<PersonAnimator>();
 
-        Transform legL, legR, armL, armR, head;
+        void OnDisable() { All.Remove(this); }
+
+        Transform legL, legR, armL, armR, head, kneeL, kneeR;
         ImportedAvatar imported;
         Vector3 lastPos;
         float speed, phase, seed;
@@ -219,12 +316,16 @@ namespace FutureCity
             armL = transform.Find("ArmL");
             armR = transform.Find("ArmR");
             head = transform.Find("Head");
+            // ひざ（アニメ調の人物だけ。従来の人物にはない）
+            kneeL = legL != null ? legL.Find("Knee") : null;
+            kneeR = legR != null ? legR.Find("Knee") : null;
             lastPos = transform.position;
             seed = Random.value * 10f;
         }
 
         void OnEnable()
         {
+            if (!All.Contains(this)) All.Add(this);
             lastPos = transform.position;
             speed = 0f;
         }
@@ -254,6 +355,8 @@ namespace FutureCity
             {
                 Set(legL, -85f, 0f);
                 Set(legR, -85f, 0f);
+                Set(kneeL, 82f, 0f);
+                Set(kneeR, 82f, 0f);
                 Set(armL, -25f, 4f);
                 Set(armR, -25f, -4f);
             }
@@ -261,6 +364,10 @@ namespace FutureCity
             {
                 Set(legL, swing, 0f);
                 Set(legR, -swing, 0f);
+                // 前へ振り出している脚のひざを曲げる
+                float c = Mathf.Cos(phase);
+                Set(kneeL, Mathf.Max(0f, -c) * 38f * amt, 0f);
+                Set(kneeR, Mathf.Max(0f, c) * 38f * amt, 0f);
                 float idle = Mathf.Sin(Time.time * 1.4f + seed) * 2f * (1f - amt);
                 Set(armL, -swing * 0.8f + idle, 4f);
                 Set(armR, swing * 0.8f - idle, -4f);

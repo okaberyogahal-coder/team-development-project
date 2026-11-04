@@ -4,9 +4,10 @@ using UnityEngine.Rendering;
 namespace FutureCity
 {
     /// <summary>
-    /// 広場のまわりを「実写の360°写真」にする（まわりの街は作らない）。
-    ///  - Resources/FutureCityBackdrop に入っている 360°写真（横:縦 = 2:1 の正距円筒。HDR/EXR/JPG/PNG）を空として表示。
-    ///    自分の写真を入れると、同梱の写真（名前が Default_ で始まるもの）より優先して使う
+    /// 広場のまわりを「360°画像」にする（まわりの街は作らない）。
+    ///  - Resources/FutureCityBackdrop に入っている 360°画像（横:縦 = 2:1 の正距円筒。HDR/EXR/JPG/PNG）を空として表示。
+    ///    標準は、写真のように描いた 2127年の未来都市（Default_FutureCity_8k.jpg）。実写の 360°写真も使える
+    ///    自分の写真を入れると、同梱の画像（名前が Default_ で始まるもの）より優先して使う
     ///  - 写真の中の太陽をさがし、太陽の光の向き・色をそろえる（影の向きが写真の太陽と一致する）
     ///  - 写真を回して、太陽が広場を斜め後ろ（南東）から照らす向きにする
     ///  - 明るさを自動でそろえ、環境光（空の光）と地平線のかすみ（霧）の色を写真から作る
@@ -23,8 +24,10 @@ namespace FutureCity
         public float manualRotation = 0f;
         [Tooltip("太陽を置く方角（ワールドの方位角。x 軸から z 軸へ測った角度。-55 = 南東）")]
         public float sunAzimuth = -55f;
-        [Tooltip("空の平均の明るさの目標")]
+        [Tooltip("空の平均の明るさの目標（光の計算用。HDR の写真はこの明るさで表示）")]
         public float targetSkyLuminance = 0.62f;
+        [Tooltip("JPG など普通の写真（LDR）の空の明るさの目標。もともと見やすい明るさで撮られているので、少しだけ補正する")]
+        public float ldrSkyLuminance = 0.40f;
         [Tooltip("環境光（空の光）の強さ。日なたの白い面が自然な白になり、日かげが青みをおびる強さ")]
         public float ambientScale = 0.72f;
         [Tooltip("地平線のかすみの濃さ（湖の遠くが写真の地平線になじむ）")]
@@ -38,6 +41,8 @@ namespace FutureCity
         public Vector3 SunDirection { get; private set; } = new Vector3(0.45f, 0.62f, -0.64f).normalized;
         public float SunElevation { get; private set; }
         public float Exposure { get; private set; } = 1f;
+        /// <summary>環境光の計算に使う明るさの倍率（写真の種類によらず、空の平均が targetSkyLuminance になるように）</summary>
+        public float LightExposure { get; private set; } = 1f;
         public float Rotation { get; private set; }
         public Color HorizonColor { get; private set; }
 
@@ -75,7 +80,7 @@ namespace FutureCity
             Photo = FindPhoto();
             if (Photo == null)
             {
-                Debug.LogWarning("[FutureCity] 背景の写真が見つかりません（Assets/FutureCityPhotos/Resources/" + Folder + "）。手続きの空を使います。ZIP 2 の FutureCityPhotos フォルダを Assets に入れてください。");
+                Debug.LogWarning("[FutureCity] 背景の360°画像が見つかりません（Assets/FutureCityPhotos/Resources/" + Folder + "）。手続きの空を使います。ZIP 2 の FutureCityPhotos フォルダを Assets に入れてください。");
                 return false;
             }
             SkyMaterial = MakeSkyMaterial(lib != null ? lib.Skybox : null);
@@ -88,10 +93,13 @@ namespace FutureCity
             float[] px = Downsample(Photo, AnalyzeW, AnalyzeH);
             var st = px != null ? PanoramaMath.Analyze(px, AnalyzeW, AnalyzeH) : new PanoramaMath.Stats();
 
-            if (st.valid && st.skyMean > 1e-5f)
-                Exposure = Mathf.Clamp(targetSkyLuminance / st.skyMean, 0.02f, 64f) * Mathf.Pow(2f, exposureBias);
+            float bias = Mathf.Pow(2f, exposureBias);
+            bool okStats = st.valid && st.skyMean > 1e-5f;
+            LightExposure = okStats ? Mathf.Clamp(targetSkyLuminance / st.skyMean, 0.02f, 64f) : 1f;
+            if (okStats && !st.hdr)
+                Exposure = Mathf.Clamp(ldrSkyLuminance / st.skyMean, 0.8f, 1.35f) * bias;   // LDR：表示はほぼそのまま
             else
-                Exposure = Mathf.Pow(2f, exposureBias);
+                Exposure = LightExposure * bias;                                             // HDR：明るさをそろえて表示
 
             SunFound = st.valid && st.sunFound;
             if (SunFound && autoRotate) Rotation = PanoramaMath.RotationForAzimuth(st.sunU, sunAzimuth);
@@ -148,7 +156,7 @@ namespace FutureCity
             // ---- 環境光（空の光。太陽は除き、地面の照り返しを加える）
             if (st.valid)
             {
-                var sh = PanoramaMath.ComputeSH(px, AnalyzeW, AnalyzeH, Rotation, Exposure, st.clampLum,
+                var sh = PanoramaMath.ComputeSH(px, AnalyzeW, AnalyzeH, Rotation, LightExposure, st.clampLum,
                                                 new Vector3(groundAlbedo.r, groundAlbedo.g, groundAlbedo.b),
                                                 sun != null ? sun.intensity : 1.5f, SunDirection, SunFound ? ambientScale : 1f);
                 ambient = new SphericalHarmonicsL2();
@@ -169,7 +177,7 @@ namespace FutureCity
             RenderSettings.reflectionIntensity = 1f;
             hasAmbient = true;
 
-            Debug.Log("[FutureCity] 背景の写真：" + Photo.name + "（" + Photo.width + "×" + Photo.height + (st.hdr ? "・HDR" : "") + "）／ 太陽："
+            Debug.Log("[FutureCity] 背景の360°画像：" + Photo.name + "（" + Photo.width + "×" + Photo.height + (st.hdr ? "・HDR" : "") + "）／ 太陽："
                       + (SunFound ? "高度 " + SunElevation.ToString("0") + "°" : "見つからないため標準の向き")
                       + " ／ 回転 " + Rotation.ToString("0") + "° ／ 明るさ ×" + Exposure.ToString("0.00"));
             return true;

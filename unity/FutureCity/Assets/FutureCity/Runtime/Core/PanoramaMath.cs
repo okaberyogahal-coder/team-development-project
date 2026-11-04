@@ -116,7 +116,8 @@ namespace FutureCity
                 if (jj < j0 || jj >= h) continue;
                 peak = Mathf.Max(peak, lum[(jj - j0) * w + (bi + di + w) % w]);
             }
-            float thr = peak * 0.5f, sw = 0f, su = 0f, sv = 0f;
+            // HDR は明るい部分の重心、LDR（白く飛んだ写真）は飛んだ円の中心だけで求める（まわりの光のにじみに引っぱられない）
+            float thr = peak * (s.hdr ? 0.5f : 0.97f), sw = 0f, su = 0f, sv = 0f;
             for (int dj = -4; dj <= 4; dj++)
             for (int di = -4; di <= 4; di++)
             {
