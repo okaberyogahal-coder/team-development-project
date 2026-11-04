@@ -75,12 +75,17 @@ export function AvatarCustomizer({
         if (saved) {
           const restored = restoreAvatarChoice(JSON.parse(saved));
           if (restored) {
+            const migratedLegacyModel = assets.id === 'v3-unified-20261104' &&
+              restored.choice.baseAvatarId === LEGACY_BASE_AVATAR_ID;
+            if (migratedLegacyModel) {
+              restored.choice.baseAvatarId = initialCandidateId || 'young-man';
+            }
             initialDefaultPending.current = false;
             setChoice(restored.choice);
             // Old saves represent an already-created avatar. New drafts stay
             // on selection until the user explicitly continues to editing.
             if (localStorage.getItem('miraifu_avatar_stage') !== 'select') setStep(2);
-            if (restored.adjusted) setNotice('利用できないモデルやパーツを初期設定に戻しました。色など、使える設定は引き継いでいます。');
+            if (restored.adjusted || migratedLegacyModel) setNotice('利用できないモデルやパーツを初期設定に戻しました。色など、使える設定は引き継いでいます。');
           }
         }
       } catch { /* Keep defaults if saved data is malformed. */ }
@@ -96,7 +101,7 @@ export function AvatarCustomizer({
         setHasPreviewBuild(false);
       });
     return () => window.clearTimeout(restore);
-  }, [assets.previewSrc]);
+  }, [assets.id, assets.previewSrc, initialCandidateId]);
 
   // Keep the iframe mounted; its bridge queues changes until Unity is ready.
   useEffect(() => {
@@ -697,4 +702,3 @@ export function AvatarCustomizer({
     </div>
   );
 }
-

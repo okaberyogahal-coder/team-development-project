@@ -1,11 +1,11 @@
 import type { Metadata } from 'next';
-import { getAvatarDevelopmentAssets } from '../../server/avatar-development-assets';
 import Link from 'next/link';
 import { Logo } from '../components/Logo';
 import { getCurrentUser } from '../../server/auth/server';
 import { AvatarCustomizer } from './AvatarCustomizer';
 import './avatar.css';
-import { getRegisteredAvatarGender, resolveAvatarGender } from '../../shared/avatar-candidates';
+import { getRegisteredAvatarGender, type AvatarGenderState } from '../../shared/avatar-candidates';
+import { V3_UNIFIED_ASSETS } from '../../shared/avatar-development-assets';
 
 export const metadata: Metadata = {
   title: 'アバター作成・編集 | ミライフ',
@@ -14,8 +14,18 @@ export const metadata: Metadata = {
 
 export default async function AvatarPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const query = await searchParams;
-  const genderState = resolveAvatarGender(getRegisteredAvatarGender(), query.avatarGenderFixture, process.env.NODE_ENV === 'development');
+  const selectedGender = query.avatarGenderFixture === 'male' || query.avatarGenderFixture === 'female'
+    ? query.avatarGenderFixture
+    : undefined;
+  const genderState: AvatarGenderState = selectedGender
+    ? { status: 'ready', gender: selectedGender, source: 'selection' }
+    : getRegisteredAvatarGender();
   const user = await getCurrentUser();
+  const currentModeLabel = selectedGender === 'male'
+    ? '男性用（若者・大人・シニア）'
+    : selectedGender === 'female'
+      ? '女性用（若者・大人・シニア）'
+      : '男女6体';
 
   return (
     <main className="avatar-page">
@@ -40,8 +50,26 @@ export default async function AvatarPage({ searchParams }: { searchParams: Promi
         </div>
       </header>
 
-      <AvatarCustomizer genderState={genderState} assets={getAvatarDevelopmentAssets()} />
+      <div className="avatar-v3-nav-banner">
+        <span className="avatar-v3-nav-desc">完成版V3アバター ／ {currentModeLabel}</span>
+        <div className="avatar-v3-nav-links" aria-label="アバターの表示">
+          <Link href="/avatar" className={`avatar-v3-pill ${!selectedGender ? 'active' : ''}`} aria-current={!selectedGender ? 'page' : undefined}>
+            全6体
+          </Link>
+          <Link href="/avatar?avatarGenderFixture=male" className={`avatar-v3-pill ${selectedGender === 'male' ? 'active' : ''}`} aria-current={selectedGender === 'male' ? 'page' : undefined}>
+            男性
+          </Link>
+          <Link href="/avatar?avatarGenderFixture=female" className={`avatar-v3-pill ${selectedGender === 'female' ? 'active' : ''}`} aria-current={selectedGender === 'female' ? 'page' : undefined}>
+            女性
+          </Link>
+        </div>
+      </div>
+
+      <AvatarCustomizer
+        genderState={genderState}
+        assets={V3_UNIFIED_ASSETS}
+        allCandidatesMode={!selectedGender}
+      />
     </main>
   );
 }
-

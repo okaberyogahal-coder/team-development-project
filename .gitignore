@@ -31,7 +31,10 @@ unity/**/*.unitypackage
 
 # Rebuild locally with Tools > Miraifu > ★ v3 WebGLプレイヤーのビルド (or npm run build:unity:v3)
 # Large WebGL binary data (>100MB) excluded from Git
+/public/unity/AvatarPreview/Build/
 /public/unity/AvatarV3Unified20261104/Build/
+/public/unity/AvatarV3World20261104/Build/
+/public/unity/AvatarV3World20261104/TemplateData/
 
 # Obsolete / intermediate WebGL prototype builds
 /public/unity/AvatarFaceSeed20261103/

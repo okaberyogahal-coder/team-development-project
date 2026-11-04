@@ -2,7 +2,7 @@ import { BASE_AVATARS } from './avatar-types';
 
 // Avatar-domain values only. These are NOT registration/DB field names or values.
 export type AvatarGenderState =
-  | { status: 'ready'; gender: 'female' | 'male'; source: 'profile' | 'development-fixture' }
+  | { status: 'ready'; gender: 'female' | 'male'; source: 'profile' | 'development-fixture' | 'selection' }
   | { status: 'loading' | 'unset' | 'unconnected' | 'error' };
 
 export function getAvatarCandidates(state: AvatarGenderState) {

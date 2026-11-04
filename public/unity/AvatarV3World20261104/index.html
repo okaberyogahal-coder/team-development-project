@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ミライフ V3ワールド</title>
+  <style>html,body,#unity-canvas{margin:0;width:100%;height:100%;overflow:hidden;background:#edf5fa}#unity-canvas{display:block}</style>
+</head>
+<body>
+  <canvas id="unity-canvas" tabindex="0" aria-label="ミライフ V3ワールド"></canvas>
+  <script src="bridge.js"></script>
+  <script src="Build/AvatarV3World20261104.loader.js"></script>
+  <script>
+    createUnityInstance(document.getElementById('unity-canvas'), {
+      dataUrl: 'Build/AvatarV3World20261104.data',
+      frameworkUrl: 'Build/AvatarV3World20261104.framework.js',
+      codeUrl: 'Build/AvatarV3World20261104.wasm',
+      streamingAssetsUrl: 'StreamingAssets',
+      companyName: 'Miraifu',
+      productName: 'Miraifu V3 World',
+      productVersion: '20261104'
+    }).then(function(instance) {
+      window.unityInstance = instance;
+      document.getElementById('unity-canvas').focus();
+    }).catch(function(error) {
+      document.body.dataset.unityState = 'error';
+      console.error(error);
+    });
+  </script>
+</body>
+</html>

@@ -21,7 +21,8 @@ test('development defaults to the new assets and can roll back without changing 
 
 test('the v3 editor uses the shared world build and can explicitly select it from the plaza route', () => {
   assert.equal(V3_UNIFIED_ASSETS.previewSrc, '/unity/AvatarV3Unified20261104/index.html?mode=preview');
-  assert.equal(V3_UNIFIED_ASSETS.worldSrc, '/unity/AvatarFaceSeed20261103/index.html?mode=world');
+  assert.equal(V3_UNIFIED_ASSETS.worldSrc, '/unity/AvatarV3World20261104/index.html?mode=world');
+  assert.equal(resolveAvatarDevelopmentAssets('development', 'face-seed-20261103').worldSrc, '/unity/AvatarFaceSeed20261103/index.html?mode=world');
   assert.equal(resolveAvatarDevelopmentAssets('development', V3_UNIFIED_ASSETS.id), V3_UNIFIED_ASSETS);
   assert.equal(resolveAvatarDevelopmentAssets('production', V3_UNIFIED_ASSETS.id), V3_UNIFIED_ASSETS);
 });

@@ -20,7 +20,7 @@ export const LEGACY_AVATAR_ASSETS: AvatarAssetProfile = {
   export const V3_UNIFIED_ASSETS: AvatarAssetProfile = {
     id: 'v3-unified-20261104',
     previewSrc: '/unity/AvatarV3Unified20261104/index.html?mode=preview',
-    worldSrc: FACE_SEED_ASSETS.worldSrc,
+    worldSrc: '/unity/AvatarV3World20261104/index.html?mode=world',
     baseImageRoot: '/images/avatar-v3-unified-20261104/base',
     headImageRoot: '/images/avatar-v3-unified-20261104/heads',
   };
