@@ -39,7 +39,9 @@
   <script src="session.js"></script>
   <script src="Build/{{{ LOADER_FILENAME }}}"></script>
   <script>
-    if(new URLSearchParams(location.search).get('experience')==='avatar')document.documentElement.classList.add('avatar-experience');
+    const experienceMode = new URLSearchParams(location.search).get('experience');
+    if(experienceMode==='avatar'||experienceMode==='profile')document.documentElement.classList.add('avatar-experience');
+    if(experienceMode==='profile')document.documentElement.classList.add('host-session-header');
     const canvas = document.getElementById('unity-canvas');
     function syncKeyboardFocus() {
       if(window.unityInstance)window.unityInstance.SendMessage('MelifeSessionBridge','SetKeyboardFocus',document.hasFocus() && document.activeElement === canvas ? '1':'0');
@@ -53,6 +55,7 @@
     let hostReadyTimer;
     const notifyHost = () => window.parent.postMessage({type:'melife:ready'},window.location.origin);
     function showError(message) {
+      window.parent.postMessage({type:'melife:error'},window.location.origin);
       loading.hidden = false;
       document.getElementById('status').textContent = 'ワールドを起動できませんでした。ページを再読み込みしてください。';
       document.getElementById('progress').hidden = true;
@@ -63,11 +66,12 @@
     window.addEventListener('message', event => {
       if (window.parent === window || event.source !== window.parent || event.origin !== window.location.origin || event.data?.type !== 'melife:initialize' || !window.unityInstance) return;
       const {mode, profile} = event.data;
-      if ((mode === 'avatar' || mode === 'world') && profile && typeof profile.id === 'string' && typeof profile.nickname === 'string') {
-        window.unityInstance.SendMessage('MiraiLife', 'Initialize', JSON.stringify({mode,profileId:profile.id,nickname:profile.nickname,appearance:profile.appearance}));
+      if ((mode === 'avatar' || mode === 'world' || mode === 'profile') && profile && typeof profile.id === 'string' && typeof profile.nickname === 'string') {
+        window.unityInstance.SendMessage('MiraiLife', 'Initialize', JSON.stringify({mode,profileId:profile.id,nickname:profile.nickname,gender:profile.gender,appearance:profile.appearance}));
       }
       clearInterval(hostReadyTimer);
       loading.hidden = true;
+      if (mode === 'profile') window.parent.postMessage({type:'melife:profile-ready'},window.location.origin);
     });
     window.addEventListener('melife-unity-avatar', event => {
       const value = event.detail;

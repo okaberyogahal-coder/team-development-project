@@ -42,7 +42,7 @@ async function fillSignup(page: Page, data: ReturnType<typeof registration>) {
 
 async function assertAccount(page: Page, data: ReturnType<typeof registration>) {
   await expect(page.getByRole('heading', { name: `こんにちは、${data.nickname}さん。` })).toBeVisible();
-  for (const value of [data.email, data.interests.join('、'), data.wantsToLearn.join('、'), data.teaches.join('、'), data.goal]) {
+  for (const value of [data.email, ...data.interests, ...data.wantsToLearn, ...data.teaches, data.goal]) {
     await expect(page.locator('.account-details dd').filter({ hasText: value })).toHaveCount(1);
   }
 }

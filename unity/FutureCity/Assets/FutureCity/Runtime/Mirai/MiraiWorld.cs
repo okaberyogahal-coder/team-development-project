@@ -255,7 +255,7 @@ namespace FutureCity
             foreach (var r in uiRectsLast) if (r.Contains(gp)) { over = true; break; }
             PointerOverUI = UIOpen || over;
 
-            if (creatingWebAvatar) return;
+            if (creatingWebAvatar || previewingWebAvatar) return;
 
             // 擬似アップロード（未送信 → 送信中 → 検証中 → 利用可能）
             if (uploadStart > 0f)
@@ -693,6 +693,7 @@ namespace FutureCity
         void OnGUI()
         {
             if (cam == null || campus == null) return;
+            if (previewingWebAvatar) { DrawWebAccountAvatar(); return; }
             Styles();
             if (Event.current.type == EventType.Repaint) uiRects.Clear();
             if (clearFocus) { GUI.FocusControl(null); clearFocus = false; }

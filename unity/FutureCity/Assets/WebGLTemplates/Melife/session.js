@@ -1,6 +1,13 @@
 (function () {
   'use strict';
 
+  // The account page has already authenticated its server-rendered profile.
+  // A read-only preview must not run world redirects or apply guest models.
+  if (new URLSearchParams(window.location.search).get('experience') === 'profile') {
+    window.melifeUnityReady = function () {};
+    return;
+  }
+
   var status = document.getElementById('session-status');
   var avatar = document.getElementById('session-avatar');
   var account = document.getElementById('session-account');

@@ -10,6 +10,7 @@ namespace FutureCity
         public string mode;
         public string profileId;
         public string nickname;
+        public string gender;
         public AvatarAppearance appearance;
     }
 
@@ -18,7 +19,7 @@ namespace FutureCity
     {
         MiraiWorld world;
         string profileId, lastState;
-        bool editing;
+        bool editing, readOnly;
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] static extern void MelifeAvatarEvent(string json);
 #endif
@@ -29,11 +30,12 @@ namespace FutureCity
             try
             {
                 var profile = JsonUtility.FromJson<WebAvatarProfile>(json);
-                if (profile == null || (profile.mode != "avatar" && profile.mode != "world") ||
+                if (profile == null || (profile.mode != "avatar" && profile.mode != "world" && profile.mode != "profile") ||
                     string.IsNullOrWhiteSpace(profile.profileId) || profile.profileId.Length > 100 ||
                     string.IsNullOrWhiteSpace(profile.nickname) || profile.nickname.Trim().Length > 20) return null;
                 profile.nickname = profile.nickname.Trim().Replace("<", "").Replace(">", "");
                 if (string.IsNullOrWhiteSpace(profile.nickname)) return null;
+                if (profile.mode == "profile" && profile.gender != "male" && profile.gender != "female") return null;
                 return profile;
             }
             catch (ArgumentException) { return null; }
@@ -45,6 +47,7 @@ namespace FutureCity
             if (profile == null || world == null) return;
             profileId = profile.profileId;
             editing = profile.mode == "avatar";
+            readOnly = profile.mode == "profile";
             world.ApplyWebProfile(profile);
             lastState = null;
         }
@@ -59,6 +62,7 @@ namespace FutureCity
 
         void Publish(bool complete)
         {
+            if (readOnly) return;
             var state = new WebAvatarProfile
             {
                 mode = complete ? "complete" : "appearance", profileId = profileId,

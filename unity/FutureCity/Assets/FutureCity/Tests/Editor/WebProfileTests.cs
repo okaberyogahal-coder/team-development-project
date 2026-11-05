@@ -6,6 +6,15 @@ namespace FutureCity.Tests
     public class WebProfileTests
     {
         [Test]
+        public void AccountPreviewAcceptsReadOnlyProfileMode()
+        {
+            var profile = WebProfileBridge.Decode("{\"mode\":\"profile\",\"profileId\":\"owner\",\"nickname\":\"みらい\",\"gender\":\"female\"}");
+            Assert.That(profile, Is.Not.Null);
+            Assert.That(profile.mode, Is.EqualTo("profile"));
+            Assert.That(JsonUtility.ToJson(profile), Does.Contain("\"gender\":\"female\""));
+        }
+
+        [Test]
         public void DisplayProfilePreservesIdentityAndExactWardrobe()
         {
             var catalog = Resources.Load<AvatarWardrobeCatalog>(AvatarWardrobeCatalog.ResourcePath);

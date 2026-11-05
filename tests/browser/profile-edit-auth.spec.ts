@@ -98,8 +98,8 @@ test('demographics persist and Unity receives a badge without exact age',async({
  await page.getByLabel('年齢（必須・本人のみ）').fill('59');
  await page.getByRole('button',{name:'変更を保存',exact:true}).click();
  await expect(page).toHaveURL(/\/account\?updated=1$/);
- await expect(page.locator('.account-details')).toContainText('ミドルシニア');
- await expect(page.locator('.account-details')).not.toContainText('59歳');
+ await expect(page.locator('.account-profile')).toContainText('ミドルシニア');
+ await expect(page.locator('.account-profile')).not.toContainText('59歳');
  const row=await db.userProfile.findUniqueOrThrow({where:{userId:user.id}});
  expect(row.gender).toBe('female');expect(row.age).toBe(59);
  const session=await (await page.request.get('/api/unity/session')).json();
@@ -122,5 +122,5 @@ test('existing users must complete demographics before world entry',async({page}
  await page.getByLabel('年齢（必須・本人のみ）').fill('18');
  await page.getByRole('button',{name:'変更を保存',exact:true}).click();
  await expect(page).toHaveURL(/\/account\?updated=1$/);
- await expect(page.locator('.account-details')).toContainText('ユース');
+ await expect(page.locator('.account-profile')).toContainText('ユース');
 });
