@@ -767,6 +767,61 @@ namespace FutureCity
         }
 
         // ---- 空間の案内ラベル
+        readonly Dictionary<string, Texture2D> ageBadgeTextures = new Dictionary<string, Texture2D>();
+
+        Texture2D AgeBadgeTexture(string badge)
+        {
+            string asset;
+            switch (badge)
+            {
+                case "ユース": asset = "youth"; break;
+                case "ミドル": asset = "middle"; break;
+                case "ミドルシニア": asset = "middle-senior"; break;
+                case "シニア": asset = "senior"; break;
+                default: return null;
+            }
+            if (!ageBadgeTextures.TryGetValue(asset, out var texture))
+            {
+                texture = Resources.Load<Texture2D>("AgeBadges/" + asset);
+                ageBadgeTextures[asset] = texture;
+            }
+            return texture;
+        }
+
+        void DrawAvatarNameplate(Vector2 p, string name, string badge, bool demo = false)
+        {
+            string label = "<b>" + Plain(name) + "さん</b>";
+            if (demo) label += " <size=16><color=#888888>デモ</color></size>";
+            var texture = AgeBadgeTexture(badge);
+            const float iconSize = 24f;
+            const float gap = 6f;
+            var size = sTag.CalcSize(new GUIContent(label));
+            float extra = texture == null ? 0f : iconSize + gap;
+            float height = Mathf.Max(size.y, iconSize + sTag.padding.vertical);
+            var rect = new Rect(p.x - (size.x + extra) * 0.5f, p.y - height, size.x + extra, height);
+            var style = new GUIStyle(sTag) { padding = new RectOffset(sTag.padding.left, sTag.padding.right + (int)extra, sTag.padding.top, sTag.padding.bottom) };
+            GUI.Box(rect, label, style);
+            if (texture != null)
+            {
+                var iconRect = new Rect(rect.xMax - sTag.padding.right - iconSize, rect.y + (height - iconSize) * 0.5f, iconSize, iconSize);
+                GUI.DrawTexture(iconRect, texture, ScaleMode.ScaleToFit, true);
+                GUI.Label(iconRect, new GUIContent("", badge), GUIStyle.none);
+            }
+        }
+
+        void DrawPlayerNameplate(float s)
+        {
+            if (player == null || player.body == null || me == null) return;
+            Vector3 anchor = player.body.position + Vector3.up * 1.9f;
+            foreach (var renderer in player.body.GetComponentsInChildren<Renderer>())
+                if (renderer.enabled) anchor.y = Mathf.Max(anchor.y, renderer.bounds.max.y);
+            anchor.y += 0.25f;
+            if (!ToGui(anchor, s, out var p)) return;
+            string badge = webSession == null ? AgeBadgeLabel(me.age)
+                : webSession.authenticated ? webSession.profile.ageBadge : null;
+            DrawAvatarNameplate(p, me.name, badge);
+        }
+
         void DrawWorldLabels(float s)
         {
             Vector3 camPos = cam.transform.position;
@@ -795,8 +850,9 @@ namespace FutureCity
                 float d = Vector3.Distance(camPos, c.HeadPosition);
                 if (d > 14f || !ToGui(c.HeadPosition + Vector3.up * 0.3f, s, out var p)) continue;
                 var pr = c.profile;
-                TagAt(p, $"<b>{pr.name}さん</b> {AgeBadgeLabel(pr.age)} <size=16><color=#888888>デモ</color></size>");
+                DrawAvatarNameplate(p, pr.name, AgeBadgeLabel(pr.age), true);
             }
+            DrawPlayerNameplate(s);
         }
 
         // ---- 左上：現在地と参加人数
