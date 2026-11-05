@@ -50,7 +50,7 @@ namespace FutureCity
             gg.AddComponent<MeshCollider>().sharedMesh = gg.GetComponent<MeshFilter>().sharedMesh;
             deco.Build("Park_Deco", root, lib);
 
-            Sculpture(lib, c, root);
+            if (!lib.IsAnime) Sculpture(lib, c, root);   // アニメ調では MiraiPlaza が作り直した彫刻を置く
             Drones(lib, c, root);
             if (city.photoMode) Boats(lib, city, root, city.LakeLevel);   // 背景は実写の写真。湖に船だけ浮かべる
             else Distant(lib, city, root);
@@ -83,9 +83,23 @@ namespace FutureCity
             var path = MeshBuilder.Smooth(ctrl, 6, true);
             for (int i = 0; i < path.Count; i++) { var p = path[i]; p.y = c.Center.y; path[i] = p; }
 
+            bool anime = AnimeProps.Active;
+            if (anime)
+            {
+                // 角を丸めた床板（下面もなめらかに）＋上面のパステルの石畳＋縁の立ち上がり
+                var deckPath = new List<Vector3>();
+                foreach (var q in path) deckPath.Add(q + Up * deckY);
+                Sweep.Add(s, deckPath, true, Sweep.RoundedRectClosed(halfW * 2f, deckH, 0.16f, 3, 0f, 0f), S(Mat.Plaster), 6f);
+                Sweep.Add(s, deckPath, true, new[] { new Vector2(-halfW + 0.12f, deckH + 0.004f), new Vector2(halfW - 0.12f, deckH + 0.004f) }, S(Mat.PastelPaving), 8f);
+                Sweep.Add(s, deckPath, true, Sweep.RoundedRect(0.16f, 0.14f, 0.05f, 2, halfW - 0.08f, deckH), S(Mat.Plaster), 6f);
+                Sweep.Add(s, deckPath, true, Sweep.RoundedRect(0.16f, 0.14f, 0.05f, 2, -halfW + 0.08f, deckH), S(Mat.Plaster), 6f);
+            }
+            else
+            {
             s.AddBeam(path, true, 0f, halfW, deckY, deckH, S(Mat.Plaster), S(Mat.PastelPaving), S(Mat.Plaster));
             s.AddBeam(path, true, halfW - 0.05f, 0.06f, deckY + deckH, 0.12f, S(Mat.Plaster), S(Mat.Plaster), S(Mat.Plaster));
             s.AddBeam(path, true, -halfW + 0.05f, 0.06f, deckY + deckH, 0.12f, S(Mat.Plaster), S(Mat.Plaster), S(Mat.Plaster));
+            }
             glass.AddBeam(path, true, halfW - 0.05f, 0.03f, deckY + deckH + 0.12f, 0.95f, S(Mat.GlassClear), S(Mat.GlassClear), S(Mat.GlassClear));
             glass.AddBeam(path, true, -halfW + 0.05f, 0.03f, deckY + deckH + 0.12f, 0.95f, S(Mat.GlassClear), S(Mat.GlassClear), S(Mat.GlassClear));
 
@@ -113,7 +127,8 @@ namespace FutureCity
                 if (acc > 14f && !nearAxis && !overRoom)
                 {
                     acc = 0f;
-                    s.AddExtrusion(p, MeshBuilder.Circle(0.42f, 20), MeshBuilder.Circle(0.3f, 20), deckY, 0f, S(Mat.Plaster), S(Mat.Plaster), T, true, false);
+                    if (anime) AnimeProps.Add("SkywalkPillar", p, 0f, 1f, 2);
+                    else s.AddExtrusion(p, MeshBuilder.Circle(0.42f, 20), MeshBuilder.Circle(0.3f, 20), deckY, 0f, S(Mat.Plaster), S(Mat.Plaster), T, true, false);
                 }
                 if (plant > 9f)
                 {
@@ -232,14 +247,19 @@ namespace FutureCity
             foreach (var tp in new[] { new Vector2(-3.6f, 0f), new Vector2(0f, 0f), new Vector2(3.6f, 0f) })
             {
                 Vector3 t0 = o + new Vector3(tp.x, 0.06f, tp.y);
-                s.AddExtrusion(t0, MeshBuilder.Circle(0.1f, 12), MeshBuilder.Circle(0.08f, 12), 0.7f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, false);
-                s.AddExtrusion(t0 + Up * 0.7f, MeshBuilder.Circle(0.62f, 32), MeshBuilder.Circle(0.62f, 32), 0.05f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, true, true);
-                deco.AddSphere(t0 + Up * 0.82f, new Vector3(0.09f, 0.07f, 0.09f), 4, 10, S(Mat.FlowerYellow));
+                bool model = AnimeProps.Active;
+                if (model) AnimeProps.Add("CafeSet4", t0, 0f, 1f, 1);    // アニメ調：丸テーブル＋布張りのいす 4 脚（座る人の位置は同じ）
+                else
+                {
+                    s.AddExtrusion(t0, MeshBuilder.Circle(0.1f, 12), MeshBuilder.Circle(0.08f, 12), 0.7f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, false);
+                    s.AddExtrusion(t0 + Up * 0.7f, MeshBuilder.Circle(0.62f, 32), MeshBuilder.Circle(0.62f, 32), 0.05f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, true, true);
+                    deco.AddSphere(t0 + Up * 0.82f, new Vector3(0.09f, 0.07f, 0.09f), 4, 10, S(Mat.FlowerYellow));
+                }
                 for (int k = 0; k < 4; k++)
                 {
                     float a = (k * 90f + 45f) * Mathf.Deg2Rad;
                     Vector3 st = t0 + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * 1.05f;
-                    s.AddExtrusion(st, MeshBuilder.Circle(0.21f, 16), MeshBuilder.Circle(0.19f, 16), 0.45f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, true);
+                    if (!model) s.AddExtrusion(st, MeshBuilder.Circle(0.21f, 16), MeshBuilder.Circle(0.19f, 16), 0.45f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, true);
                     res.cafeSeats.Add(st + Up * 0.45f);
                     Vector3 face = t0 - st;
                     res.cafeYaw.Add(Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg);
@@ -384,12 +404,25 @@ namespace FutureCity
         static void Boats(MaterialLibrary lib, CityGenerator city, Transform root, float waterY)
         {
             float E = city.HalfExtent;
-            var boat = new MeshBuilder();
-            boat.AddSphere(Vector3.zero, new Vector3(4.2f, 1.6f, 13f), 6, 20, S(Mat.Plaster), -90f);
-            boat.AddBox(new Vector3(0f, 1f, -1.5f), new Vector3(5.4f, 2.2f, 12f), 0f, S(Mat.Glass), S(Mat.Plaster), T, true);
-            boat.AddBox(new Vector3(0f, 3.2f, -1f), new Vector3(4.6f, 1.6f, 7f), 0f, S(Mat.Glass), S(Mat.Plaster), T, true);
-            var boatMesh = boat.ToMesh("Boat", out var bslots);
-            var bmats = lib.GetMany(bslots);
+            Mesh boatMesh;
+            Material[] bmats;
+            var ferry = lib.IsAnime ? MiraiModels.Get("FerryBoat") : null;
+            if (ferry != null)
+            {
+                // アニメ調：流線形の船体・ガラスの客室・色の帯（Blender のモデル）
+                boatMesh = ferry.mesh;
+                bmats = lib.ModelMaterials(ferry.subNames);
+                for (int i = 0; i < ferry.subNames.Length; i++) if (ferry.subNames[i] == "Accent") bmats[i] = lib.Model("Accent1");
+            }
+            else
+            {
+                var boat = new MeshBuilder();
+                boat.AddSphere(Vector3.zero, new Vector3(4.2f, 1.6f, 13f), 6, 20, S(Mat.Plaster), -90f);
+                boat.AddBox(new Vector3(0f, 1f, -1.5f), new Vector3(5.4f, 2.2f, 12f), 0f, S(Mat.Glass), S(Mat.Plaster), T, true);
+                boat.AddBox(new Vector3(0f, 3.2f, -1f), new Vector3(4.6f, 1.6f, 7f), 0f, S(Mat.Glass), S(Mat.Plaster), T, true);
+                boatMesh = boat.ToMesh("Boat", out var bslots);
+                bmats = lib.GetMany(bslots);
+            }
             for (int i = 0; i < 4; i++)
             {
                 var go = new GameObject("Boat" + i);

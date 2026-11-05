@@ -1,7 +1,7 @@
 # ミライフ Unity 空間
 
-メンバーから受け取った `FutureCity_Unity_1of2.zip` と
-`FutureCity_Unity_2of2.zip` の素材・ソースを、同じリポジトリで共有する。
+メンバーから受け取った `FutureCity_Unity_1of3.zip`・`FutureCity_Unity_2of3.zip`・
+`FutureCity_Unity_3of3.zip`（2026-10-30版） の素材・ソースを、同じリポジトリで共有する。
 
 ## 現在の状態
 
@@ -180,3 +180,17 @@ WebとDBを含む検証記録は [認証の一連操作の検証](../docs/auth-v
 埋め込み時はUnity側の認証バーを隠し、既存のセッション確認・ログアウト・再確認処理へ同一オリジンかつ親子ウィンドウを確認したメッセージで連携する。親画面から本人IDや認証状態を設定する機能は設けない。WebGLを単独で開いた場合は従来のバーを残す。
 
 `world-header.spec.ts` と `unity-auth.spec.ts` で、一列配置、ボタン寸法・順序、ログアウト、利用者切替、通信失敗と再確認を確認する。
+
+## 2026-11-02 新ワールドへの更新
+
+3分割ZIPの景観・モデル・トゥーンシェーダーを統合し、アニメ調を標準にした。
+プレイヤー・デモ人物・背景人物は既存のCreative Charactersを使う。
+着替え・Webログイン／プロフィール・年齢バッジ・ドラッグ操作・全画面操作を維持する。
+同梱の戦闘モードは導入していない。
+
+新素材を取り込んだ後は、Unityメニューの
+`Tools > Future City > Recreate Scene and Build Web for melife` でシーンを再生成してWebビルドする。
+通常の `npm run build:unity` は既存シーンを維持したまま再ビルドする。
+検証用に出力先を分ける場合は `MELIFE_UNITY_BUILD_OUTPUT` に絶対パスを指定できる。
+旧版のREADMEに記載されたアセットフォルダ全削除は、この統合プロジェクトでは行わない。
+既存のアバター・フォント・Web連携を削除してしまうため。

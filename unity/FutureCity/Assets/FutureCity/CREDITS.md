@@ -3,14 +3,29 @@
 このフォルダの画像素材は、すべて **CC0（パブリックドメイン）** の実写素材と、そこから作った画像、または自作の画像です。
 CC0 のため表記の義務はありませんが、感謝をこめて記載します。
 
-## 背景の 360°写真（Assets/FutureCityPhotos）
+## アニメ調の素材（2026-10-30 版）
+
+| 素材 | 作り方 | ライセンス |
+|---|---|---|
+| シェーダー（`Resources/FutureCityShaders`） | このプロジェクトで自作（URP 用の HLSL） | このプロジェクトの制作物（CC0 として扱ってかまいません） |
+| モデル（`Resources/FutureCityModels`） | Blender の Python スクリプトで自作（プロジェクトの `tools/blender`） | 同上 |
+| テクスチャ（`Resources/FutureCityAnime`） | Python で手続き的に生成（プロジェクトの `tools/texgen`） | 同上 |
+| 戦闘モードの効果音 | 実行時にプログラムで合成（ファイルなし） | 同上 |
+
+- 新規の景観用アニメ調素材は自作です。本統合版の人物には、下記の既存Asset Storeアバターを使用します。
+- 世界観・建物・人物はミライフのオリジナルです（ほかの作品の素材・キャラクター・形は使っていません）。
+
+## 背景の 360°画像（Assets/FutureCityPhotos）
 
 | ファイル | 元の素材 | 作者・配布元 | ライセンス |
 |---|---|---|---|
-| `Resources/FutureCityBackdrop/Default_ParchedCanal_4k.hdr` | 「Parched Canal」HDRI（4K） | Poly Haven（旧 HDRI Haven）／ pyvista vtk-data 経由で入手 | CC0 |
+| `Resources/FutureCityBackdrop/Default_FutureCity_8k.jpg` | 2127年の未来都市（このプロジェクトで制作した 3DCG。Blender 5.0 Cycles で描画） | このプロジェクト | CC0 として扱ってかまいません |
+| （上の画像の雲） | 「Parched Canal」HDRI の空から雲だけを取り出して合成 | Poly Haven（旧 HDRI Haven）／ pyvista vtk-data 経由で入手 | CC0 |
+| `BackdropAlternatives/ParchedCanal_4k.jpg`（予備の写真） | 「Parched Canal」HDRI（4K）を JPG に | Poly Haven（旧 HDRI Haven） | CC0 |
 | `BackdropAlternatives/FlowerRoad_2k.hdr`（予備の写真） | 「Flower Road」HDRI（2K） | Poly Haven（旧 HDRI Haven）／ Google Filament のサンプル同梱品から入手 | CC0 |
 
-- 地平線より下（広場では湖の水面にかくれて見えない部分）は、ファイルを小さくするため単色にしています。空と地平線は元のままです。
+- 予備の写真は、地平線より下（広場では湖の水面にかくれて見えない部分）をファイルを小さくするため単色にしています。空と地平線は元のままです。
+- 未来都市の画像の空は Blender の物理的な空のモデル（多重散乱）、街は手続き的に生成した約1万7千棟の建物です。
 
 ## 広場のテクスチャ（…/Resources/FutureCityTextures。Lawn・Soil・Bark の法線マップは Assets/FutureCityPhotos 側）
 
