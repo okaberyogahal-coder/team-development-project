@@ -1,4 +1,4 @@
-import {expect,type Page} from '@playwright/test';
+import {expect,test,type Page} from '@playwright/test';
 import {randomUUID} from 'node:crypto';
 import {authTestDatabaseUrl} from './auth-database';
 import {BASE_AVATARS,DEFAULT_AVATAR_CHOICE} from '../../shared/avatar-types';
@@ -6,7 +6,7 @@ import {DEFAULT_AVATAR,DEMO_PROFILE_KEY} from '../../shared/demo-profile';
 export async function avatarUser(page:Page){
  authTestDatabaseUrl();
  const email=`avatar-v3-${randomUUID()}@example.invalid`,password='avatar-v3-test-password-123';
- const result=await page.request.post('/api/account/signup',{headers:{Origin:'http://127.0.0.1:3012'},data:{email,password,confirmation:password,nickname:'着せ替え確認',avatar:'cat',gender:'male',age:30,adult:true,terms:true,privacy:true,interests:['写真'],wantsToLearn:[],teaches:[],strengths:'',goal:''}});
+ const result=await page.request.post('/api/account/signup',{headers:{Origin:new URL(test.info().project.use.baseURL!).origin},data:{email,password,confirmation:password,nickname:'着せ替え確認',avatar:'cat',gender:'male',age:30,adult:true,terms:true,privacy:true,interests:['写真'],wantsToLearn:[],teaches:[],strengths:'',goal:''}});
  expect(result.ok(),await result.text()).toBe(true);
  const session=await (await page.request.get('/api/unity/session')).json();
  return session.profile.userId as string;

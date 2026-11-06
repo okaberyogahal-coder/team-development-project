@@ -43,3 +43,18 @@ for(const viewport of [{width:1024,height:600},{width:390,height:844}])test(`mem
  const submit=page.getByRole('button',{name:'このアバターで街へ行く'});await expect(submit).toBeEnabled();await submit.scrollIntoViewIfNeeded();await expect(submit).toBeInViewport();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:test.info().outputPath(`member-${viewport.width}.png`),fullPage:true});
 });
+for(const action of ['auth-change','unmount'] as const)test(`pending completion is invalidated by ${action}`,async({page})=>{
+ const owner=await avatarUser(page);await legacySave(page,owner);await mockPreview(page);await page.goto('/avatar');await expect(page.locator('.avatar-base-card').first()).toBeEnabled();await page.getByRole('button',{name:'このアバターで編集へ →'}).click();
+ const submit=page.getByRole('button',{name:'このアバターで街へ行く'});await expect(submit).toBeEnabled();
+ let release!:()=>void;const held=new Promise<void>(resolve=>{release=resolve;});let requested!:()=>void;const started=new Promise<void>(resolve=>{requested=resolve;});
+ await page.route('**/api/unity/session',async route=>{requested();await held;await route.fulfill({json:{authenticated:true,profile:{userId:owner}}});});
+ await submit.click();await started;
+ if(action==='auth-change'){
+  await page.evaluate(key=>{localStorage.setItem(key,JSON.stringify({version:1,id:'another-owner',nickname:'B',appearance:null}));const channel=new BroadcastChannel('melife-auth');channel.postMessage('changed');channel.close();},DEMO_PROFILE_KEY);
+  await page.waitForTimeout(100);
+ }else{await page.getByRole('link',{name:'マイページ',exact:true}).click();await expect(page).toHaveURL(/\/account$/);}
+ const response=page.waitForResponse('**/api/unity/session');release();await response;
+ if(action==='auth-change'){
+  await expect(page.getByText('ログイン状態が変わりました。再度ログインしてください。')).toBeVisible();expect(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).id,DEMO_PROFILE_KEY)).toBe('another-owner');await expect(page).toHaveURL(/\/avatar$/);
+ }else{await page.waitForTimeout(300);await expect(page).toHaveURL(/\/account$/);expect(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).appearance,DEMO_PROFILE_KEY)).toEqual(DEFAULT_AVATAR);}
+});

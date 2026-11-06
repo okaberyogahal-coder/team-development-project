@@ -70,9 +70,20 @@ export function AvatarCustomizer({
 
   const current = useRef({choice, revision:0});
   const frameEpoch=useRef(0);
+  const lifecycle=useRef({active:false,generation:0,identityChanged:false});
+  const [sessionChanged,setSessionChanged]=useState(false);
+  useEffect(()=>{
+    const state=lifecycle.current;state.active=true;state.generation++;
+    const invalidate=()=>{state.generation++;};
+    const authChanged=()=>{invalidate();state.identityChanged=true;setSessionChanged(true);setNotice('ログイン状態が変わりました。再度ログインしてください。');};
+    let channel:BroadcastChannel|undefined;
+    try{channel=new BroadcastChannel('melife-auth');channel.addEventListener('message',event=>{if(event.data==='changed')authChanged();});}catch{/* The final server check remains required. */}
+    window.addEventListener('focus',invalidate);document.addEventListener('visibilitychange',invalidate);
+    return()=>{state.active=false;invalidate();channel?.close();window.removeEventListener('focus',invalidate);document.removeEventListener('visibilitychange',invalidate);};
+  },[]);
   const [ack, setAck] = useState<{revision:number; fingerprint:string} | null>(null);
   const [saving, setSaving] = useState(false);
-  const confirmed = ack?.revision === revision && ack.fingerprint === v3Fingerprint(choice);
+  const confirmed = !sessionChanged && ack?.revision === revision && ack.fingerprint === v3Fingerprint(choice);
 
   useEffect(() => {
     const restore = window.setTimeout(() => {
@@ -94,7 +105,7 @@ export function AvatarCustomizer({
     current.current={choice,revision};
     if(!hydrated)return;
     let warningTimer:number|undefined;
-    try{writeV3Draft(localStorage,ownerId,choice);}catch{warningTimer=window.setTimeout(()=>setSaveError(true),0);}
+    try{if(!lifecycle.current.identityChanged)writeV3Draft(localStorage,ownerId,choice);}catch{warningTimer=window.setTimeout(()=>setSaveError(true),0);}
     const send = () => iframeRef.current?.contentWindow?.postMessage({type:'miraifu:avatar',...current.current},window.location.origin);
     const receive = (event:MessageEvent) => {
       if(event.origin!==window.location.origin||event.source!==iframeRef.current?.contentWindow)return;
@@ -120,15 +131,17 @@ export function AvatarCustomizer({
   const changeStep = (next:1|2) => {setStep(next);requestAnimationFrame(()=>document.getElementById('avatar-step-title')?.focus());};
   const handleGoToCity = async () => {
     if(!confirmed||saving)return;
-    const submitted={...current.current,epoch:frameEpoch.current};setSaving(true);
+    const submitted={...current.current,epoch:frameEpoch.current,generation:lifecycle.current.generation};setSaving(true);
     try{
       const response=await fetch('/api/unity/session',{cache:'no-store'});
       const session=await response.json();
+      if(!lifecycle.current.active)return;
+      if(submitted.generation!==lifecycle.current.generation||lifecycle.current.identityChanged)throw new Error('ログイン状態が変わりました。再度ログインしてください。');
       if(!response.ok||!session.authenticated||session.profile?.userId!==ownerId)throw new Error('ログイン状態が変わりました。再度ログインしてください。');
       if(submitted.epoch!==frameEpoch.current||submitted.revision!==current.current.revision||v3Fingerprint(submitted.choice)!==v3Fingerprint(current.current.choice))throw new Error('変更後のプレビューを確認してから、もう一度お試しください。');
       completeV3Avatar(localStorage,ownerId,nickname,{version:3,assetProfile:'v3-unified-20261104',choice:submitted.choice});
       router.push('/plaza');
-    }catch(error){setNotice(error instanceof Error?error.message:'保存できませんでした。もう一度お試しください。');setSaving(false);}
+    }catch(error){if(!lifecycle.current.active)return;setNotice(error instanceof Error?error.message:'保存できませんでした。もう一度お試しください。');setSaving(false);}
   };
 
   const unsupportedModel = hydrated && catalogReceived && (assets.id !== 'legacy' || choice.baseAvatarId !== LEGACY_BASE_AVATAR_ID) && !models.some(model => model.id === choice.baseAvatarId);

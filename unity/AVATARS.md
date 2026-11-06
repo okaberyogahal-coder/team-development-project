@@ -97,3 +97,8 @@ V3は `{version:3,assetProfile:'v3-unified-20261104',choice:...}` として
 現在の街のプレイヤールート・移動・カメラ・NPCは維持し、`V3AvatarAdapter` が本人の表示モデルだけを置き換える。
 サーバーが確認した本人IDと一致する完成外見だけを読み込み、ゲスト・別人へ前の利用者のV3外見を渡さない。
 マイページは同じ外見を読み取り専用で表示する。受領ブランチの別ワールドは起動しない。
+
+検証: `npm test` にV3単体試験を含む。ブラウザ統合試験は、共有DBとは別のローカル
+`DATABASE_TEST_URL`（DB名末尾 `_test`）を用意し、`npm run test:db` の後に
+`MELIFE_ACCOUNT_WEBGL=1 npm run test:avatar-v3:browser` を実行する。
+事前に両WebGLと `npm run build` が必要。テスト用Nextサーバーは3012番を使う。

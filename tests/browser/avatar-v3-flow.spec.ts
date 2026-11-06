@@ -51,3 +51,19 @@ test('real six-model wardrobe applies the same appearance in existing city and r
  await page.screenshot({path:test.info().outputPath('real-account-v3.png')});
  expect(errors).toEqual([]);
 });
+test('real world clears V3 on logout and never applies the previous owners outfit to a new user',async({page})=>{
+ const owner=await avatarUser(page);
+ const {DEFAULT_AVATAR_CHOICE}=await import('../../shared/avatar-types');
+ await page.addInitScript(({owner,key,choice})=>{if(top===window)localStorage.setItem(key,JSON.stringify({version:1,id:owner,nickname:'着せ替え確認',appearance:{version:3,assetProfile:'v3-unified-20261104',choice}}));},{owner,key:DEMO_PROFILE_KEY,choice:{...DEFAULT_AVATAR_CHOICE,baseAvatarId:'young-woman'}});
+ await page.goto('/plaza');const world=page.frameLocator('iframe[title="ミライフ Unityワールド"]');
+ await expect.poll(()=>world.locator('body').evaluate(()=>(window as unknown as {melifeAppliedAvatar?:{choice:{baseAvatarId:string}}}).melifeAppliedAvatar?.choice.baseAvatarId),{timeout:150000}).toBe('young-woman');
+ const actual=()=>world.locator('body').evaluate(async()=>{
+  const w=window as unknown as {unityInstance:{SendMessage:(object:string,method:string)=>void};melifeWorldInteraction?:{avatarChoice:unknown}};delete w.melifeWorldInteraction;w.unityInstance.SendMessage('MiraiLife','ReportWebInteraction');for(let i=0;i<60&&!w.melifeWorldInteraction;i++)await new Promise(r=>setTimeout(r,16));return ((w.melifeWorldInteraction as {avatarChoice:{baseAvatarId?:string}|null}|undefined)?.avatarChoice)?.baseAvatarId||null;
+ });
+ await page.getByRole('button',{name:'ログアウト',exact:true}).click();await expect(world.locator('body')).toHaveAttribute('data-session-state','guest');
+ await expect.poll(actual).toBeNull();
+ const next=await avatarUser(page);expect(next).not.toBe(owner);await page.reload();
+ await expect(world.locator('body')).toHaveAttribute('data-session-state','authenticated',{timeout:150000});
+ await expect.poll(actual).toBeNull();
+ expect(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).id,DEMO_PROFILE_KEY)).toBe(owner);
+});

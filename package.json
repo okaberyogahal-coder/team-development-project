@@ -14,7 +14,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:plaza": "tsx --test tests/plaza/*.test.ts",
-    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo && npm run test:account",
+    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo && npm run test:account && npm run test:avatar-v3",
     "dev:plaza": "tsx server/plaza/index.ts",
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
@@ -35,7 +35,8 @@
     "test:local-demo": "node --import tsx --test tests/local-demo/*.test.ts",
     "test:account": "node --import tsx --test tests/account/*.test.ts",
     "build:avatar-v3": "node scripts/build-avatar-v3.mjs",
-    "test:avatar-v3": "node --import tsx --test tests/avatar-v3/*.test.ts"
+    "test:avatar-v3": "node --import tsx --test tests/avatar-v3/*.test.ts",
+    "test:avatar-v3:browser": "playwright test --config playwright.avatar-v3.config.ts"
   },
   "dependencies": {
     "@next/env": "16.4.2",

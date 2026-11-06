@@ -35,9 +35,11 @@ test('Unityワールド本体がブラウザー内で起動する', async ({ pag
 
 // Unity must begin loading before client-side profile hydration.
 test('初期HTMLからUnityを読み込み、再読み込み時の空画面を防ぐ', async ({ request }) => {
-  for (const route of ['/plaza', '/avatar']) {
+  for (const route of ['/plaza']) {
     const response = await request.get(route);
     expect(response.ok()).toBe(true);
     expect(await response.text()).toMatch(/<iframe[^>]+src="\/unity\/FutureCity\/index.html/);
   }
 });
+
+test('未ログインのアバター作成はログインへ案内する',async({page})=>{await page.goto('/avatar');await expect(page).toHaveURL(/\/login$/);});
