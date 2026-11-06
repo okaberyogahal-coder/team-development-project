@@ -5,7 +5,7 @@ export default defineConfig([
   ...nextVitals,
   // These existing exits intentionally perform a full page navigation.
   {
-    files: ["app/components/AuthShell.tsx", "app/components/Footer.tsx", "app/components/SignupForm.tsx", "app/components/plaza/PlazaClient.tsx", "app/plaza/page.tsx"],
+    files: ["app/ai-navi/DemoClient.tsx", "app/components/AuthShell.tsx", "app/components/Footer.tsx", "app/components/SignupForm.tsx", "app/components/plaza/PlazaClient.tsx", "app/plaza/page.tsx"],
     rules: { "@next/next/no-html-link-for-pages": "warn" },
   },
   // Keep the legacy plaza's existing hook patterns visible during this dependency upgrade.
@@ -17,5 +17,5 @@ export default defineConfig([
     files: ["app/components/plaza/JoinForm.tsx", "app/hooks/useRoomCall.ts"],
     rules: { "react-hooks/set-state-in-effect": "warn" },
   },
-  globalIgnores([".next/**", "generated/**", "unity/**", "public/unity/**", "test-results/**", "playwright-report/**"]),
+  globalIgnores([".worktrees/**", ".next/**", "generated/**", "unity/**", "public/unity/**", "test-results/**", "playwright-report/**"]),
 ]);

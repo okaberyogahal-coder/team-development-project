@@ -74,3 +74,26 @@ NPCは名前をもとに服装と色を決定し、再表示しても同じ人�
 頭上ラベルの年齢文字を、名前の右横の24px画像に置き換える。ユース＝芽、ミドル＝若葉、ミドルシニア＝木、シニア＝花。背景透過PNGを`Assets/FutureCity/Resources/AgeBadges/`から読み込み、種類ごとにキャッシュする。未設定・ゲストは名前のみ。プロフィール内の年齢区分の説明は文字で維持する。Web反映にはWebGL再ビルドが必要。
 
 画像は組み込みImageGenで生成した。共通プロンプトは「ONE square favicon-like age-group badge for a friendly Japanese community game; flat clean friendly illustrated emblem; thick dark forest green outlines; bold simple silhouette legible at 24 pixels; centered filling 85%; transparent background with real alpha; no text, letters, numbers, border, other objects, gradients or shadow; consistent botanical icon family」。各画像の主題は`youth`: fresh two-leaf green sprout、`middle`: single broad teal green leaf、`middle-senior`: rounded mature tree with green canopy and brown trunk、`senior`: warm golden orange five petal flower with a dark gold center。生成画像をアルファ付き128×128 PNGに縮小して格納する。
+
+## メンバー作成のV3着せ替え（2026-11-06）
+
+Webの `/avatar` は `feature/unity-avatar-futurecity` の固定コミット
+`d71d307e8a7f22446e3429516d3719e0d42c8d31` にある `AvatarCustomizer` とCSSを使用する。
+基本アバター選択、衣装サムネイル、表情、色、プリセットは受領版のUIを維持する。
+ログイン後、プロフィールの性別・年齢に関係なく男女6体すべてから選択できる。
+プロフィールの性別・年齢は外見選択で変更しない。
+
+`npm run build:avatar-v3` で選択用プレビュー、`npm run build:unity` で現在の街を生成する。
+両方のビルドが必要。出力はGit管理外なので、別PCでもUnity 6000.4.2f1 + Web Build Supportで実行する。
+素材の依存関係は `node scripts/import-avatar-v3.mjs --check` で検証できる。
+`docs/avatar-v3-import.json` に元ファイルと固定コミット・SHAを記録している。
+
+V3は `{version:3,assetProfile:'v3-unified-20261104',choice:...}` として
+ブラウザの既存完成データキーに保存する。編集中は `melife.avatar.v3.draft:<本人ID>` だけを更新し、
+現在の設定を実プレビューが正常に適用した後、確定操作とサーバーの本人再確認で完成値を保存する。
+旧version1/2の完成外見は編集開始で上書きしない。初回のV3確定時に本人別の `melife.avatar.previous:<本人ID>` へ退避する。
+メール・パスワード・認証トークンはこの保存領域に入れない。ブラウザ保存のみで、DB・他端末へは同期しない。
+
+現在の街のプレイヤールート・移動・カメラ・NPCは維持し、`V3AvatarAdapter` が本人の表示モデルだけを置き換える。
+サーバーが確認した本人IDと一致する完成外見だけを読み込み、ゲスト・別人へ前の利用者のV3外見を渡さない。
+マイページは同じ外見を読み取り専用で表示する。受領ブランチの別ワールドは起動しない。

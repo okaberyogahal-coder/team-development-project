@@ -92,13 +92,13 @@
  .account-page-heading > div > p:last-child { display: none; }
  .account-page-heading .account-eyebrow { padding: 2px 8px; font-size: 9px; }
  .account-grid { gap: 18px; }
- .account-profile { gap: 7px; }
+ .account-profile { gap: 5px; }
  .account-profile-heading { min-height: 32px; }
  .account-profile-heading h2 { font-size: 16px; margin-top: 1px; }
  .account-profile-heading .account-eyebrow { display: none; }
  .account-page .secondary-button { min-height: 32px; padding: 6px 12px; }
  .account-info-card { padding: 8px 12px; border-radius: 13px; }
- .account-info-card:has(.account-learning-details) { min-height: 128px; }
+ .account-info-card:has(.account-learning-details) { min-height: 110px; }
  .account-card-heading { margin-bottom: 6px; }
  .account-card-number { width: 20px; height: 20px; }
  .account-card-heading h3 { font-size: 13px; }
