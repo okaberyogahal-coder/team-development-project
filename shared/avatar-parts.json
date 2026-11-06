@@ -1,0 +1,159 @@
+{
+  "slots": [
+    {
+      "key": "body",
+      "parts": [
+        {
+          "value": 0,
+          "label": "現在のモデル",
+          "prefab": "Body/Body_010.prefab"
+        }
+      ]
+    },
+    {
+      "key": "face",
+      "parts": [
+        {
+          "value": 0,
+          "label": "怒った顔",
+          "prefab": "Faces/Male_emotion_angry_003.prefab"
+        },
+        {
+          "value": 1,
+          "label": "笑顔",
+          "prefab": "Faces/Male_emotion_happy_002.prefab"
+        },
+        {
+          "value": 2,
+          "label": "おだやかな顔",
+          "prefab": "Faces/Male_emotion_usual_001.prefab"
+        }
+      ]
+    },
+    {
+      "key": "hair",
+      "parts": [
+        {
+          "value": 0,
+          "label": "ウェーブショート",
+          "prefab": "Hairstyle/Hairstyle_Male_001.prefab"
+        },
+        {
+          "value": 1,
+          "label": "すっきりショート",
+          "prefab": "Hairstyle/Hairstyle_Male_005.prefab"
+        },
+        {
+          "value": 2,
+          "label": "ボリュームカール",
+          "prefab": "Hairstyle Single/Hairstyle_Male_Single_006.prefab"
+        }
+      ]
+    },
+    {
+      "key": "outerwear",
+      "parts": [
+        {
+          "value": 0,
+          "label": "半袖Tシャツ",
+          "prefab": "Outwear/Outwear_004.prefab"
+        },
+        {
+          "value": 1,
+          "label": "ハイネックジャケット",
+          "prefab": "Outwear/Outwear_043.prefab"
+        },
+        {
+          "value": 2,
+          "label": "ショート丈パーカー",
+          "prefab": "Outwear/Outwear_050.prefab"
+        }
+      ]
+    },
+    {
+      "key": "pants",
+      "parts": [
+        {
+          "value": 0,
+          "label": "裾折り返しパンツ",
+          "prefab": "Pants/Pants_009.prefab"
+        },
+        {
+          "value": 1,
+          "label": "カーゴパンツ",
+          "prefab": "Pants/Pants_010.prefab"
+        },
+        {
+          "value": 2,
+          "label": "ショートパンツ",
+          "prefab": "Shorts/Shorts_003.prefab"
+        }
+      ]
+    },
+    {
+      "key": "shoes",
+      "parts": [
+        {
+          "value": 0,
+          "label": "ポンポン付きスリッパ",
+          "prefab": "Shoes/Shoe_Slippers_002.prefab"
+        },
+        {
+          "value": 1,
+          "label": "スリッポンシューズ",
+          "prefab": "Shoes/Shoe_Slippers_005.prefab"
+        },
+        {
+          "value": 2,
+          "label": "スニーカー",
+          "prefab": "Shoes/Shoe_Sneakers_009.prefab"
+        }
+      ]
+    },
+    {
+      "key": "glasses",
+      "parts": [
+        {
+          "value": 0,
+          "label": "丸みのあるフレームメガネ",
+          "prefab": "Glasses/Glasses_004.prefab"
+        },
+        {
+          "value": 1,
+          "label": "サングラス",
+          "prefab": "Glasses/Glasses_006.prefab"
+        }
+      ]
+    },
+    {
+      "key": "accessory",
+      "parts": [
+        {
+          "value": 0,
+          "label": "ピエロの鼻",
+          "prefab": "Face Accessories/Clown_nose_001.prefab"
+        },
+        {
+          "value": 1,
+          "label": "イヤホン",
+          "prefab": "Face Accessories/Headphones_002.prefab"
+        },
+        {
+          "value": 2,
+          "label": "太い口ひげ",
+          "prefab": "Face Accessories/Mustache_003.prefab"
+        },
+        {
+          "value": 3,
+          "label": "巻きひげ",
+          "prefab": "Face Accessories/Mustache_011.prefab"
+        },
+        {
+          "value": 4,
+          "label": "おしゃぶり",
+          "prefab": "Face Accessories/Pacifier_001.prefab"
+        }
+      ]
+    }
+  ]
+}

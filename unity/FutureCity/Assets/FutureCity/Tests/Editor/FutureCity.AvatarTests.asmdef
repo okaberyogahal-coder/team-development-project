@@ -1,6 +1,14 @@
 {
-  "name": "FutureCity.AvatarTests",
-  "references": ["FutureCity", "FutureCity.Editor"],
-  "includePlatforms": ["Editor"],
-  "optionalUnityReferences": ["TestAssemblies"]
+    "name": "FutureCity.AvatarTests",
+    "references": [
+        "FutureCity",
+        "FutureCity.Editor",
+        "Melife.AvatarV3"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
 }

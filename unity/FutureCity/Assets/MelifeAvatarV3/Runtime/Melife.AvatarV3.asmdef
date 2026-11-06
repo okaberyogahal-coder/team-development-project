@@ -1,0 +1,7 @@
+{
+  "name": "Melife.AvatarV3",
+  "references": [
+    "Unity.InputSystem"
+  ],
+  "autoReferenced": true
+}

@@ -33,7 +33,9 @@
     "test:ai-navi": "node --import tsx --test tests/ai-navi/*.test.ts",
     "dev:ai-navi": "node scripts/dev-ai-navi.mjs",
     "test:local-demo": "node --import tsx --test tests/local-demo/*.test.ts",
-    "test:account": "node --import tsx --test tests/account/*.test.ts"
+    "test:account": "node --import tsx --test tests/account/*.test.ts",
+    "build:avatar-v3": "node scripts/build-avatar-v3.mjs",
+    "test:avatar-v3": "node --import tsx --test tests/avatar-v3/*.test.ts"
   },
   "dependencies": {
     "@next/env": "16.4.2",
