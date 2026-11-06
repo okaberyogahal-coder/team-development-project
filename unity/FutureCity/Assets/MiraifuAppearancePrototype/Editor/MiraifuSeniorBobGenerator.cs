@@ -14,6 +14,8 @@ public static class MiraifuSeniorBobGenerator
     const string OptionFolder = "Assets/MiraifuAppearancePrototype/Generated/hair-option-elderly-woman-soft-bob";
     const string ComparisonImageDir = "docs/avatar-hair-accessory-audit-2026-11-02";
 
+    // Startup generation is opt-in; normal clones never generate assets or build players.
+#if MIRAIFU_ENABLE_LEGACY_AUTOGENERATION
     [InitializeOnLoadMethod]
     static void AutoInitIfMissing()
     {
@@ -30,6 +32,7 @@ public static class MiraifuSeniorBobGenerator
             };
         }
     }
+#endif
 
     [MenuItem(GeneratorMenu)]
     public static void GenerateFromMenu() => GenerateAndVerify(silent: false);

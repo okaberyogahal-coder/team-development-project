@@ -31,6 +31,8 @@ public static class MiraifuAvatarV3WebExport
 
     public static void BuildWebGLBatch() => BuildWebGLPlayer(silent: true);
 
+    // Startup generation is opt-in; normal clones never generate assets or build players.
+#if MIRAIFU_ENABLE_LEGACY_AUTOGENERATION
     [InitializeOnLoadMethod]
     static void AutoInitIfMissing()
     {
@@ -66,6 +68,7 @@ public static class MiraifuAvatarV3WebExport
             }
         };
     }
+#endif
 
     public static MiraifuAvatarDraftCandidate[] FindLatestV3Candidates()
     {
