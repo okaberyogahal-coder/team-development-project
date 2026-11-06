@@ -1,15 +1,19 @@
+import {isV3Appearance,type V3Appearance} from "./avatar-v3";
+
 /** Browser-only walkthrough data. Never store email, passwords or auth tokens here. */
 export const DEMO_PROFILE_KEY = 'melife.demo-profile.v1';
-export type AvatarAppearance = { version: 1 | 2; baseVariant: number; parts: number[]; colors: number[]; costume?: number };
+export type LegacyAvatarAppearance = { version: 1 | 2; baseVariant: number; parts: number[]; colors: number[]; costume?: number };
+export type AvatarAppearance = LegacyAvatarAppearance | V3Appearance;
 export type DemoProfile = { version: 1; id: string; nickname: string; appearance: AvatarAppearance | null };
 // Match the first Unity wardrobe preset; unfinished registration still keeps appearance=null.
-export const DEFAULT_AVATAR: AvatarAppearance = {version:2,baseVariant:0,costume:0,parts:[0,0,2,0,0,0,2,0,0],colors:[0,6,5,7,2,6,0,0,6]};
+export const DEFAULT_AVATAR: LegacyAvatarAppearance = {version:2,baseVariant:0,costume:0,parts:[0,0,2,0,0,0,2,0,0],colors:[0,6,5,7,2,6,0,0,6]};
 type ProfileStorage = Pick<Storage, 'getItem' | 'setItem'>;
 const legacyCounts = [4,3,3,3,5,3];
 const partCounts = [4,3,4,4,5,3,3,6,3];
 export function validAppearance(value: unknown): value is AvatarAppearance {
  if (!value || typeof value !== 'object') return false;
- const a = value as AvatarAppearance;
+ if(isV3Appearance(value))return true;
+ const a = value as LegacyAvatarAppearance;
  const counts = a.version === 1 ? legacyCounts : partCounts;
  return (a.version === 1 || a.version === 2) && Number.isInteger(a.baseVariant) && a.baseVariant >= 0 && a.baseVariant < 5
   && Array.isArray(a.parts) && a.parts.length === counts.length && a.parts.every((n,i)=>Number.isInteger(n) && n >= 0 && n < counts[i])
