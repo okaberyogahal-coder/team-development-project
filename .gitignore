@@ -29,7 +29,7 @@ unity/**/*.unitypackage
 # Rebuild locally with npm run build:unity; deploy these files with the site.
 /public/unity/FutureCity/
 
-# Rebuild locally with Tools > Miraifu > ★ v3 WebGLプレイヤーのビルド (or npm run build:unity:v3)
+# Build existing V3 scenes with Tools > Miraifu > Safe WebGL; see docs/unity-safe-webgl.md
 # Large WebGL binary data (>100MB) excluded from Git
 /public/unity/AvatarPreview/Build/
 /public/unity/AvatarV3Unified20261104/Build/
