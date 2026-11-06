@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b55f7dc502f04ed989fe82dde7a0f0cd, type: 3}
+  m_Name: Model
+  m_EditorClassIdentifier: Assembly-CSharp::MiraifuAvatarPrototype.MiraifuRuntimeAvatarModel
+  modelId: elderly-man
+  sourceCandidateGuid: 24d02f803160840e49d8fa906a612039
+  sourceJsonSha: 472a41edb0691c7b22ee1c724014e5d466d525df0b26224d56c8074dabfaf649
+  sourceBasis: shipped
+  defaults:
+    modelId: elderly-man
+    expression: 0
+    hair: 1
+    top: 0
+    pants: 0
+    shoes: 0
+    costume: -1
+    skinColor: 
+    hairColor: 
+  prefab: {fileID: 6782814988312898351, guid: 7dc326eeedc334707981468176cc943f, type: 3}
+  parts:
+  - key: body
+    paths:
+    - Base_Mesh/Body
+    meshes:
+    - {fileID: 4300000, guid: caa7c65b8782c4e2799cf330a1ce1d7b, type: 2}
+    - {fileID: 4300000, guid: caa7c65b8782c4e2799cf330a1ce1d7b, type: 2}
+    - {fileID: 4300000, guid: caa7c65b8782c4e2799cf330a1ce1d7b, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: c0889445393b64ad69b556f3497c15e9, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 2dba0d995bbef46d091d1fc927c981b6, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 0058617a81e3f4d34a9c228ddba16bd5, type: 2}
+  - key: face
+    paths:
+    - Base_Mesh/Faces
+    meshes:
+    - {fileID: 4300000, guid: 2975387a517db40bab842095a6b0cfd7, type: 2}
+    - {fileID: 4300000, guid: 115d8d66ea0414b33a2182464c76496c, type: 2}
+    - {fileID: 4300000, guid: 144b48860e1264806b9dc66e7c4b1c58, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: cd91287a5ecea4f468d62d551291abed, type: 2}
+      - {fileID: 2100000, guid: 7a8e4809d611f4e659c03f785923850e, type: 2}
+    - values:
+      - {fileID: 2100000, guid: cd91287a5ecea4f468d62d551291abed, type: 2}
+      - {fileID: 2100000, guid: 7a8e4809d611f4e659c03f785923850e, type: 2}
+    - values:
+      - {fileID: 2100000, guid: cd91287a5ecea4f468d62d551291abed, type: 2}
+      - {fileID: 2100000, guid: 7a8e4809d611f4e659c03f785923850e, type: 2}
+  - key: hair
+    paths:
+    - Base_Mesh/Hairstyle
+    meshes:
+    - {fileID: 4300000, guid: 01c6be18a08164e93ab731e25f84a99d, type: 2}
+    - {fileID: 4300000, guid: 7900ad8218ca147758fcfba786cba944, type: 2}
+    - {fileID: 4300000, guid: 828a6b0ee95aa4450acfd0f09f75d318, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: d47edc6cfcbd340979812903feb7f35f, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 92ff01bd6a13349f49bb7112d7208eaf, type: 2}
+    - values:
+      - {fileID: 2100000, guid: a09295d5fa85c4c78b90b75d96816348, type: 2}
+  - key: outerwear
+    paths:
+    - Base_Mesh/Outerwear
+    meshes:
+    - {fileID: 4300000, guid: 45b6db57a510141c988280eb2394a5b9, type: 2}
+    - {fileID: 4300000, guid: 12fbfef0ac4ce4e95bada7a9b1601b20, type: 2}
+    - {fileID: 4300000, guid: 1d2b9d813176d4220b58664dcdd29464, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: 2a3129eebfdc842ec84c7187a784c6ba, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 5688cb225f58143cf9f6eff16072018a, type: 2}
+    - values:
+      - {fileID: 2100000, guid: e6e99d5d7dd634858b538c75f3f91cca, type: 2}
+  - key: pants
+    paths:
+    - Base_Mesh/Pants
+    meshes:
+    - {fileID: 4300000, guid: 7a4c42ec3fd5042fda6f3bfe16eacb94, type: 2}
+    - {fileID: 4300000, guid: d98fd5f032bcd43ea803de161e622961, type: 2}
+    - {fileID: 4300000, guid: 26ffb2e396d3a4a609d20b6bff174e17, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: dacd6f151358f4b6381cfc61297c16d7, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 6bce48516f3d4478ba46ad566e30a8c3, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 04d798fb90a8c40a8a38e64785a6271b, type: 2}
+  - key: shoes
+    paths:
+    - Base_Mesh/Shoes
+    meshes:
+    - {fileID: 4300000, guid: 95289faad5b6c4ca49d2e186cbf07610, type: 2}
+    - {fileID: 4300000, guid: f1f26e839adc345eea1686d67641eb19, type: 2}
+    - {fileID: 4300000, guid: 0cca061c93f7145e0aee0e7bbb50cddb, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: cbfb921c441184effa94abc450b979e5, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 69b182844d03c47778f6ce1852834f22, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 93b16fd55530e4f069665caeb28aae90, type: 2}
+  - key: costume0
+    paths:
+    - Base_Mesh/Body/Candidate_costume0_0
+    - Base_Mesh/Body/Candidate_costume0_1
+    meshes:
+    - {fileID: 4300000, guid: 17a67e9a084d14e3aa0f42c3dbab9f03, type: 2}
+    - {fileID: 4300000, guid: e761bafd472054f5a81d5f8468850d6c, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: b56fbb33b1bba41b2804b27b09c8abf9, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 7320e412f5bdc4cff82e03c0eeac5098, type: 2}
+  - key: costume1
+    paths:
+    - Base_Mesh/Body/Candidate_costume1_0
+    meshes:
+    - {fileID: 4300000, guid: 0db200ad057fe44c4b39a07790478535, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: fa71e903a47cf4be1954baeb3c64d038, type: 2}
+  idle: {fileID: 7400000, guid: 3ed56c1c8d524197b0c60b0b09bb8d84, type: 2}
+  walk: {fileID: 7400000, guid: 98b6a2eb86734f97bdcfb9fcd236f27d, type: 2}
+  jump: {fileID: 7400000, guid: 7cc61edbc91e4638a961fc0228920a80, type: 2}

@@ -1,0 +1,255 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 156cf9100fdf4e4ca6c30aae98fefa13, type: 3}
+  m_Name: Candidate
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::MiraifuAvatarDraftCandidate
+  generatorVersion: 1
+  modelId: elderly-woman
+  sourceKind: shipped
+  jsonVersion: 3
+  sourceHash: 35340871f2bf1e0e049b213a793e1b6f3b28a925be9e3be88483b7d88c8b75ad
+  garmentHash: 91eddb4ce9d87fdc68af3b7e39a6f0d3fca61df82b302d2dd3a38752b9650d63
+  jsonSha256: 788c6959ec8c2b2122c388dd5603429db6568d93a08c12a77cd69fb3f9fbccfe
+  sourceFile: elderly-woman-face-all-02.json
+  createdUtc: 2026-11-04T10:21:06.0258900Z
+  resolvedJson: "{\n    \"format\": \"MiraifuAvatarEditorDraft\",\n    \"version\":
+    \"3\",\n    \"modelId\": \"elderly-woman\",\n    \"sourceKind\": \"shipped\",\n   
+    \"sourceHash\": \"35340871f2bf1e0e049b213a793e1b6f3b28a925be9e3be88483b7d88c8b75ad\",\n   
+    \"referenceHash\": \"c47679bcb676a1fd8dda5f2c95794f8a4dda99930606cf17bf279aecbecea720\",\n   
+    \"faceBaseExpressions\": [\n        0,\n        1,\n        2\n    ],\n    \"designStart\":
+    {\n        \"format\": \"MiraifuEditorDesignStart\",\n        \"version\": \"1\",\n       
+    \"unified\": true,\n        \"bodySourceHash\": \"20567deedb531436bc343b6a028c3cfbb5484f034c02ef2702f5a58d680e1e9c\",\n       
+    \"faceSourceHash\": \"1ebfcd497fd74e677da8138447962ae8e803a318e574c60eca21bb7d2959dd26\",\n       
+    \"expressionFiles\": [\n            \"docs/avatar-editor-tool-2026-11-01/drafts/young-woman-face-angry-01.json\",\n           
+    \"docs/avatar-editor-tool-2026-11-01/drafts/young-woman-face-smile-01.json\",\n           
+    \"docs/avatar-editor-tool-2026-11-01/drafts/young-woman-face-calm-01.json\"\n       
+    ],\n        \"expressionShas\": [\n            \"c5514796105a3e99adf15000acc9b1ba1eee2215e81266dab92b660f8988688a\",\n           
+    \"d4188cc5e80e6cbffc402e8e57ec8bc22af134a6e0addfe6ee3e08ce25a2e9d4\",\n           
+    \"691b2c1f497bf91298351598f7cc2ba5d832ecf8b9d78b1df0f6a66cccd7ddd0\"\n       
+    ],\n        \"hairMeshGuids\": [\n            \"9d4915a389c4a4bb0a6ea084cf9eab57\",\n           
+    \"9884b93942664471aafdf9b374a44c04\",\n            \"5a034fd9b095943c6b7e430f414d6e81\"\n       
+    ],\n        \"hairMeshShas\": [\n            \"c9308c8b26a2a13f2f689186a60b0a6dad3a00d71eb9d8d582b1dd6f0f9db6cb\",\n           
+    \"ffe547a6d96aa521598fe6c475d352b38da608b4804db29a3955e911cf67f141\",\n           
+    \"c35322b09127553f98a955d246c810e63f985027c6e71b2ce413b17e2ff44c2e\"\n       
+    ],\n        \"appearanceGuid\": \"657f9900630f4494582749b47a34e56f\",\n       
+    \"structure\": {\n            \"headWidth\": 0.0,\n            \"headHeight\":
+    0.0,\n            \"headDepth\": 0.0,\n            \"neckWidth\": 0.0,\n           
+    \"shoulders\": 0.0,\n            \"torsoWidth\": 0.0,\n            \"torsoDepth\":
+    0.0,\n            \"hips\": 0.0,\n            \"arms\": 0.0,\n            \"legs\":
+    0.0\n        },\n        \"folds\": {\n            \"enabled\": true,\n           
+    \"length\": 34.900001525878909,\n            \"width\": 5.0,\n            \"contrast\":
+    35.0,\n            \"x\": 2.200000047683716,\n            \"y\": 1.399999976158142,\n           
+    \"angle\": 12.0,\n            \"curve\": 0.699999988079071\n        },\n       
+    \"eyebrowColor\": \"#9CA3AF\"\n    },\n    \"face\": {\n        \"eyeWidth\":
+    -32.0,\n        \"eyeHeight\": -32.0,\n        \"eyeSpacing\": 4.0,\n       
+    \"eyeY\": -1.0,\n        \"eyeAngle\": 0.0,\n        \"eyeAngleL\": 0.0,\n       
+    \"eyeAngleR\": 0.0,\n        \"browThickness\": 0.0,\n        \"browWidth\":
+    22.0,\n        \"browAngle\": 7.0,\n        \"browCurve\": -2.0,\n        \"noseSize\":
+    -1.0,\n        \"noseWidth\": -10.0,\n        \"noseProjection\": 13.0,\n       
+    \"mouthSize\": 4.0,\n        \"mouthThickness\": 0.0,\n        \"smile\": 0.30000001192092898,\n       
+    \"cheek\": 10.0,\n        \"jaw\": -2.700000047683716,\n        \"outline\":
+    -1.0,\n        \"mouthY\": 2.0,\n        \"philtrum\": 1.100000023841858\n   
+    },\n    \"hair\": [\n        {\n            \"fringeLength\": 0.0,\n           
+    \"fringeWidth\": 0.0,\n            \"fringeSweep\": 0.0,\n            \"fringeRound\":
+    0.0,\n            \"length\": 0.0,\n            \"sideVolume\": 0.0,\n           
+    \"tipRound\": 0.0,\n            \"volume\": 0.0,\n            \"fringeThickness\":
+    0.0,\n            \"fringeClump\": 0.0,\n            \"fringeBlend\": 0.0,\n           
+    \"sideDrop\": 0.0,\n            \"crownBulge\": 0.0,\n            \"backRound\":
+    0.0,\n            \"tipFlare\": 0.0,\n            \"tipCurl\": 0.0,\n           
+    \"stepSmoothing\": 0.0,\n            \"sideBlend\": 0.0,\n            \"sideBackBlend\":
+    0.0,\n            \"backSmooth\": 0.0,\n            \"tipsSmooth\": 0.0,\n           
+    \"surfaceSmooth\": 0.0,\n            \"smoothingRange\": 0.0\n        },\n       
+    {\n            \"fringeLength\": 0.0,\n            \"fringeWidth\": 0.0,\n           
+    \"fringeSweep\": 0.0,\n            \"fringeRound\": 0.0,\n            \"length\":
+    0.0,\n            \"sideVolume\": 0.0,\n            \"tipRound\": 0.0,\n           
+    \"volume\": 0.0,\n            \"fringeThickness\": 0.0,\n            \"fringeClump\":
+    0.0,\n            \"fringeBlend\": 0.0,\n            \"sideDrop\": 0.0,\n           
+    \"crownBulge\": 0.0,\n            \"backRound\": 0.0,\n            \"tipFlare\":
+    0.0,\n            \"tipCurl\": 0.0,\n            \"stepSmoothing\": 0.0,\n           
+    \"sideBlend\": 0.0,\n            \"sideBackBlend\": 0.0,\n            \"backSmooth\":
+    0.0,\n            \"tipsSmooth\": 0.0,\n            \"surfaceSmooth\": 0.0,\n           
+    \"smoothingRange\": 0.0\n        },\n        {\n            \"fringeLength\":
+    0.0,\n            \"fringeWidth\": 0.0,\n            \"fringeSweep\": 0.0,\n           
+    \"fringeRound\": 0.0,\n            \"length\": 0.0,\n            \"sideVolume\":
+    0.0,\n            \"tipRound\": 0.0,\n            \"volume\": 0.0,\n           
+    \"fringeThickness\": 0.0,\n            \"fringeClump\": 0.0,\n            \"fringeBlend\":
+    0.0,\n            \"sideDrop\": 0.0,\n            \"crownBulge\": 0.0,\n           
+    \"backRound\": 0.0,\n            \"tipFlare\": 0.0,\n            \"tipCurl\":
+    0.0,\n            \"stepSmoothing\": 0.0,\n            \"sideBlend\": 0.0,\n           
+    \"sideBackBlend\": 0.0,\n            \"backSmooth\": 0.0,\n            \"tipsSmooth\":
+    0.0,\n            \"surfaceSmooth\": 0.0,\n            \"smoothingRange\": 0.0\n       
+    }\n    ],\n    \"expressions\": [\n        {\n            \"eyeWidth\": 9.0,\n           
+    \"eyeHeight\": -2.0,\n            \"eyeSpacing\": 0.0,\n            \"eyeY\":
+    0.0,\n            \"eyeAngle\": -30.0,\n            \"eyeAngleL\": 0.0,\n           
+    \"eyeAngleR\": 0.0,\n            \"browThickness\": 85.0,\n            \"browWidth\":
+    -14.59999942779541,\n            \"browAngle\": 0.0,\n            \"browCurve\":
+    9.5,\n            \"noseSize\": 0.0,\n            \"noseWidth\": 0.0,\n           
+    \"noseProjection\": 0.0,\n            \"mouthSize\": 0.0,\n            \"mouthThickness\":
+    0.0,\n            \"smile\": 0.0,\n            \"cheek\": 0.0,\n            \"jaw\":
+    0.0,\n            \"outline\": 0.0,\n            \"mouthY\": 0.0,\n           
+    \"philtrum\": 10.0\n        },\n        {\n            \"eyeWidth\": 0.0,\n           
+    \"eyeHeight\": 0.0,\n            \"eyeSpacing\": 0.0,\n            \"eyeY\":
+    0.0,\n            \"eyeAngle\": -11.0,\n            \"eyeAngleL\": 0.0,\n           
+    \"eyeAngleR\": 0.0,\n            \"browThickness\": 0.0,\n            \"browWidth\":
+    0.0,\n            \"browAngle\": -25.0,\n            \"browCurve\": 0.0,\n           
+    \"noseSize\": 0.0,\n            \"noseWidth\": 0.0,\n            \"noseProjection\":
+    0.0,\n            \"mouthSize\": 0.0,\n            \"mouthThickness\": -15.0,\n           
+    \"smile\": 0.0,\n            \"cheek\": 0.0,\n            \"jaw\": 0.0,\n           
+    \"outline\": 0.0,\n            \"mouthY\": 0.0,\n            \"philtrum\": 0.0\n       
+    },\n        {\n            \"eyeWidth\": 30.0,\n            \"eyeHeight\": -16.0,\n           
+    \"eyeSpacing\": 0.0,\n            \"eyeY\": 0.0,\n            \"eyeAngle\": -28.0,\n           
+    \"eyeAngleL\": 0.0,\n            \"eyeAngleR\": 0.0,\n            \"browThickness\":
+    38.0,\n            \"browWidth\": -16.100000381469728,\n            \"browAngle\":
+    0.0,\n            \"browCurve\": 1.4600000381469727,\n            \"noseSize\":
+    22.0,\n            \"noseWidth\": 0.0,\n            \"noseProjection\": 0.0,\n           
+    \"mouthSize\": 0.0,\n            \"mouthThickness\": 0.0,\n            \"smile\":
+    0.0,\n            \"cheek\": 0.0,\n            \"jaw\": 0.0,\n            \"outline\":
+    0.0,\n            \"mouthY\": 0.0,\n            \"philtrum\": 9.199999809265137\n       
+    }\n    ],\n    \"wardrobe\": {\n        \"top\": 0,\n        \"pants\": 0,\n       
+    \"shoes\": 0,\n        \"costume\": -1,\n        \"tops\": [\n            {\n               
+    \"sleeveLength\": 0.0,\n                \"sleeveWidth\": 0.0,\n               
+    \"torsoWidth\": 0.0,\n                \"hemLength\": 0.0,\n                \"shoulder\":
+    0.0\n            },\n            {\n                \"sleeveLength\": 0.0,\n               
+    \"sleeveWidth\": 0.0,\n                \"torsoWidth\": 0.0,\n               
+    \"hemLength\": 0.0,\n                \"shoulder\": 0.0\n            },\n           
+    {\n                \"sleeveLength\": 0.0,\n                \"sleeveWidth\": 0.0,\n               
+    \"torsoWidth\": 0.0,\n                \"hemLength\": 0.0,\n                \"shoulder\":
+    0.0\n            }\n        ],\n        \"trousers\": [\n            {\n               
+    \"waist\": 0.0,\n                \"thigh\": 0.0,\n                \"hemWidth\":
+    0.0,\n                \"length\": 0.0\n            },\n            {\n               
+    \"waist\": 0.0,\n                \"thigh\": 0.0,\n                \"hemWidth\":
+    0.0,\n                \"length\": 0.0\n            },\n            {\n               
+    \"waist\": 0.0,\n                \"thigh\": 0.0,\n                \"hemWidth\":
+    0.0,\n                \"length\": 0.0\n            }\n        ],\n        \"footwear\":
+    [\n            {\n                \"size\": 0.0,\n                \"width\":
+    0.0,\n                \"y\": 0.0,\n                \"z\": 0.0\n            },\n           
+    {\n                \"size\": 0.0,\n                \"width\": 0.0,\n               
+    \"y\": 0.0,\n                \"z\": 0.0\n            },\n            {\n               
+    \"size\": 0.0,\n                \"width\": 0.0,\n                \"y\": 0.0,\n               
+    \"z\": 0.0\n            }\n        ],\n        \"costumes\": [\n            {\n               
+    \"size\": 0.0,\n                \"fit\": 0.0,\n                \"hatY\": 0.0,\n               
+    \"hatZ\": 0.0\n            },\n            {\n                \"size\": 0.0,\n               
+    \"fit\": 0.0,\n                \"hatY\": 0.0,\n                \"hatZ\": 0.0\n           
+    }\n        ]\n    },\n    \"skinColor\": \"\",\n    \"hairColor\": \"\",\n   
+    \"overrideHairColor\": false,\n    \"previewHair\": 0,\n    \"previewExpression\":
+    2,\n    \"expandedInitialized\": true,\n    \"garmentHash\": \"91eddb4ce9d87fdc68af3b7e39a6f0d3fca61df82b302d2dd3a38752b9650d63\"\n}"
+  rawReference: 0
+  prefab: {fileID: 3255175378656763167, guid: 6e65e4dd59b4d4b0d8e50f1fdb27c85b, type: 3}
+  parts:
+  - key: body
+    paths:
+    - Base_Mesh/Body
+    meshes:
+    - {fileID: 4300000, guid: 53d0ef875b84f4f9dae08dda1707af4b, type: 2}
+    - {fileID: 4300000, guid: 53d0ef875b84f4f9dae08dda1707af4b, type: 2}
+    - {fileID: 4300000, guid: 53d0ef875b84f4f9dae08dda1707af4b, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: 51245041a3c1b444fabc2d14bf5118a9, type: 2}
+    - values:
+      - {fileID: 2100000, guid: c874afefa4a2648dca7dc04b4a5cd298, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 4ff490c827e85400ea31c229e2ddcf49, type: 2}
+  - key: face
+    paths:
+    - Base_Mesh/Faces
+    meshes:
+    - {fileID: 4300000, guid: 93c76f49d7fb64947b89f45d6f05cb05, type: 2}
+    - {fileID: 4300000, guid: e2a7ea74b3f724c1c8164e07826bd91d, type: 2}
+    - {fileID: 4300000, guid: 6c9fcfb62c0f84ac9822add1fe263806, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: 762042a3be5554717a9f77d3ed558cbb, type: 2}
+      - {fileID: 2100000, guid: f4fe34afd870947f4810369859e2bf58, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 762042a3be5554717a9f77d3ed558cbb, type: 2}
+      - {fileID: 2100000, guid: f4fe34afd870947f4810369859e2bf58, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 762042a3be5554717a9f77d3ed558cbb, type: 2}
+      - {fileID: 2100000, guid: f4fe34afd870947f4810369859e2bf58, type: 2}
+  - key: hair
+    paths:
+    - Base_Mesh/Hairstyle
+    meshes:
+    - {fileID: 4300000, guid: be8fd98cce6c14d2680b739025f5b26b, type: 2}
+    - {fileID: 4300000, guid: 5b751af9e395e41b1b5c40ceb2ad9b5e, type: 2}
+    - {fileID: 4300000, guid: 59ba55edb88cc4355b85bd1dd11b8b73, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: b57b36828917a460ca055e8c95d913fb, type: 2}
+    - values:
+      - {fileID: 2100000, guid: d3215a1ec3dda4052b5e38a0fb7fb4d1, type: 2}
+    - values:
+      - {fileID: 2100000, guid: a64b2789c6439451b87edf74891361ca, type: 2}
+  - key: outerwear
+    paths:
+    - Base_Mesh/Outerwear
+    meshes:
+    - {fileID: 4300000, guid: c1e45d2c95c194cf7a7fb281877f5261, type: 2}
+    - {fileID: 4300000, guid: a2b328a3e551c4df9a55b623bee53e8b, type: 2}
+    - {fileID: 4300000, guid: 2d6cb56eda7ac4788b7963a4f61cebd4, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: c0e89c82643a5431e978a1e64861e7e3, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 484d84d09265a42b39053ee4e3d1fa01, type: 2}
+    - values:
+      - {fileID: 2100000, guid: e5f532095b6b742a38d0738a93a6515d, type: 2}
+  - key: pants
+    paths:
+    - Base_Mesh/Pants
+    meshes:
+    - {fileID: 4300000, guid: 5684e896e769947929c6e6c973167eaf, type: 2}
+    - {fileID: 4300000, guid: 973beaa070c154574aa9394d42d3f709, type: 2}
+    - {fileID: 4300000, guid: 0f804a9f4c96d468ab99c0890d157688, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: 02179a42c1474488495434992f012408, type: 2}
+    - values:
+      - {fileID: 2100000, guid: c80832766e89448849b2552f57b39c9c, type: 2}
+    - values:
+      - {fileID: 2100000, guid: a65d7970555df470b9e49437dc56c655, type: 2}
+  - key: shoes
+    paths:
+    - Base_Mesh/Shoes
+    meshes:
+    - {fileID: 4300000, guid: 369da52e6256746028a05f802d3d386c, type: 2}
+    - {fileID: 4300000, guid: 44ba4bd3f33494ce0822493012eca4ee, type: 2}
+    - {fileID: 4300000, guid: 651ba0d244e5a43f8a6214d04af90c97, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: ef230644c179247228db9d3a21caf62d, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 280bccdff6903401bb6fb6b92069dddf, type: 2}
+    - values:
+      - {fileID: 2100000, guid: 76230f02d239942eea1fe67685177cf4, type: 2}
+  - key: costume0
+    paths:
+    - Base_Mesh/Body/Candidate_costume0_0
+    - Base_Mesh/Body/Candidate_costume0_1
+    meshes:
+    - {fileID: 4300000, guid: 1224047a3e98d400f85191a6752f0f01, type: 2}
+    - {fileID: 4300000, guid: 915c9effa633a40db9284702aae6e59b, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: d27cd28a6794d4b37902b63bc8efb7d2, type: 2}
+    - values:
+      - {fileID: 2100000, guid: ab3a731c28d064fde9d657ce048712e8, type: 2}
+  - key: costume1
+    paths:
+    - Base_Mesh/Body/Candidate_costume1_0
+    meshes:
+    - {fileID: 4300000, guid: 7da83485fb5ec41719a7d4d2a7a4162a, type: 2}
+    materials:
+    - values:
+      - {fileID: 2100000, guid: b0d7b9ef2636148e380e30adfc7c9c4c, type: 2}
+  reference: {fileID: 11400000, guid: c43fda51c08244ee487f3bfbed027551, type: 2}

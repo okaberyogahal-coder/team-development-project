@@ -28,3 +28,41 @@ unity/**/*.user
 unity/**/*.unitypackage
 # Rebuild locally with npm run build:unity; deploy these files with the site.
 /public/unity/FutureCity/
+
+# Rebuild locally with Tools > Miraifu > ★ v3 WebGLプレイヤーのビルド (or npm run build:unity:v3)
+# Large WebGL binary data (>100MB) excluded from Git
+/public/unity/AvatarPreview/Build/
+/public/unity/AvatarV3Unified20261104/Build/
+/public/unity/AvatarV3World20261104/Build/
+/public/unity/AvatarV3World20261104/TemplateData/
+
+# Obsolete / intermediate WebGL prototype builds
+/public/unity/AvatarFaceSeed20261103/
+
+# Large audit images, capture logs, and verification reports (>1GB total)
+/docs/avatar-integration-audit-2026-11-03/
+/docs/avatar-appearance-prototype-2026-11-02/
+/docs/avatar-hair-accessory-audit-2026-11-02/
+/docs/avatar-audit/
+/docs/avatar-front-thumbnails-2026-11-01/*
+!/docs/avatar-front-thumbnails-2026-11-01/extraction-audit.json
+!/docs/avatar-front-thumbnails-2026-11-01/shipped-meshes.bin
+!/docs/avatar-front-thumbnails-2026-11-01/shipped-defaults.json
+/docs/avatar-isolated-thumbnails-2026-11-01/
+/docs/avatar-thumbnail-alignment-2026-11-01/
+/docs/avatar-common-face-2026-10-30/
+/docs/avatar-head-thumbnails-2026-11-01/
+/docs/avatar-editor-workbench-2026-11-01/
+/docs/avatar-face-seed-2026-11-03/
+/docs/avatar-web-defaults-2026-11-03/
+/docs/avatar-face-review-r2-2026-10-30/
+/docs/avatar-design-workbench-2026-11-03/
+/docs/avatar-item-thumbnails-2026-10-31/
+/docs/avatar-face-review-2026-10-30/
+/docs/avatar-ui-cleanup-2026-10-31/
+/docs/avatar-comparison-2026-10-29/
+/docs/avatar-editor-extension-2026-11-01/
+/docs/avatar-design-start-2026-11-03/
+/docs/avatar-runtime-prototype-2026-11-02/
+/docs/avatar-v3-export-2026-11-04/
+/unity/FutureCity/docs/

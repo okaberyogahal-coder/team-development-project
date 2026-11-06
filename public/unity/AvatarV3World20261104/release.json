@@ -1,0 +1,47 @@
+{
+    "profile": "v3-unified-20261104",
+    "scene": "Assets/MiraifuAvatarRuntimePrototype/Generated/v3-world/AvatarV3World.unity",
+    "output": "public/unity/AvatarV3World20261104",
+    "result": "Succeeded",
+    "runtimeVerified": false,
+    "ids": [
+        "young-man",
+        "young-woman",
+        "middle-aged-man",
+        "middle-aged-woman",
+        "elderly-man",
+        "elderly-woman"
+    ],
+    "models": [
+        {
+            "id": "young-man",
+            "sourceJsonSha": "012488f74ac429b23f92e447ba76ad0e4626bbee69e968f95686e453484f4b86",
+            "appearanceSourceJsonSha": "012488f74ac429b23f92e447ba76ad0e4626bbee69e968f95686e453484f4b86"
+        },
+        {
+            "id": "young-woman",
+            "sourceJsonSha": "f16ec558e37fa748c3abd545f32f36183b2d553d29b18f8441a117056670f37e",
+            "appearanceSourceJsonSha": "f16ec558e37fa748c3abd545f32f36183b2d553d29b18f8441a117056670f37e"
+        },
+        {
+            "id": "middle-aged-man",
+            "sourceJsonSha": "a9d7c71159461e7a8e4b886e87ade6b46b7608580bca0ab289188eb5f0d4ddcf",
+            "appearanceSourceJsonSha": "a9d7c71159461e7a8e4b886e87ade6b46b7608580bca0ab289188eb5f0d4ddcf"
+        },
+        {
+            "id": "middle-aged-woman",
+            "sourceJsonSha": "2be5954338cd7d5fde1fc4b2f446c4f82d95cd465dbf66e09f6a89a9acf28c9c",
+            "appearanceSourceJsonSha": "2be5954338cd7d5fde1fc4b2f446c4f82d95cd465dbf66e09f6a89a9acf28c9c"
+        },
+        {
+            "id": "elderly-man",
+            "sourceJsonSha": "472a41edb0691c7b22ee1c724014e5d466d525df0b26224d56c8074dabfaf649",
+            "appearanceSourceJsonSha": "472a41edb0691c7b22ee1c724014e5d466d525df0b26224d56c8074dabfaf649"
+        },
+        {
+            "id": "elderly-woman",
+            "sourceJsonSha": "788c6959ec8c2b2122c388dd5603429db6568d93a08c12a77cd69fb3f9fbccfe",
+            "appearanceSourceJsonSha": "788c6959ec8c2b2122c388dd5603429db6568d93a08c12a77cd69fb3f9fbccfe"
+        }
+    ]
+}

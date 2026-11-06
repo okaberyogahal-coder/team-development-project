@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29a17ee6157a44cbb458570b6ab15cf0, type: 3}
+  m_Name: Appearance
+  m_EditorClassIdentifier: Assembly-CSharp::MiraifuAppearancePrototype.MiraifuAppearanceSet
+  modelId: middle-aged-woman
+  baselineCandidateGuid: 36e2cba0a5e7744769d37b0282404a5d
+  baselineJsonSha: 2be5954338cd7d5fde1fc4b2f446c4f82d95cd465dbf66e09f6a89a9acf28c9c
+  recipeSha: 1e0803f0a008827508e88c2489c0595ff704ce9857ccfef869f70005608d50fd
+  glasses:
+  - label: Glasses_004
+    mesh: {fileID: 4300000, guid: f9b952f7caa2d4fde9b9504a7f6f691d, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Glasses_006
+    mesh: {fileID: 4300000, guid: e4306a3e36e0c4068b34fb2ec983dacd, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+    - {fileID: 2100000, guid: 4ba83d4bb5e700a4ead22c818c99b364, type: 2}
+  accessories:
+  - label: Clown_nose_001
+    mesh: {fileID: 4300000, guid: 74d134d811fe14d44a6a104aa6543c1d, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Headphones_002
+    mesh: {fileID: 4300000, guid: f87b35b0443dd4c01a2f2967631341f4, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Mustache_003
+    mesh: {fileID: 4300000, guid: 06d43b833a1cc4dedae9a47de36e9955, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Mustache_011
+    mesh: {fileID: 4300000, guid: 32158020bc8a94fd6bc023902a4f022c, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Pacifier_001
+    mesh: {fileID: 4300000, guid: c9a293d7d8a6543dd8354adf5949b108, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  hats:
+  - label: Hat_010
+    mesh: {fileID: 4300000, guid: adae6b60016044f49b34607ee869a5e3, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Hat_Single_008
+    mesh: {fileID: 4300000, guid: 0bb1da725dee649f6ae1bd592dbe3259, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  - label: Hat_Single_013
+    mesh: {fileID: 4300000, guid: e413a744afd2b447cbaf6e40fcb130ac, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+    - {fileID: 2100000, guid: 4ba83d4bb5e700a4ead22c818c99b364, type: 2}
+  - label: Hat_Single_016
+    mesh: {fileID: 4300000, guid: 62ff2ed9c839a45b485627d2f5a2627b, type: 2}
+    materials:
+    - {fileID: 2100000, guid: dbc0ac3b2e21dbd4aaface70d26b6083, type: 2}
+  defaults:
+    modelId: middle-aged-woman
+    glasses: -1
+    accessory: -1
+    hat: -1
+    hideHairWithHat: 1
+    glassesFits:
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    accessoryFits:
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    hatFits:
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+    - positionMm: {x: 0, y: 0, z: 0}
+      rotation: {x: 0, y: 0, z: 0}
+      scale: {x: 1, y: 1, z: 1}
+  headBoneIndex: 9

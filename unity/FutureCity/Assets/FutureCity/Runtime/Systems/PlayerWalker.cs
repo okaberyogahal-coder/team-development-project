@@ -45,6 +45,9 @@ namespace FutureCity
         float bodyYaw, stride, strideAmount, camDist, smoothDistance;
         Vector3 planarVel, smoothPivot;
         bool pivotInit;
+        Animator bodyAnimator;
+        bool hasVertParam, hasIsJumpParam;
+        Transform cachedBody;
 
         // ドラッグで見回す
         bool pressing, dragging;
@@ -257,16 +260,56 @@ namespace FutureCity
             pitch = Mathf.Clamp(pitch - md.y * lookSensitivity, minPitch, maxPitch);
         }
 
+        void SyncBodyAnimator()
+        {
+            if (body == cachedBody) return;
+            cachedBody = body;
+            bodyAnimator = body != null ? body.GetComponentInChildren<Animator>(true) : null;
+            hasVertParam = false;
+            hasIsJumpParam = false;
+            if (bodyAnimator != null)
+            {
+                bodyAnimator.applyRootMotion = false;
+                foreach (var p in bodyAnimator.parameters)
+                {
+                    if (p.name == "Vert" && p.type == AnimatorControllerParameterType.Float) hasVertParam = true;
+                    if (p.name == "IsJump" && p.type == AnimatorControllerParameterType.Bool) hasIsJumpParam = true;
+                }
+            }
+        }
+
         void LateUpdate()
         {
             if (cam == null) return;
             float dt = Time.deltaTime;
+            SyncBodyAnimator();
 
             if (body != null)
             {
-                float lean = Mathf.Clamp(planarVel.magnitude * 1.2f, 0f, 8f);
-                body.localPosition = Vector3.up * (Mathf.Abs(Mathf.Sin(stride)) * 0.05f * strideAmount);
-                body.rotation = Quaternion.Euler(lean, bodyYaw, Mathf.Sin(stride) * 2f * strideAmount);
+                if (bodyAnimator != null)
+                {
+                    // ボーンアニメーション（着せ替えアバター等）がある場合：
+                    // 足元位置を原点に固定し、進行方向への向き（bodyYaw）のみ適用する
+                    body.localPosition = Vector3.zero;
+                    body.rotation = Quaternion.Euler(0f, bodyYaw, 0f);
+
+                    float sp = planarVel.magnitude;
+                    if (hasVertParam)
+                    {
+                        float normSpeed = walkSpeed > 0.01f ? sp / walkSpeed : sp / 3.2f;
+                        bodyAnimator.SetFloat("Vert", sp > 0.05f ? Mathf.Clamp01(normSpeed) : 0f, 0.12f, dt);
+                    }
+                    if (hasIsJumpParam)
+                    {
+                        bodyAnimator.SetBool("IsJump", !cc.isGrounded);
+                    }
+                }
+                else
+                {
+                    float lean = Mathf.Clamp(planarVel.magnitude * 1.2f, 0f, 8f);
+                    body.localPosition = Vector3.up * (Mathf.Abs(Mathf.Sin(stride)) * 0.05f * strideAmount);
+                    body.rotation = Quaternion.Euler(lean, bodyYaw, Mathf.Sin(stride) * 2f * strideAmount);
+                }
             }
 
             // 向き：目標に向かってなめらかに追従（マウスの細かな揺れやフレームのばらつきを吸収）
