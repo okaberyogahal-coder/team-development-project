@@ -154,6 +154,7 @@ namespace FutureCity
             };
             if (changed)
             {
+                if(webAppearanceOwner!=userId)player?.body?.GetComponent<ImportedAvatar>()?.ClearV3();
                 completed.Clear();
                 later.Clear();
                 webProfileScroll = Vector2.zero;

@@ -27,7 +27,7 @@ namespace MiraifuAvatarPrototype
         {
             float floor=transform.parent==null?0:transform.parent.position.y,min=float.PositiveInfinity;var mesh=new Mesh();
             try{foreach(var r in renderers.Values.Where(r=>r.enabled)){r.BakeMesh(mesh);foreach(var v in mesh.vertices)min=Mathf.Min(min,r.transform.TransformPoint(v).y);}}
-            finally{Destroy(mesh);}
+            finally{Remove(mesh);}
             if(!float.IsInfinity(min))transform.position+=Vector3.up*(floor-min);
         }
         public void Apply(AvatarSettings settings)
@@ -66,5 +66,6 @@ namespace MiraifuAvatarPrototype
         public void SampleMotion(float time){if(graph.IsValid()){playable.SetTime(time);graph.Evaluate(0);}}
         void OnDisable(){if(graph.IsValid())graph.Destroy();}
         void OnDestroy(){if(graph.IsValid())graph.Destroy();}
+        static void Remove(UnityEngine.Object value){if(Application.isPlaying)UnityEngine.Object.Destroy(value);else UnityEngine.Object.DestroyImmediate(value);}
     }
 }

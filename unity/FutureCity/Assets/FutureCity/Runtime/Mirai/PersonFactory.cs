@@ -241,7 +241,8 @@ namespace FutureCity
 
             if (imported != null)
             {
-                imported.UpdateMotion(speed, sitting);
+                var controller=GetComponentInParent<CharacterController>();
+                imported.UpdateMotion(speed, sitting,controller!=null&&!controller.isGrounded&&Mathf.Abs(controller.velocity.y)>.5f);
                 return;
             }
 

@@ -1,4 +1,5 @@
 mergeInto(LibraryManager.library, {
+  MelifeAvatarApplied: function(json){window.dispatchEvent(new CustomEvent("melife-unity-avatar-applied",{detail:JSON.parse(UTF8ToString(json))}));},
   MelifeWorldInteraction: function (json) {
     window.melifeWorldInteraction = Object.freeze(JSON.parse(UTF8ToString(json)));
   },

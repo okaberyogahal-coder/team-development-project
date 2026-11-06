@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using MiraifuAvatarPrototype;
 
 namespace FutureCity
 {
@@ -21,11 +22,24 @@ namespace FutureCity
         GameObject[] defaultVariants;
         AvatarWardrobeCatalog defaultWardrobe;
         bool missingGenderModel;
+        V3AvatarAdapter v3;
+        public MiraifuWebAvatarReceiver.WebChoice V3Choice => v3 == null ? null : v3.AppliedChoice;
+        public AvatarMotion V3Motion => v3 == null ? AvatarMotion.Idle : v3.Motion;
+        public bool TryApplyV3(MiraifuWebAvatarReceiver.WebChoice choice,out string error)
+        {
+            if(v3==null)v3=gameObject.AddComponent<V3AvatarAdapter>();
+            if(!v3.TryApply(choice,out error))return false;
+            if(visual!=null)visual.SetActive(false);
+            return true;
+        }
+        public void ClearV3(){if(v3!=null)v3.Clear();UpdateGenderVisibility();}
+
         public string Gender => gender;
-        public bool MissingGenderModel => missingGenderModel;
+        public bool MissingGenderModel => V3Choice == null && missingGenderModel;
 
         public void SetGender(string value)
         {
+            if(V3Choice != null)return;
             value = value == "male" || value == "female" ? value : null;
             if (gender == value) return;
             if (defaultVariants == null) { defaultVariants = variants; defaultWardrobe = wardrobe; }
@@ -46,11 +60,11 @@ namespace FutureCity
         void UpdateGenderVisibility()
         {
             // The installed animal suit is shared. A missing normal female model stays hidden.
-            if (visual != null) visual.SetActive(!missingGenderModel || (appearance != null && appearance.costume == 1));
+            if (visual != null) visual.SetActive(V3Choice == null && (!missingGenderModel || (appearance != null && appearance.costume == 1)));
         }
 
         public AvatarWardrobeCatalog Wardrobe => wardrobe;
-        public AvatarAppearance Appearance => appearance == null ? null : appearance.Copy();
+        public AvatarAppearance Appearance => V3Choice != null || appearance == null ? null : appearance.Copy();
         public int SelectedVariant => selected;
 
         public int VariantCount => variants == null ? 0 : variants.Length;
@@ -128,6 +142,7 @@ namespace FutureCity
         public void ApplyAppearance(AvatarAppearance choice)
         {
             if (wardrobe == null || choice == null || visual == null) return;
+            if(V3Choice!=null)ClearV3();
             appearance = choice.Copy();
             appearance.Normalize(wardrobe);
             appearance.baseVariant %= VariantCount;
@@ -173,8 +188,9 @@ namespace FutureCity
             UpdateGenderVisibility();
         }
 
-        public void UpdateMotion(float speed, bool sitting)
+        public void UpdateMotion(float speed, bool sitting, bool jumping = false)
         {
+            if(V3Choice != null){v3.SetMotion(sitting?0f:speed,jumping);return;}
             if (animator == null || animator.runtimeAnimatorController == null) return;
             animator.SetFloat(SpeedId, sitting ? 0f : speed);
             animator.SetFloat(WalkRateId, Mathf.Clamp(speed / 1.3f, 0.4f, 2f));

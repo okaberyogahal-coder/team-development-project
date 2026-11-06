@@ -20,14 +20,22 @@ namespace FutureCity
         {
             if (stage == null) Create(camera);
             previewCamera.backgroundColor = background ?? new Color(0.94f, 0.94f, 0.9f);
-            string json = source.Gender + JsonUtility.ToJson(source.Appearance);
+            string json = source.Gender + JsonUtility.ToJson(source.V3Choice) + JsonUtility.ToJson(source.Appearance);
             if (json != lastAppearance)
             {
-                avatar.SetGender(source.Gender);
-                avatar.ApplyAppearance(source.Appearance);
-                var animator = avatar.GetComponentInChildren<Animator>();
-                avatar.UpdateMotion(0f, false);
-                if (animator != null) { animator.Play("Idle"); animator.Update(0f); }
+                if(source.V3Choice!=null)
+                {
+                    if(!avatar.TryApplyV3(source.V3Choice,out _))return;
+                    avatar.UpdateMotion(0f,false);
+                }
+                else
+                {
+                    avatar.SetGender(source.Gender);
+                    avatar.ApplyAppearance(source.Appearance);
+                    var animator=avatar.GetComponentInChildren<Animator>();
+                    avatar.UpdateMotion(0f,false);
+                    if(animator!=null){animator.Play("Idle");animator.Update(0f);}
+                }
                 lastAppearance = json;
             }
             avatar.transform.localRotation = Quaternion.Euler(0f, angle, 0f);

@@ -26,7 +26,7 @@ namespace MiraifuAppearancePrototype
         }
         void Clear()
         {
-            foreach(var g in visuals)if(g!=null){g.SetActive(false);Destroy(g);}visuals.Clear();foreach(var m in transient)if(m!=null)Destroy(m);transient.Clear();
+            foreach(var g in visuals)if(g!=null){g.SetActive(false);Remove(g);}visuals.Clear();foreach(var m in transient)if(m!=null)Remove(m);transient.Clear();
         }
         void Changed(AvatarSettings settings)
         {
@@ -65,5 +65,6 @@ namespace MiraifuAppearancePrototype
             }
             catch(Exception e){error=e.Message;return false;}
         }
+        static void Remove(UnityEngine.Object value){if(Application.isPlaying)UnityEngine.Object.Destroy(value);else UnityEngine.Object.DestroyImmediate(value);}
     }
 }
