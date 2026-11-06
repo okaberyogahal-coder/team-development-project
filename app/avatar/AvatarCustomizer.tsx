@@ -51,7 +51,8 @@ export function AvatarCustomizer({
   const initialDefaultPending = useRef(assets.id !== 'legacy');
   const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [activeTab, setActiveTab] = useState<'outerwear' | 'pants' | 'hair' | 'face' | 'shoes' | 'accessories' | 'colors' | 'costume'>('outerwear');
+  const [activeTab, setActiveTab] = useState<'outerwear' | 'pants' | 'hair' | 'face' | 'shoes' | 'accessories' | 'glasses' | 'colors' | 'costume'>('outerwear');
+  const [accessoryPage,setAccessoryPage]=useState(0);
   const [{choice,revision},setSelection] = useState(() => ({
     choice:{...DEFAULT_AVATAR_CHOICE,baseAvatarId:initialCandidateId || 'young-man',face:2},revision:0,
   }));
@@ -363,8 +364,9 @@ export function AvatarCustomizer({
               aria-pressed={activeTab === 'accessories'}
               onClick={() => setActiveTab('accessories')}
             >
-              小物・メガネ
+              小物
             </button>
+            <button type="button" className={`avatar-tab-btn ${activeTab === 'glasses' ? 'active' : ''}`} aria-pressed={activeTab === 'glasses'} onClick={() => setActiveTab('glasses')}>メガネ</button>
             <button
               type="button"
               className={`avatar-tab-btn ${activeTab === 'colors' ? 'active' : ''}`}
@@ -376,6 +378,7 @@ export function AvatarCustomizer({
             <button type="button" className={`avatar-tab-btn ${activeTab === 'costume' ? 'active' : ''}`} aria-pressed={activeTab === 'costume'} onClick={() => setActiveTab('costume')}>コスチューム</button>
           </div>
 
+          <div className="avatar-category-content">
           {(choice.costume >= 0 || activeTab === 'costume') && <p className="avatar-inline-hint" role="status">{choice.costume >= 0 ? '着用中は一部のパーツが隠れます。「通常の服」で戻せます。' : '衣装を選んでも、元の着せ替えは残ります。'}</p>}
           {activeTab === 'costume' && <div>
             <div className="avatar-options-grid">
@@ -549,43 +552,35 @@ export function AvatarCustomizer({
             </div>
           )}
 
-          {activeTab === 'accessories' && (
+          {activeTab === 'glasses' && (
             <div>
               <div className="avatar-color-title">メガネ</div>
               <div className="avatar-options-grid">
-                {AVATAR_OPTIONS.glasses.map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    className={`avatar-option-card ${choice.glasses === opt.value ? 'selected' : ''}`}
-                    aria-pressed={choice.glasses === opt.value}
-                    disabled={opt.value >= (partCounts.glasses ?? 0)}
-                    title={opt.value >= (partCounts.glasses ?? 0) ? 'プレビューの更新後に利用できます' : undefined}
-                    onClick={() => updateChoice({ glasses: opt.value })}
-                  >
-                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="glasses" value={opt.value} baseAvatarId={choice.baseAvatarId} />
+                {AVATAR_OPTIONS.glasses.map(opt => (
+                  <button type="button" key={opt.value} className={`avatar-option-card ${choice.glasses === opt.value ? 'selected' : ''}`} aria-pressed={choice.glasses === opt.value} disabled={opt.value >= (partCounts.glasses ?? 0)} onClick={() => updateChoice({glasses:opt.value})}>
+                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="glasses" value={opt.value} baseAvatarId={choice.baseAvatarId}/>
                     <div className="avatar-option-label">{opt.label}</div>
                   </button>
                 ))}
               </div>
-
-              <div className="avatar-color-title" style={{ marginTop: '16px' }}>アクセサリー / 小物</div>
+            </div>
+          )}
+          {activeTab === 'accessories' && (
+            <div>
+              <div className="avatar-color-title">小物</div>
               <div className="avatar-options-grid">
-                {AVATAR_OPTIONS.accessory.map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    className={`avatar-option-card ${choice.accessory === opt.value ? 'selected' : ''}`}
-                    aria-pressed={choice.accessory === opt.value}
-                    disabled={opt.value >= (partCounts.accessory ?? 0)}
-                    title={opt.value >= (partCounts.accessory ?? 0) ? 'プレビューの更新後に利用できます' : undefined}
-                    onClick={() => updateChoice({ accessory: opt.value })}
-                  >
-                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="accessory" value={opt.value} baseAvatarId={choice.baseAvatarId} />
+                {AVATAR_OPTIONS.accessory.slice(accessoryPage*3,accessoryPage*3+3).map(opt => (
+                  <button type="button" key={opt.value} className={`avatar-option-card ${choice.accessory === opt.value ? 'selected' : ''}`} aria-pressed={choice.accessory === opt.value} disabled={opt.value >= (partCounts.accessory ?? 0)} onClick={() => updateChoice({accessory:opt.value})}>
+                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="accessory" value={opt.value} baseAvatarId={choice.baseAvatarId}/>
                     <div className="avatar-option-label">{opt.label}</div>
                   </button>
                 ))}
               </div>
+              <nav className="avatar-option-pages" aria-label="小物のページ">
+                <button type="button" aria-label="前の小物" disabled={accessoryPage===0} onClick={()=>setAccessoryPage(page=>page-1)}>← 前へ</button>
+                <span aria-live="polite">{accessoryPage+1} / {Math.ceil(AVATAR_OPTIONS.accessory.length/3)}</span>
+                <button type="button" aria-label="次の小物" disabled={(accessoryPage+1)*3>=AVATAR_OPTIONS.accessory.length} onClick={()=>setAccessoryPage(page=>page+1)}>次へ →</button>
+              </nav>
             </div>
           )}
 
@@ -663,6 +658,7 @@ export function AvatarCustomizer({
             </div>
           )}
 
+          </div>
           {/* アクションバー */}
           <div className="avatar-action-bar">
             <button

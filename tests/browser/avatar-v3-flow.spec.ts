@@ -13,6 +13,8 @@ test('real six-model wardrobe applies the same appearance in existing city and r
  }
  await page.getByRole('button',{name:'このアバターで編集へ →'}).click();
  await page.getByRole('button',{name:'シック',exact:true}).click();
+ await page.locator('.avatar-tabs').getByRole('button',{name:'小物',exact:true}).click();await page.getByRole('button',{name:'次の小物'}).click();await page.locator('.avatar-option-card').last().click();
+ await page.locator('.avatar-tabs').getByRole('button',{name:'メガネ',exact:true}).click();await page.locator('.avatar-option-card').last().click();
  const complete=page.getByRole('button',{name:'このアバターで街へ行く'});await expect(complete).toBeEnabled();
  const applied=await preview.locator('body').evaluate(()=>(window as unknown as {miraifuAppliedAvatar:{choice:unknown}}).miraifuAppliedAvatar.choice);
  await page.screenshot({path:test.info().outputPath('real-member-wardrobe.png')});
