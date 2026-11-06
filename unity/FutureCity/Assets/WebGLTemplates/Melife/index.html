@@ -67,11 +67,19 @@
       if (window.parent === window || event.source !== window.parent || event.origin !== window.location.origin || event.data?.type !== 'melife:initialize' || !window.unityInstance) return;
       const {mode, profile} = event.data;
       if ((mode === 'avatar' || mode === 'world' || mode === 'profile') && profile && typeof profile.id === 'string' && typeof profile.nickname === 'string') {
-        window.unityInstance.SendMessage('MiraiLife', 'Initialize', JSON.stringify({mode,profileId:profile.id,nickname:profile.nickname,gender:profile.gender,appearance:profile.appearance}));
+        window.unityInstance.SendMessage('MiraiLife', 'Initialize', JSON.stringify({mode,profileId:profile.id,nickname:profile.nickname,gender:profile.gender,appearance:profile.appearance?.version===3?null:profile.appearance,appearanceV3:profile.appearance?.version===3?profile.appearance.choice:null}));
       }
       clearInterval(hostReadyTimer);
       loading.hidden = true;
-      if (mode === 'profile') window.parent.postMessage({type:'melife:profile-ready'},window.location.origin);
+      if (mode === 'profile' && profile?.appearance?.version !== 3) window.parent.postMessage({type:'melife:profile-ready'},window.location.origin);
+    });
+    window.addEventListener('melife-unity-avatar-applied', event => {
+      const receipt=event.detail;
+      if(window.parent===window)return;
+      if(receipt?.accepted===true){
+        window.melifeAppliedAvatar=receipt;
+        window.parent.postMessage({type:receipt.mode==='profile'?'melife:profile-ready':'melife:appearance-applied',...receipt},location.origin);
+      }else window.parent.postMessage({type:'melife:error'},location.origin);
     });
     window.addEventListener('melife-unity-avatar', event => {
       const value = event.detail;

@@ -25,6 +25,18 @@ namespace FutureCity.Tests
             }
         }
         [Test]
+        public void V3WebEnvelopeDoesNotBecomeALegacyAppearance()
+        {
+            var library=Resources.Load<V3AvatarLibrary>(V3AvatarLibrary.ResourcePath);
+            string choice=JsonUtility.ToJson(library.catalog.models[0].defaults);
+            foreach(var legacy in new[]{"",",\"appearance\":null"})
+            {
+                var value=WebProfileBridge.Decode("{\"mode\":\"world\",\"profileId\":\"a\",\"nickname\":\"A\",\"appearanceV3\":"+choice+legacy+"}");
+                Assert.That(value,Is.Not.Null,"Legacy null field must not reject a V3 envelope");
+                Assert.That(value.appearance,Is.Null);Assert.That(value.appearanceV3,Is.Not.Null);
+            }
+        }
+        [Test]
         public void InvalidChoiceKeepsTheLastVisualAndLegacyCanBeRestored()
         {
             var library=Resources.Load<V3AvatarLibrary>(V3AvatarLibrary.ResourcePath);

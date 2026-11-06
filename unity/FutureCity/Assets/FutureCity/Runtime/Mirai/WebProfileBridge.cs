@@ -35,6 +35,10 @@ namespace FutureCity
                 if (profile == null || (profile.mode != "avatar" && profile.mode != "world" && profile.mode != "profile") ||
                     string.IsNullOrWhiteSpace(profile.profileId) || profile.profileId.Length > 100 ||
                     string.IsNullOrWhiteSpace(profile.nickname) || profile.nickname.Trim().Length > 20) return null;
+                // JsonUtility materializes absent/null nested classes. Discard empty
+                // placeholders before deciding which appearance envelope was supplied.
+                if(profile.appearance!=null&&profile.appearance.parts==null&&profile.appearance.colors==null)profile.appearance=null;
+                if(profile.appearanceV3!=null&&string.IsNullOrEmpty(profile.appearanceV3.baseAvatarId))profile.appearanceV3=null;
                 if(profile.appearance!=null&&profile.appearanceV3!=null)return null;
                 if(profile.appearance!=null&&profile.appearance.version!=1&&profile.appearance.version!=2)return null;
                 profile.nickname = profile.nickname.Trim().Replace("<", "").Replace(">", "");

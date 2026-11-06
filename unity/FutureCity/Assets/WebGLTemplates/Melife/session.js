@@ -31,6 +31,7 @@
     var applied = window.melifeAppliedSession;
     window.parent.postMessage({
       type: 'melife:session-header',
+      ownerId: applied && applied.authenticated ? applied.userId : null,
       state: applied ? applied.state : 'loading',
       authenticated: Boolean(applied && applied.authenticated),
       status: status.textContent,
