@@ -27,6 +27,8 @@ public static class MiraifuAvatarV3Exporter
         ("elderly-woman", "elderly-woman-face-all-02.json")
     };
 
+    // Startup generation is opt-in; normal clones never generate assets or build players.
+#if MIRAIFU_ENABLE_LEGACY_AUTOGENERATION
     [InitializeOnLoadMethod]
     static void AutoInitIfMissing()
     {
@@ -42,6 +44,7 @@ public static class MiraifuAvatarV3Exporter
             };
         }
     }
+#endif
 
     [MenuItem(MenuPath)]
     public static void ExportAllFromMenu() => ExportAll(silent: false);
