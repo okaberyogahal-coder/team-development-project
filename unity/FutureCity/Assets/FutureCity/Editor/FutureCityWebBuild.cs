@@ -32,6 +32,14 @@ namespace FutureCity.EditorTools
             Debug.Log("FutureCity anime update applied to the existing scene.");
         }
 
+        // Explicitly regenerate the scenery after importing a new world version.
+        [MenuItem("Tools/Future City/Recreate Scene and Build Web for melife")]
+        public static void RebuildWorld()
+        {
+            FutureCityMenu.CreateScene();
+            Build();
+        }
+
         [MenuItem("Tools/Future City/Build Web for melife")]
         public static void Build()
         {
@@ -47,7 +55,10 @@ namespace FutureCity.EditorTools
             PlayerSettings.defaultWebScreenWidth = 1280;
             PlayerSettings.defaultWebScreenHeight = 720;
             // Keep the normal build directly serveable by Next.js without custom compression headers.
-            var output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../public/unity/FutureCity"));
+            var output = Environment.GetEnvironmentVariable("MELIFE_UNITY_BUILD_OUTPUT");
+            if (string.IsNullOrEmpty(output))
+                output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../public/unity/FutureCity"));
+            else output = Path.GetFullPath(output);
             Directory.CreateDirectory(output);
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {

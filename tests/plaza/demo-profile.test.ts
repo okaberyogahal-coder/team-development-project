@@ -34,7 +34,7 @@ test('Unityと同じ名前の正規化を使い、空になる名前は登録し
  assert.throws(()=>createDemoProfile('<>','demo-1'));
 });
 test('保存機能を利用できない場合は、データなしと区別して呼び出し元に通知する',()=>{
- assert.throws(()=>readDemoProfile({getItem(){throw new Error('blocked');},setItem(){}}),/blocked/);
+ assert.throws(()=>readDemoProfile({getItem(){throw new Error('blocked');}}),/blocked/);
 });
 test('追加パーツとコスチュームの外見を保存して入場へ引き継ぐ',()=>{
  const store=storage();saveDemoProfile(store,createDemoProfile('みらい','demo-1'));

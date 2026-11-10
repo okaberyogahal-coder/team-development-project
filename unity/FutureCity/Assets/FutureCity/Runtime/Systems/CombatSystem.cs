@@ -72,6 +72,7 @@ namespace FutureCity
         void OnDestroy()
         {
             if (Instance == this) { Instance = null; Active = false; Aiming = false; }
+            CombatFx.Release(fxMat);
         }
 
         /// <summary>腕の端末（戦闘モードのときだけ見える、手首の光る輪）</summary>
@@ -548,7 +549,16 @@ namespace FutureCity
                 m.SetFloat("_Intensity", 2.2f);
                 return m;
             }
-            return lib != null ? lib.Get(Mat.HoloCyan) : null;
+            var fallback = lib != null ? lib.Get(Mat.HoloCyan) : null;
+            // The combat system owns its copy; never destroy the world's shared material.
+            return fallback != null ? new Material(fallback) : null;
+        }
+
+        public static void Release(UnityEngine.Object resource)
+        {
+            if(resource == null)return;
+            if(Application.isPlaying)UnityEngine.Object.Destroy(resource);
+            else UnityEngine.Object.DestroyImmediate(resource);
         }
 
         static GameObject Make(string name, Material mat, out Mesh mesh)
@@ -556,6 +566,7 @@ namespace FutureCity
             var go = new GameObject(name);
             mesh = new Mesh { name = name };
             mesh.MarkDynamic();
+            go.AddComponent<CombatMeshOwner>().mesh = mesh;
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var mr = go.AddComponent<MeshRenderer>();
             mr.sharedMaterial = mat;
@@ -617,6 +628,13 @@ namespace FutureCity
         }
 
         public static Vector3 CamPos => Camera.main != null ? Camera.main.transform.position : Vector3.zero;
+    }
+
+    // Each effect owns its generated mesh; materials are shared across live effects.
+    public sealed class CombatMeshOwner : MonoBehaviour
+    {
+        public Mesh mesh;
+        void OnDestroy(){CombatFx.Release(mesh);}
     }
 
     /// <summary>ビーム：白い芯＋水色の光。0.14 秒で細く・薄くなって消える</summary>

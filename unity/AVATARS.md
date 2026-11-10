@@ -64,3 +64,13 @@ NPCは名前をもとに服装と色を決定し、再表示しても同じ人�
 プロフィールの必須性別をセッションから受け取り、男性は既存Characters、女性は`Resources/FutureCityAvatars/FemaleCharacters`と`FemaleWardrobe.asset`を使用する。女性用モデルと互換カタログは未導入。女性用素材のライセンスを確認して導入し、既存と同じAnimatorのSpeed／WalkRate／Sittingを備えたPrefabと、身体に対応する服・顔・髪のカタログを作成する。現在の男性用メッシュを女性用として流用しない。未導入時は通常モデルを非表示にし準備中と表示、既存の着ぐるみ（costume=1）は共通として使える。
 
 年齢はセッションに含めず年齢バッジだけを表示する。18〜29歳ユース／30〜49歳ミドル／50〜59歳ミドルシニア／60歳以上シニア。Unity変更の反映にはWebGL再ビルドが必要。
+
+## アバター頭上の名前・年齢バッジ（2026-11-02）
+
+本人とデモ人物の頭上に名前と年齢バッジを2段で表示する。本人の年齢バッジはサーバーセッションの公開用ラベルを使い、実年齢は渡さない。ゲスト・年齢未設定の場合は名前だけを表示する。本人のラベル位置は表示中のモデル上端から求め、帽子や着ぐるみの耳に重ならないようにする。プロフィール更新は既存のセッション再取得で反映される。
+
+### 画像バッジへの更新
+
+頭上ラベルの年齢文字を、名前の右横の24px画像に置き換える。ユース＝芽、ミドル＝若葉、ミドルシニア＝木、シニア＝花。背景透過PNGを`Assets/FutureCity/Resources/AgeBadges/`から読み込み、種類ごとにキャッシュする。未設定・ゲストは名前のみ。プロフィール内の年齢区分の説明は文字で維持する。Web反映にはWebGL再ビルドが必要。
+
+画像は組み込みImageGenで生成した。共通プロンプトは「ONE square favicon-like age-group badge for a friendly Japanese community game; flat clean friendly illustrated emblem; thick dark forest green outlines; bold simple silhouette legible at 24 pixels; centered filling 85%; transparent background with real alpha; no text, letters, numbers, border, other objects, gradients or shadow; consistent botanical icon family」。各画像の主題は`youth`: fresh two-leaf green sprout、`middle`: single broad teal green leaf、`middle-senior`: rounded mature tree with green canopy and brown trunk、`senior`: warm golden orange five petal flower with a dark gold center。生成画像をアルファ付き128×128 PNGに縮小して格納する。

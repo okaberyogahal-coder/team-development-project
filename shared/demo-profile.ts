@@ -21,7 +21,7 @@ export function createDemoProfile(nickname: string, id: string): DemoProfile {
  if (!name || !id) throw new Error('ニックネームを入力してください。');
  return {version:1,id,nickname:name,appearance:null};
 }
-export function readDemoProfile(storage: ProfileStorage): DemoProfile | null {
+export function readDemoProfile(storage: Pick<Storage, 'getItem'>): DemoProfile | null {
  const raw = storage.getItem(DEMO_PROFILE_KEY);
  try {
   const p = JSON.parse(raw || 'null');

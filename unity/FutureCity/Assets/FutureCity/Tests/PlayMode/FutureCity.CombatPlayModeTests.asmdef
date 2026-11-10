@@ -1,0 +1,5 @@
+{
+  "name": "FutureCity.CombatPlayModeTests",
+  "references": ["FutureCity"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
