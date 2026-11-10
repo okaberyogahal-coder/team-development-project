@@ -7,6 +7,24 @@ namespace FutureCity.Tests
     public class WorldUpgradeTests
     {
         [Test]
+        public void AnimeEdgesUseMsaaWithoutASecondScreenBlurPass()
+        {
+            var go=new GameObject("AnimeQualityFixture");
+            var pipeline=UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
+            string saved=EditorJsonUtility.ToJson(pipeline);
+            try
+            {
+                var camera=go.AddComponent<Camera>();
+                PostFXSetup.Apply(camera,go.transform,anime:true);
+                var data=go.GetComponent("UniversalAdditionalCameraData");
+                Assert.That(data,Is.Not.Null);
+                Assert.That(data.GetType().GetProperty("antialiasing").GetValue(data).ToString(),Is.EqualTo("None"),"MSAA already smooths geometry; a second full-screen filter softens the world");
+                Assert.That(pipeline.GetType().GetProperty("msaaSampleCount").GetValue(pipeline),Is.EqualTo(4));
+                Assert.That(pipeline.GetType().GetProperty("renderScale").GetValue(pipeline),Is.EqualTo(1f));
+            }
+            finally { EditorJsonUtility.FromJsonOverwrite(saved,pipeline);Object.DestroyImmediate(go); }
+        }
+        [Test]
         public void NewWorldDefaultsToAnimeScenery()
         {
             var go = new GameObject("UpgradeFixture");

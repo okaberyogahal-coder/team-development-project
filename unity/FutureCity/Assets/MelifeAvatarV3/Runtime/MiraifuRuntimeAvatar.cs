@@ -63,6 +63,17 @@ namespace MiraifuAvatarPrototype
             if(graph.IsValid())graph.Destroy();Motion=motion;AnimationClip clip=motion==AvatarMotion.Walk?model.walk:motion==AvatarMotion.Jump?model.jump:model.idle;
             graph=PlayableGraph.Create("Runtime Avatar Prototype");graph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);playable=AnimationClipPlayable.Create(graph,clip);playable.SetApplyFootIK(false);var output=AnimationPlayableOutput.Create(graph,"Avatar",animator);output.SetSourcePlayable(playable);graph.Play();
         }
+        void LateUpdate()
+        {
+            if(Motion!=AvatarMotion.Walk||!graph.IsValid())return;
+            double length=playable.GetAnimationClip().length;
+            double time=playable.GetTime();
+            if(length<=0||time<length)return;
+            // Preserve the elapsed fraction without modifying the imported animation asset.
+            playable.SetTime(time%length);
+            playable.SetDone(false);
+            graph.Evaluate(0);
+        }
         public void SampleMotion(float time){if(graph.IsValid()){playable.SetTime(time);graph.Evaluate(0);}}
         void OnDisable(){if(graph.IsValid())graph.Destroy();}
         void OnDestroy(){if(graph.IsValid())graph.Destroy();}

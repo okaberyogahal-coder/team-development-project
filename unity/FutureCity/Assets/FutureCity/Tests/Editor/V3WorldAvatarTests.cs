@@ -6,6 +6,62 @@ namespace FutureCity.Tests
 {
     public class V3WorldAvatarTests
     {
+        [UnityEngine.TestTools.UnityTest]
+        public System.Collections.IEnumerator WalkingBonesKeepMovingAfterThreeCompleteCycles()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.NewScene(UnityEditor.SceneManagement.NewSceneSetup.EmptyScene,UnityEditor.SceneManagement.NewSceneMode.Single);
+            yield return new UnityEngine.TestTools.EnterPlayMode();
+            var library=Resources.Load<V3AvatarLibrary>(V3AvatarLibrary.ResourcePath);
+            var avatars=new System.Collections.Generic.List<MiraifuRuntimeAvatar>();
+            float longest=0f;
+            foreach(var model in library.models)
+            {
+                var root=Object.Instantiate(model.prefab);
+                var avatar=root.GetComponent<MiraifuRuntimeAvatar>();
+                avatar.Initialize(model.defaults,AvatarMotion.Walk);
+                avatars.Add(avatar);longest=Mathf.Max(longest,model.walk.length);
+            }
+            yield return new WaitForSeconds(longest*3f+.1f);
+            var before=new System.Collections.Generic.List<Quaternion[]>();
+            foreach(var avatar in avatars)
+            {
+                var bones=avatar.PartRenderer("body").bones;
+                var rotations=new Quaternion[bones.Length];
+                for(int i=0;i<bones.Length;i++)rotations[i]=bones[i].localRotation;
+                before.Add(rotations);
+            }
+            yield return new WaitForSeconds(.17f);
+            var frozen=new System.Collections.Generic.List<string>();
+            for(int j=0;j<avatars.Count;j++)
+            {
+                var avatar=avatars[j];var bones=avatar.PartRenderer("body").bones;bool moved=false;
+                for(int i=0;i<bones.Length;i++)if(Quaternion.Angle(before[j][i],bones[i].localRotation)>.1f)moved=true;
+                if(!moved||avatar.MotionTime>=avatar.model.walk.length)frozen.Add(avatar.model.modelId);
+                Object.Destroy(avatar.gameObject);
+            }
+            yield return new UnityEngine.TestTools.ExitPlayMode();
+            Assert.That(frozen,Is.Empty,"Walking bones must still animate after the first three cycles");
+        }
+        [Test]
+        public void WalkingKeepsAdvancingAfterMultipleClipLengthsForEveryModel()
+        {
+            var library=Resources.Load<V3AvatarLibrary>(V3AvatarLibrary.ResourcePath);
+            foreach(var model in library.models)
+            {
+                var root=Object.Instantiate(model.prefab);
+                try
+                {
+                    var avatar=root.GetComponent<MiraifuRuntimeAvatar>();
+                    avatar.Initialize(model.defaults,AvatarMotion.Walk);
+                    float phase=model.walk.length*.25f;
+                    avatar.SampleMotion(model.walk.length*3f+phase);
+                    typeof(MiraifuRuntimeAvatar).GetMethod("LateUpdate",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic)?.Invoke(avatar,null);
+                    Assert.That(avatar.MotionTime,Is.EqualTo(phase).Within(.001f),model.modelId+" must keep walking after the first cycle");
+                    Assert.That(avatar.Motion,Is.EqualTo(AvatarMotion.Walk));
+                }
+                finally { Object.DestroyImmediate(root); }
+            }
+        }
         GameObject actor;
         [TearDown] public void TearDown(){if(actor!=null)Object.DestroyImmediate(actor);}
         [Test]

@@ -13,6 +13,7 @@ namespace FutureCity
             public Vector3 position;
             public float yaw;
             public bool cursorVisible, freeLook;
+            public string roomId,topicId;
             public MiraifuAvatarPrototype.MiraifuWebAvatarReceiver.WebChoice avatarChoice;
         }
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -25,7 +26,8 @@ namespace FutureCity
             if (player == null) return;
             MelifeWorldInteraction(JsonUtility.ToJson(new WebInteractionSnapshot {
                 panel = panel.ToString(), position = player.transform.position, yaw = player.Yaw,
-                cursorVisible = Cursor.visible, freeLook = PlayerWalker.FreeLook, avatarChoice=player.body.GetComponent<ImportedAvatar>()?.V3Choice
+                cursorVisible = Cursor.visible, freeLook = PlayerWalker.FreeLook, avatarChoice=player.body.GetComponent<ImportedAvatar>()?.V3Choice,
+                roomId=currentRoom?.id,topicId=currentRoom==null?null:Topics.Current(currentRoom.id)?.id
             }));
 #endif
         }

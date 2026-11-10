@@ -25,7 +25,7 @@ namespace FutureCity
         public static bool PromptVisible { get; private set; }
         static MiraiWorld instance;
 
-        enum Panel { None, Intro, Learn, CourseDetail, Viewer, Teach, EditCourse, Connect, Navi, Profile, Person, Help }
+        enum Panel { None, Intro, Learn, CourseDetail, Viewer, Teach, EditCourse, Connect, Navi, Profile, Person, Help, RoomTopics }
         enum LearnTab { Courses, Sessions, Later }
         enum TeachTab { Materials, Lectures }
 
@@ -449,12 +449,14 @@ namespace FutureCity
             mic = false;
             camOn = false;
             Toast($"{r.name}に入りました（{RoomCount(r)}/8人）。マイクとカメラはOFFです。");
+            SetPanel(Panel.RoomTopics);
         }
 
         void LeaveRoom(bool teleportOut)
         {
             var r = currentRoom;
             currentRoom = null;
+            if(panel==Panel.RoomTopics)SetPanel(Panel.None);
             mic = false;
             camOn = false;
             if (teleportOut && r != null)
@@ -707,9 +709,12 @@ namespace FutureCity
             if (creatingWebAvatar) { DrawWebAvatarCreation(); FinishFrame(); return; }
             if (panel == Panel.Intro) { DrawIntro(); FinishFrame(); return; }
 
-            DrawWorldLabels(s);
-            DrawStatus();
-            DrawGuideBar();
+            if(panel!=Panel.RoomTopics)
+            {
+                DrawWorldLabels(s);
+                DrawStatus();
+                DrawGuideBar();
+            }
             if (panel == Panel.None)
             {
                 DrawPrompt();
@@ -730,6 +735,7 @@ namespace FutureCity
                 case Panel.Profile: DrawProfile(); break;
                 case Panel.Person: DrawPerson(); break;
                 case Panel.Help: DrawHelp(); break;
+                case Panel.RoomTopics: DrawRoomTopics(); break;
             }
             FinishFrame();
         }
@@ -860,7 +866,7 @@ namespace FutureCity
         // ---- 左上：現在地と参加人数
         void DrawStatus()
         {
-            var r = new Rect(16f, 16f, 430f, (currentRoom != null ? 200f : 104f) + (webSession != null ? 38f : 0f));
+            var r = new Rect(16f, 16f, 430f, (currentRoom != null ? 254f : 104f) + (webSession != null ? 38f : 0f));
             Box(r, sPanel);
             string where = currentRoom != null ? $"{currentRoom.name}（{RoomCount(currentRoom)}/8人）" : "ロビー・庭";
             GUI.Label(new Rect(r.x + 20f, r.y + 12f, r.width - 40f, 36f), $"<b>現在地：</b>{where}", sBody);
@@ -874,7 +880,8 @@ namespace FutureCity
                 { mic = !mic; Toast(mic ? "マイクをONにしました（デモ：通話サービス未接続）" : "マイクをOFFにしました"); }
                 if (Btn(new Rect(r.x + 32f + bw, r.y + 92f, bw, 50f), camOn ? "カメラ ON" : "カメラ OFF", camOn ? new Color(0.85f, 0.3f, 0.3f) : (Color?)null))
                 { camOn = !camOn; Toast(camOn ? "カメラをONにしました（デモ：通話サービス未接続）" : "カメラをOFFにしました"); }
-                if (Btn(new Rect(r.x + 20f, r.y + 146f, r.width - 40f, 44f), "ロビーへ戻る")) LeaveRoom(true);
+                if (Btn(new Rect(r.x + 20f, r.y + 146f, r.width - 40f, 44f), "お題を選ぶ")) SetPanel(Panel.RoomTopics);
+                if (Btn(new Rect(r.x + 20f, r.y + 200f, r.width - 40f, 44f), "ロビーへ戻る")) LeaveRoom(true);
             }
         }
 

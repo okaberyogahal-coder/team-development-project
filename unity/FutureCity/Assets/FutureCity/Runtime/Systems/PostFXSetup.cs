@@ -9,7 +9,7 @@ namespace FutureCity
     /// <summary>
     /// 画質の設定。
     ///  - ギザギザ対策：TAA（時間方向のアンチエイリアス。葉や草のふちのちらつきも消える）、
-    ///    または MSAA 4x ＋ SMAA（高）。テクスチャの異方性フィルタ
+    ///    または MSAA 4x（アニメ調では追加の画面フィルタなし）。テクスチャの異方性フィルタ
     ///  - 影：4096 の高解像度シャドウマップを、見ている周辺に集中して使う。4段カスケード
     ///    （写真モードは広場だけなので 150m に集中させて、よりくっきり）
     ///  - 色：HDR、ACES トーンマップ、ほどよいコントラストと彩度、やわらかい Bloom（太陽のまぶしさは上限つき）、ビネット
@@ -31,7 +31,7 @@ namespace FutureCity
 
         public static void Apply(Camera cam, Transform parent, float renderScale = 1f, bool photoMode = false, bool temporalAA = false, bool anime = false)
         {
-            // アニメ調：輪郭のくっきりした絵にするため TAA（ぼける）は使わず、MSAA 4x ＋ SMAA。葉は Alpha to Coverage でなめらかに
+            // アニメ調は MSAA 4x のみ。画面全体への追加フィルタは輪郭をぼかし、描画パスも増やす。
             if (anime) temporalAA = false;
             float shadowDist = photoMode ? 150f : 450f;
             cam.allowHDR = true;
@@ -56,7 +56,7 @@ namespace FutureCity
 #endif
             if (!taa)
             {
-                data.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+                data.antialiasing = anime ? AntialiasingMode.None : AntialiasingMode.SubpixelMorphologicalAntiAliasing;
                 data.antialiasingQuality = AntialiasingQuality.High;
             }
             data.renderShadows = true;

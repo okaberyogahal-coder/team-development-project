@@ -20,6 +20,7 @@
     "test:browser": "playwright test",
     "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "test:unity": "playwright test --config playwright.unity.config.ts",
+    "test:room-topics": "playwright test --config playwright.room-topics.config.ts",
     "test:unity:auth": "playwright test --config playwright.unity-auth.config.ts",
     "dev:lan": "node scripts/dev-lan.mjs",
     "db:generate": "prisma generate",
