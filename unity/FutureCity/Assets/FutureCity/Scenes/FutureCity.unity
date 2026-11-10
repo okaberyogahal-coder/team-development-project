@@ -358,6 +358,7 @@ MonoBehaviour:
   realtimeReflections: 1
   postProcessing: 1
   ambientPeople: 1
+  combatMode: 1
   lawnGrass: 1
   renderScale: 1
   bakedMaterials:

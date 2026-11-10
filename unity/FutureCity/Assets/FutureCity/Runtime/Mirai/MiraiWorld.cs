@@ -141,6 +141,7 @@ namespace FutureCity
             string userId = authenticated ? session.profile.userId : "";
             string oldUserId = webSession != null && webSession.authenticated && webSession.profile != null ? webSession.profile.userId : "";
             bool changed = webSession == null || oldUserId != userId;
+            if (changed && CombatSystem.Instance != null) CombatSystem.Instance.SetActive(false);
             webSession = session;
             me = new MiraiProfile
             {
@@ -245,6 +246,15 @@ namespace FutureCity
             if (instance == this) { instance = null; UIOpen = false; PointerOverUI = false; PromptVisible = false; }
         }
 
+        /// <summary>画面下の短いお知らせを出す（戦闘モードの切りかえなど、ほかの仕組みから）</summary>
+        public static void Notify(string msg)
+        {
+            if (instance != null) instance.Toast(msg);
+        }
+
+        /// <summary>話しかける・入室するキーの表示（戦闘モードでは E がパンチなので Enter）</summary>
+        static string ActKey => CombatSystem.Active ? "Enter" : "E";
+
         // ================================================================== 更新
         void Update()
         {
@@ -305,7 +315,7 @@ namespace FutureCity
             }
             PromptVisible = focus != null || pendingRoom != null || nearGate != null;
 
-            if (InputBridge.Down(FKey.E) || InputBridge.Down(FKey.Enter)) ActivatePrompt();
+            if ((InputBridge.Down(FKey.E) && !CombatSystem.Active) || InputBridge.Down(FKey.Enter)) ActivatePrompt();
             else if (MenuKeys()) { }
             else if (InputBridge.Down(FKey.N)) OpenFeature(MiraiFeature.Navi);
             else if (InputBridge.Down(FKey.P)) SetPanel(Panel.Profile);
@@ -313,7 +323,8 @@ namespace FutureCity
 
             // クリック移動・人をクリックして話しかける
             // ドラッグ（見回し）ではなく「クリックして離した」ときだけ歩く・話しかける
-            if (InputBridge.LeftMouseUp && !player.LastPressWasDrag && (PlayerWalker.FreeLook || !PointerOverUI) && cam != null)
+            // 戦闘モードでは左クリックはビームなので、クリックで歩く・話しかけるは止める（Enter で話せる）
+            if (InputBridge.LeftMouseUp && !player.LastPressWasDrag && (PlayerWalker.FreeLook || !PointerOverUI) && cam != null && !CombatSystem.Active)
             {
                 // 見回しモードでは画面中央の照準、カーソルを出しているときはマウスの位置
                 Vector2 aim = PlayerWalker.FreeLook ? new Vector2(Screen.width * 0.5f, Screen.height * 0.5f) : mp;
@@ -607,7 +618,7 @@ namespace FutureCity
 
         void Styles()
         {
-            // Web builds cannot fall back to Japanese fonts installed on the user's OS.
+            // WebGL cannot use Japanese fonts installed on the visitor's OS.
             if (japaneseFont == null) japaneseFont = Resources.Load<Font>("Fonts/NotoSansCJKjp-Regular");
             if (japaneseFont != null) GUI.skin.font = japaneseFont;
             if (sPanel != null) return;
@@ -713,7 +724,7 @@ namespace FutureCity
             {
                 DrawPrompt();
                 DrawBottomBar();
-                if (PlayerWalker.FreeLook) DrawAim();
+                if (PlayerWalker.FreeLook && !CombatSystem.Active) DrawAim();   // 戦闘モードの照準は CombatSystem が描く
             }
             DrawToast();
 
@@ -902,20 +913,20 @@ namespace FutureCity
             {
                 title = $"{focus.profile.name}さん（{AgeBadgeLabel(focus.profile.age)}）";
                 sub = "プロフィールを見ることができます（デモ人物）";
-                button = "プロフィールを見る（E）";
+                button = $"プロフィールを見る（{ActKey}）";
             }
             else if (pendingRoom != null)
             {
                 title = pendingRoom.name;
                 sub = $"{pendingRoom.caption}。いま {RoomCount(pendingRoom)}/8人。入室してもマイク・カメラはOFFのままです。";
-                button = "入室する（E）";
+                button = $"入室する（{ActKey}）";
                 col = pendingRoom.color * 0.85f;
             }
             else if (nearGate != null)
             {
                 title = MiraiData.FeatureName(nearGate.feature);
                 sub = MiraiData.FeatureCaption(nearGate.feature);
-                button = "ひらく（E）";
+                button = $"ひらく（{ActKey}）";
                 col = MiraiData.FeatureColor(nearGate.feature);
             }
             if (title == null) return;
@@ -1622,6 +1633,7 @@ namespace FutureCity
                 "<b>視点をもどす</b>：R キー、または下の「視点をもどす」ボタン。",
                 "<b>人や入口</b>：近づくと説明が出ます。「ひらく」「入室する」を押したときだけ動きます。",
                 "<b>画面を閉じる</b>：右上の「閉じる」か Esc キー。開いている間は歩きません。",
+                "<b>戦闘モード</b>：<b>F</b> で切りかえ。左クリック ビーム／右クリック ねらう／<b>E</b> パンチ／<b>Enter</b> 話す（クリックで歩くのは止まります）。",
             };
             foreach (var l in lines) { GUI.Label(new Rect(c.x, y, c.width, 64f), l, sBody); y += 66f; }
             y += 16f;

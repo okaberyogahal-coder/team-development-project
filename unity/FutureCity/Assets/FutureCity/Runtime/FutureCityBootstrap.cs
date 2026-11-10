@@ -56,6 +56,8 @@ namespace FutureCity
         public bool postProcessing = true;
         [Tooltip("広場を歩く人・座る人（背景の人物）を出す")]
         public bool ambientPeople = true;
+        [Tooltip("戦闘モード（F で切りかえ：左クリック ビーム／右クリック ねらう／E パンチ）を使えるようにする")]
+        public bool combatMode = true;
         [Tooltip("芝生に立体的な草を生やす（パソコンが重いときはオフ）")]
         public bool lawnGrass = true;
         [Tooltip("描画解像度の倍率。1.0=画面と同じ、1.25〜1.5=よりくっきり（重くなる）")]
@@ -262,6 +264,8 @@ namespace FutureCity
             MiraiClock.Start(startTime);   // 太陽と講座の時刻を同じ時計にそろえる
             mirai.Init(Library, player, cam, campus);
 
+            // ---- 戦闘モード（F で切りかえ）。広場の人はシールドに守られていて、当たるとよろけ・倒れ・起き上がる
+            if (combatMode) playerGo.AddComponent<CombatSystem>().Init(player, cam, Library);
         }
 
         void Start()
