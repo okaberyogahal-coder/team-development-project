@@ -1,0 +1,5 @@
+# Share the supplied V3 WebGL binaries without normal Git file-size limits.
+/public/unity/AvatarV3Unified20261104/Build/*.data filter=lfs diff=lfs merge=lfs -text
+/public/unity/AvatarV3Unified20261104/Build/*.wasm filter=lfs diff=lfs merge=lfs -text
+/public/unity/AvatarV3World20261104/Build/*.data filter=lfs diff=lfs merge=lfs -text
+/public/unity/AvatarV3World20261104/Build/*.wasm filter=lfs diff=lfs merge=lfs -text

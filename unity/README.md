@@ -157,3 +157,10 @@ npm.cmd run test:unity:auth
 C#適用結果と別タブのログイン・別人切替・ログアウト・通信失敗と復旧・定期照会による期限切れ・
 単独ページを確認した。実際の広場内の本人プロフィールと服の色、ログアウト後のゲスト表示も画像で確認した。
 WebとDBを含む検証記録は [認証の一連操作の検証](../docs/auth-validation-2026-10-21.md) を参照。
+
+
+## メンバー提供V3ビルドのGit LFS共有
+
+`AvatarV3Unified20261104` と `AvatarV3World20261104` は例外としてGit LFSで共有する。
+取得・更新・CIの手順は [V3 WebGL共有手順](../docs/avatar-webgl-sharing.md) を参照。
+既存の `FutureCity` は引き続きローカルでビルドする。
