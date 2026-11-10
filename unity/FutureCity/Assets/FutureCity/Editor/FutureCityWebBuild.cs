@@ -8,6 +8,29 @@ namespace FutureCity.EditorTools
 {
     public static class FutureCityWebBuild
     {
+        [MenuItem("Tools/Future City/Apply October 2026 Anime Update")]
+        public static void ApplyAnimeUpdate()
+        {
+            if (!Application.isBatchMode && !UnityEditor.SceneManagement.EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+            const string scenePath = "Assets/FutureCity/Scenes/FutureCity.unity";
+            if (!File.Exists(scenePath)) FutureCityMenu.CreateScene();
+            var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+            FutureCityBootstrap bootstrap = null;
+            foreach (var root in scene.GetRootGameObjects())
+            {
+                bootstrap = root.GetComponentInChildren<FutureCityBootstrap>(true);
+                if (bootstrap != null) break;
+            }
+            if (bootstrap == null) throw new Exception("FutureCity scene has no bootstrap.");
+            // The world is generated at runtime. Preserve authored objects, settings and GUIDs.
+            bootstrap.animeStyle = true;
+            EditorUtility.SetDirty(bootstrap);
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(scene);
+            UnityEditor.SceneManagement.EditorSceneManager.SaveScene(scene);
+            AssetDatabase.SaveAssets();
+            Debug.Log("FutureCity anime update applied to the existing scene.");
+        }
+
         // Explicitly regenerate the scenery after importing a new world version.
         [MenuItem("Tools/Future City/Recreate Scene and Build Web for melife")]
         public static void RebuildWorld()
@@ -36,12 +59,14 @@ namespace FutureCity.EditorTools
                 output = Path.GetFullPath(Path.Combine(Application.dataPath, "../../../public/unity/FutureCity"));
             else output = Path.GetFullPath(output);
             Directory.CreateDirectory(output);
+            bool clean = Environment.GetEnvironmentVariable("MELIFE_UNITY_CLEAN_BUILD") == "1";
+            if(clean)Debug.Log("FutureCity Web build: rebuilding serialized player data without the incremental cache.");
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
                 scenes = new[] { "Assets/FutureCity/Scenes/FutureCity.unity" },
                 locationPathName = output,
                 target = BuildTarget.WebGL,
-                options = BuildOptions.None
+                options = clean ? BuildOptions.CleanBuildCache : BuildOptions.None
             });
             if (report.summary.result != BuildResult.Succeeded)
                 throw new Exception("FutureCity Web build failed: " + report.summary.result);

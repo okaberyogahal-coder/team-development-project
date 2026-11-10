@@ -20,12 +20,25 @@ test('verifies only registered credentials, normalizing email but preserving pas
  assert.equal(await verify('sora@example.test',' MilifeDemo2026!'),null);
  assert.equal(await verify('x'.repeat(255),'x'),null);assert.equal(await verify('sora@example.test','x'.repeat(129)),null);
 });
-test('corrupt, missing and symlink credential stores fail closed',async t=>{
+test('corrupt and missing credential stores fail closed',async t=>{
  const root=await setup(t);const verify=createCredentialVerifier(root);
  await writeFile(join(root,'credentials.json'),'{broken');await assert.rejects(verify('sora@example.test','x'));
  await writeFile(join(root,'credentials.json'),JSON.stringify({schemaVersion:1,accounts:[]}));await assert.rejects(verify('sora@example.test','x'));
  await unlink(join(root,'credentials.json'));await assert.rejects(verify('sora@example.test','x'));
- await symlink(join(process.cwd(),'tests/fixtures/local-demo/credentials.json'),join(root,'credentials.json'));await assert.rejects(verify('sora@example.test','x'));
+});
+
+test('symlink credential stores fail closed',async t=>{
+ const root=await setup(t);const verify=createCredentialVerifier(root);
+ await unlink(join(root,'credentials.json'));
+ try{
+  await symlink(join(process.cwd(),'tests/fixtures/local-demo/credentials.json'),join(root,'credentials.json'));
+ }catch(error){
+  if(process.platform==='win32'&&(error as NodeJS.ErrnoException).code==='EPERM'){
+   t.skip('Windows does not permit file symlinks in this environment.');return;
+  }
+  throw error;
+ }
+ await assert.rejects(verify('sora@example.test','x'));
 });
 test('random sessions expire, revoke, share process state, and limit retained tokens',()=>{
  const store=new LocalSessionStore();const now=100;

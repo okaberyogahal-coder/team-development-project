@@ -262,6 +262,8 @@ namespace FutureCity
             MiraiClock.Start(startTime);   // 太陽と講座の時刻を同じ時計にそろえる
             mirai.Init(Library, player, cam, campus);
 
+            // ---- 戦闘モード（F で切りかえ）。広場の人はシールドに守られていて、当たるとよろけ・倒れ・起き上がる
+            playerGo.AddComponent<CombatSystem>().Init(player, cam, Library);
         }
 
         void Start()
