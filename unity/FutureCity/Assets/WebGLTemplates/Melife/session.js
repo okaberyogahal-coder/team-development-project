@@ -1,6 +1,13 @@
 (function () {
   'use strict';
 
+  // The account page has already authenticated its server-rendered profile.
+  // A read-only preview must not run world redirects or apply guest models.
+  if (new URLSearchParams(window.location.search).get('experience') === 'profile') {
+    window.melifeUnityReady = function () {};
+    return;
+  }
+
   var status = document.getElementById('session-status');
   var avatar = document.getElementById('session-avatar');
   var account = document.getElementById('session-account');
@@ -17,12 +24,42 @@
   var pending = null;
   var logoutBusy = false;
   var channel = null;
+  var hostedHeader = false;
+
+  function publishHeader() {
+    if (!hostedHeader || window.parent === window) return;
+    var applied = window.melifeAppliedSession;
+    window.parent.postMessage({
+      type: 'melife:session-header',
+      state: applied ? applied.state : 'loading',
+      authenticated: Boolean(applied && applied.authenticated),
+      status: status.textContent,
+      avatarId: applied && applied.authenticated ? applied.avatarId : null,
+      busy: logoutBusy,
+      canRetry: !retry.hidden,
+      error: error.hidden ? '' : error.textContent
+    }, window.location.origin);
+  }
+
+  // The host may move presentation/controls outside the iframe, never supply identity.
+  window.addEventListener('message', function (event) {
+    if (window.parent === window || event.source !== window.parent || event.origin !== window.location.origin) return;
+    if (event.data && event.data.type === 'melife:host-session-header') {
+      hostedHeader = true;
+      document.documentElement.classList.add('host-session-header');
+      publishHeader();
+    } else if (hostedHeader && event.data && event.data.type === 'melife:host-session-command') {
+      if (event.data.action === 'logout') logout.click();
+      else if (event.data.action === 'retry') retry.click();
+    }
+  });
 
   document.body.dataset.sessionState = 'loading';
 
   function showError(message) {
     error.textContent = message;
     error.hidden = false;
+    publishHeader();
   }
 
   function sendLatest() {
@@ -64,6 +101,11 @@
       var data = await response.json();
       if (generation !== requestGeneration) return;
       if (!validSession(data)) throw new Error('invalid session response');
+      if (data.requiresProfileCompletion === true) {
+        apply({ authenticated: false, profile: null, status: 'guest' });
+        window.top.location.assign('/account/edit');
+        return;
+      }
       error.hidden = true;
       apply({ authenticated: data.authenticated, profile: data.profile, status: data.authenticated ? 'authenticated' : 'guest' });
     } catch (failure) {
@@ -107,12 +149,14 @@
     logout.hidden = !applied.authenticated;
     logout.disabled = logoutBusy;
     retry.hidden = applied.state !== 'unavailable';
+    publishHeader();
   };
 
   logout.addEventListener('click', async function () {
     if (logoutBusy) return;
     logoutBusy = true;
     logout.disabled = true;
+    publishHeader();
     error.hidden = true;
     ++requestGeneration;
     if (pending) pending.abort();
@@ -136,6 +180,7 @@
       clearTimeout(timeout);
       logoutBusy = false;
       logout.disabled = false;
+      publishHeader();
     }
   });
 

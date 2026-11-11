@@ -29,8 +29,10 @@ namespace FutureCity
             }
         }
 
-        public static void Apply(Camera cam, Transform parent, float renderScale = 1f, bool photoMode = false, bool temporalAA = false)
+        public static void Apply(Camera cam, Transform parent, float renderScale = 1f, bool photoMode = false, bool temporalAA = false, bool anime = false)
         {
+            // アニメ調：輪郭のくっきりした絵にするため TAA（ぼける）は使わず、MSAA 4x ＋ SMAA。葉は Alpha to Coverage でなめらかに
+            if (anime) temporalAA = false;
             float shadowDist = photoMode ? 150f : 450f;
             cam.allowHDR = true;
             cam.allowMSAA = true;
@@ -79,6 +81,12 @@ namespace FutureCity
             vol.priority = 10f;
             var p = ScriptableObject.CreateInstance<VolumeProfile>();
 
+            if (anime)
+            {
+                AnimeProfile(p);
+                vol.sharedProfile = p;
+                return;
+            }
             var bloom = p.Add<Bloom>(true);
             bloom.intensity.Override(photoMode ? 0.5f : 0.7f);
             bloom.threshold.Override(photoMode ? 1.15f : 1.0f);
@@ -104,6 +112,7 @@ namespace FutureCity
 
             vol.sharedProfile = p;
 #else
+            if (anime) { }
             QualitySettings.antiAliasing = 4;
             QualitySettings.shadows = ShadowQuality.All;
             QualitySettings.shadowResolution = ShadowResolution.VeryHigh;
@@ -111,5 +120,40 @@ namespace FutureCity
             QualitySettings.shadowCascades = 4;
 #endif
         }
+
+#if FUTURECITY_URP
+        /// <summary>
+        /// アニメ調の色づくり：明るく鮮やか・白が飛びすぎない（Neutral）・やわらかい光のにじみ・影はほんのり青
+        /// </summary>
+        static void AnimeProfile(VolumeProfile p)
+        {
+            var bloom = p.Add<Bloom>(true);
+            bloom.intensity.Override(0.42f);
+            bloom.threshold.Override(1.0f);
+            bloom.scatter.Override(0.66f);
+            bloom.clamp.Override(40f);
+            bloom.highQualityFiltering.Override(true);
+
+            var tm = p.Add<Tonemapping>(true);
+            tm.mode.Override(TonemappingMode.Neutral);
+
+            var ca = p.Add<ColorAdjustments>(true);
+            ca.postExposure.Override(0.08f);
+            ca.contrast.Override(8f);
+            ca.saturation.Override(14f);
+
+            var wb = p.Add<WhiteBalance>(true);
+            wb.temperature.Override(3f);
+            wb.tint.Override(0f);
+
+            var smh = p.Add<ShadowsMidtonesHighlights>(true);
+            smh.shadows.Override(new Vector4(0.98f, 0.99f, 1.03f, 0f));
+            smh.highlights.Override(new Vector4(1.015f, 1.005f, 0.985f, 0f));
+
+            var vg = p.Add<Vignette>(true);
+            vg.intensity.Override(0.16f);
+            vg.smoothness.Override(0.45f);
+        }
+#endif
     }
 }

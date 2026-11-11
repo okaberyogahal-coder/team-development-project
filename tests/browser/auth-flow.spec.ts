@@ -11,7 +11,7 @@ const origin = 'http://127.0.0.1:3012';
 function registration() {
   const email = `${randomUUID()}@example.invalid`;
   emails.push(email);
-  return { email, password, confirmation: password, adult: true, terms: true, privacy: true, nickname: '学び仲間', avatar: 'cat', interests: ['写真'], wantsToLearn: ['園芸'], teaches: ['料理'], strengths: '写真を撮ること', goal: '本人だけの目標' };
+  return { email, password, confirmation: password, gender: "male", age: 30, adult: true, terms: true, privacy: true, nickname: '学び仲間', avatar: 'cat', interests: ['写真'], wantsToLearn: ['園芸'], teaches: ['料理'], strengths: '写真を撮ること', goal: '本人だけの目標' };
 }
 
 const post = (request: APIRequestContext, path: string, data: unknown, requestOrigin = origin) => request.post(path, { data, headers: { Origin: requestOrigin } });
@@ -26,6 +26,8 @@ async function fillSignup(page: Page, data: ReturnType<typeof registration>) {
   await page.getByLabel('アカウント情報の保存に同意します').check();
   await page.getByRole('button', { name: '次へ', exact: true }).click();
   await page.getByLabel('ニックネーム', { exact: true }).fill(data.nickname);
+  await page.getByLabel('性別（必須）').selectOption(data.gender);
+  await page.getByLabel('年齢（必須・本人のみ）').fill(String(data.age));
   await page.getByRole('button', { name: 'アバター 2', exact: true }).click();
   await page.locator('.auth-topics-interests').getByRole('button', { name: '写真', exact: true }).click();
   await page.locator('#interests').fill(data.interests.join('、'));
@@ -40,7 +42,7 @@ async function fillSignup(page: Page, data: ReturnType<typeof registration>) {
 
 async function assertAccount(page: Page, data: ReturnType<typeof registration>) {
   await expect(page.getByRole('heading', { name: `こんにちは、${data.nickname}さん。` })).toBeVisible();
-  for (const value of [data.email, data.interests.join('、'), data.wantsToLearn.join('、'), data.teaches.join('、'), data.goal]) {
+  for (const value of [data.email, ...data.interests, ...data.wantsToLearn, ...data.teaches, data.goal]) {
     await expect(page.locator('.account-details dd').filter({ hasText: value })).toHaveCount(1);
   }
 }
@@ -69,7 +71,7 @@ test('UnityにはCookie本人の表示用プロフィールだけを返し、ゲ
   const response = await request.get(`/api/unity/session?userId=${randomUUID()}`);
   expect(response.headers()['cache-control']).toBe('no-store');
   expect(await response.json()).toEqual({ authenticated: true, profile: {
-    userId: user.id, nickname: data.nickname, avatarId: data.avatar,
+    userId: user.id, nickname: data.nickname, avatarId: data.avatar, gender:data.gender, ageBadge:"ミドル",
     teaches: data.teaches, wantsToLearn: data.wantsToLearn,
   } });
   expect((await post(request, '/api/auth/sign-out', {})).ok()).toBe(true);
@@ -123,7 +125,8 @@ test('ログアウトでCookieが失効し、再ログインしてもプロフ�
   await expect(page.getByRole('alert').filter({ hasText: 'メールアドレスまたはパスワード' })).toBeVisible();
   await page.getByLabel('パスワード', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(/\/avatar$/);
+  await page.goto('/account');
   await expect(page.getByText(data.goal, { exact: true })).toBeVisible();
 });
 
@@ -228,7 +231,8 @@ for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844
       await freshPage.getByLabel('メールアドレス', { exact: true }).fill(data.email.toUpperCase());
       await freshPage.getByLabel('パスワード', { exact: true }).fill(data.password);
       await freshPage.getByRole('button', { name: 'ログイン', exact: true }).click();
-      await expect(freshPage).toHaveURL(/\/account$/);
+      await expect(freshPage).toHaveURL(/\/avatar$/);
+      await freshPage.goto('/account');
       await assertAccount(freshPage, data);
       await freshPage.reload();
       await assertAccount(freshPage, data);
@@ -303,7 +307,8 @@ test('登録・ログアウト・ログインの通信失敗後も入力と状�
   await expect(page.getByRole('alert').filter({ hasText: '接続できませんでした' })).toBeVisible();
   await expect(page.getByLabel('パスワード', { exact: true })).toHaveValue(data.password);
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(/\/avatar$/);
+  await page.goto('/account');
   await assertAccount(page, data);
 });
 

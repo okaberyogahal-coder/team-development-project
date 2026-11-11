@@ -11,6 +11,8 @@ namespace FutureCity
         public string userId;
         public string nickname;
         public string avatarId;
+        public string gender;
+        public string ageBadge;
         public string[] teaches;
         public string[] wantsToLearn;
     }
@@ -53,6 +55,14 @@ namespace FutureCity
             world.ApplyWebSession(new WebPlayerSession { status = "loading" });
             WebGLInput.captureAllKeyboardInput = false;
             MelifeBridgeReady();
+#endif
+        }
+
+        [Preserve]
+        public void SetKeyboardFocus(string focused)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            WebGLInput.captureAllKeyboardInput = focused == "1";
 #endif
         }
 

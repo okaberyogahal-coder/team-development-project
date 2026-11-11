@@ -11,9 +11,16 @@
     #session-bar a,#session-bar button{min-height:36px;padding:7px 12px;border:1px solid #b7d1c2;border-radius:8px;background:#fff;color:#213d35;font:inherit;cursor:pointer;text-decoration:none}
     #session-bar a:focus-visible,#session-bar button:focus-visible,#unity-canvas:focus-visible{outline:3px solid #0b57d0;outline-offset:-3px}#session-bar button:disabled{cursor:wait;opacity:.6}
     #session-error{flex-basis:100%;margin:0;color:#a32b20;font-size:13px}.unity-stage{position:relative;flex:1;min-height:0}
+    #session-bar{min-height:34px;padding:3px 12px;gap:6px;font-size:12px}
+    #session-avatar{width:24px;height:24px}
+    #session-bar a,#session-bar button{min-height:28px;padding:3px 8px;font-size:12px}
+    .host-session-header #session-bar{display:none}
     #unity-canvas{width:100%;height:100%;display:block;outline:none}
     #loading{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:24px;background:#eef5ef;color:#213d35}
     #loading[hidden]{display:none}h1{font-size:24px;margin:0 0 14px}p{line-height:1.8}progress{width:min(320px,75vw);height:12px;accent-color:#497a60;margin:auto}
+    .avatar-experience body{background:#effaff;color:#153b78}
+    .avatar-experience #loading{background:radial-gradient(circle,#d5edf4 1px,transparent 1.5px) 0 0/22px 22px,#effaff;color:#153b78}
+    .avatar-experience progress{accent-color:#0755cf}
   </style>
 </head>
 <body>
@@ -33,15 +40,45 @@
   <script src="avatar.js"></script>
   <script src="Build/{{{ LOADER_FILENAME }}}"></script>
   <script>
+    const experienceMode = new URLSearchParams(location.search).get('experience');
+    if(experienceMode==='avatar'||experienceMode==='profile')document.documentElement.classList.add('avatar-experience');
+    if(experienceMode==='profile')document.documentElement.classList.add('host-session-header');
     const canvas = document.getElementById('unity-canvas');
+    function syncKeyboardFocus() {
+      if(window.unityInstance)window.unityInstance.SendMessage('MelifeSessionBridge','SetKeyboardFocus',document.hasFocus() && document.activeElement === canvas ? '1':'0');
+    }
+    canvas.addEventListener('pointerdown',()=>{canvas.focus({preventScroll:true});syncKeyboardFocus();},true);
+    canvas.addEventListener('focus',syncKeyboardFocus);
+    canvas.addEventListener('blur',syncKeyboardFocus);
+    window.addEventListener('blur',()=>{if(window.unityInstance)window.unityInstance.SendMessage('MelifeSessionBridge','SetKeyboardFocus','0');});
+    window.addEventListener('focus',syncKeyboardFocus);
     const loading = document.getElementById('loading');
+    let hostReadyTimer;
+    const notifyHost = () => window.parent.postMessage({type:'melife:ready'},window.location.origin);
     function showError(message) {
+      window.parent.postMessage({type:'melife:error'},window.location.origin);
       loading.hidden = false;
       document.getElementById('status').textContent = 'ワールドを起動できませんでした。ページを再読み込みしてください。';
       document.getElementById('progress').hidden = true;
       document.body.dataset.unityState = 'error';
       console.error(message);
     }
+    // Only the same-origin host iframe may initialize a display profile.
+    window.addEventListener('message', event => {
+      if (window.parent === window || event.source !== window.parent || event.origin !== window.location.origin || event.data?.type !== 'melife:initialize' || !window.unityInstance) return;
+      const {mode, profile} = event.data;
+      if ((mode === 'avatar' || mode === 'world' || mode === 'profile') && profile && typeof profile.id === 'string' && typeof profile.nickname === 'string') {
+        window.unityInstance.SendMessage('MiraiLife', 'Initialize', JSON.stringify({mode,profileId:profile.id,nickname:profile.nickname,gender:profile.gender,appearance:profile.appearance}));
+      }
+      clearInterval(hostReadyTimer);
+      loading.hidden = true;
+      if (mode === 'profile') window.parent.postMessage({type:'melife:profile-ready'},window.location.origin);
+    });
+    window.addEventListener('melife-unity-avatar', event => {
+      const value = event.detail;
+      if (window.parent !== window && (value?.mode === 'appearance' || value?.mode === 'complete'))
+        window.parent.postMessage({type:'melife:' + value.mode,profileId:value.profileId,nickname:value.nickname,appearance:value.appearance},window.location.origin);
+    });
     document.body.dataset.unityState = 'loading';
     if (typeof createUnityInstance !== 'function') {
       showError('Unity loader could not be loaded.');
@@ -59,8 +96,11 @@
       }, value => { document.getElementById('progress').value = value; }).then(instance => {
         window.unityInstance = instance;
         window.melifeUnityReady(instance);
-        loading.hidden = true;
+        syncKeyboardFocus();
+        loading.hidden = window.parent === window;
+
         document.body.dataset.unityState = 'ready';
+        if (window.parent !== window) { notifyHost(); hostReadyTimer = setInterval(notifyHost,1000); }
       }).catch(showError);
     }
   </script>

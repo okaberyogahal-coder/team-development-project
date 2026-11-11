@@ -34,7 +34,12 @@ namespace FutureCity
         [Header("時刻（夜にはしない）")]
         [Range(7f, 16f)] public float startTime = 10.5f;
 
-        [Header("背景（まわりは実写の360°写真）")]
+        [Header("画風")]
+        [Tooltip("アニメ調（ミライフ独自のトゥーン描画・アニメ調の空と雲・3D の遠景・作り直した広場のモデル）。" +
+                 "オフで従来の実写風（360°写真の背景）。URP でないときは自動で実写風になります")]
+        public bool animeStyle = true;
+
+        [Header("背景（実写風のとき：まわりは実写の360°写真）")]
         [Tooltip("まわりの街を作らず、広場のまわりを実写の写真にする（Resources/FutureCityBackdrop の写真）。オフで従来の未来都市")]
         public bool photoBackdrop = true;
         [Tooltip("写真の明るさの微調整（EV）。+1 で2倍、-1 で半分")]
@@ -66,15 +71,24 @@ namespace FutureCity
         public MaterialLibrary Library { get; private set; }
         public CityGenerator City { get; private set; }
         public PhotoBackdrop Backdrop { get; private set; }
+        public MiraiAtmosphere Atmosphere { get; private set; }
+        /// <summary>アニメ調で動いているか（MiraiToon シェーダーが使えないときは false）</summary>
+        public bool IsAnime { get; private set; }
 
         void Awake()
         {
-            Library = MaterialLibrary.Create(bakedMaterials, bakedSkybox, seed);
+            Library = MaterialLibrary.Create(bakedMaterials, bakedSkybox, seed, animeStyle);
+            IsAnime = Library.IsAnime;
+            if (animeStyle && !IsAnime)
+                Debug.LogWarning("[FutureCity] アニメ調のシェーダー（MiraiToon）が使えないため、実写風で表示します（URP と Assets/FutureCity/Resources/FutureCityShaders が必要です）");
             RenderSettings.skybox = Library.Skybox;
             RenderSettings.defaultReflectionMode = DefaultReflectionMode.Skybox;
-            bool photo = photoBackdrop;
-            // 葉・花・草のカードは、実写テクスチャ（葉の切り抜き画像）があるときだけ使う
-            bool cards = photo && Library.HasPhotoTextures;
+            bool anime = IsAnime;
+            // アニメ調も「広場・公園・湖」だけの世界（遠景は 3D の街並み）
+            bool photo = photoBackdrop || anime;
+            // 葉・花・草のカード：実写風は実写テクスチャがあるとき、アニメ調は常に（アニメ調の葉の絵を使う）
+            bool cards = anime || (photo && Library.HasPhotoTextures);
+            MeshBuilder.AlwaysEmitColors = anime;
 
             // ---- カメラ
             var cam = Camera.main;
@@ -108,8 +122,9 @@ namespace FutureCity
             City.parkChance = parkChance;
             City.photoMode = photo;
             // 広場の質感：箱の角を少し丸め（やわらかいハイライト）、木と花を葉のカードで作る
-            MeshBuilder.BevelSize = photo ? 0.025f : 0f;
-            if (cards) Foliage.Begin();
+            MeshBuilder.BevelSize = photo ? (anime ? 0.04f : 0.025f) : 0f;
+            if (cards) Foliage.Begin(anime);
+            if (anime) AnimeProps.Begin();
             City.Generate(Library);
 
             if (!photo)
@@ -125,12 +140,23 @@ namespace FutureCity
                 maglev.Init(City, Library);
             }
 
-            gameObject.AddComponent<EmissionAnimator>().lib = Library;
-            gameObject.AddComponent<WaterAnimator>().materials = new[] { Library.Get(Mat.Water), Library.Get(Mat.Lake) };
+            if (!anime)
+            {
+                gameObject.AddComponent<EmissionAnimator>().lib = Library;
+                gameObject.AddComponent<WaterAnimator>().materials = new[] { Library.Get(Mat.Water), Library.Get(Mat.Lake) };
+            }
 
-            // ---- 背景の写真（太陽・環境光・かすみを写真に合わせる）
+            // ---- アニメ調の空気（太陽・空・環境光・空気遠近・風）
             bool photoSky = false;
-            if (photo)
+            if (anime)
+            {
+                Atmosphere = gameObject.AddComponent<MiraiAtmosphere>();
+                Atmosphere.sun = sun;
+                Atmosphere.ApplyLightingSettings(Library.Skybox);
+                photoSky = true;   // 昼夜の自動変化は使わない（明るい昼に固定）
+            }
+            // ---- 背景の写真（太陽・環境光・かすみを写真に合わせる）
+            else if (photo)
             {
                 Backdrop = gameObject.AddComponent<PhotoBackdrop>();
                 Backdrop.exposureBias = backdropExposure;
@@ -141,7 +167,7 @@ namespace FutureCity
 
             // ---- 反射プローブ（ガラス・水面・金属に、空と広場を映す）
             ReflectionProbe probe = null;
-            if (realtimeReflections)
+            if (realtimeReflections && !anime)
             {
                 var pgo = new GameObject("CityReflectionProbe");
                 pgo.transform.SetParent(transform, false);
@@ -153,6 +179,7 @@ namespace FutureCity
                 probe.importance = 1;
                 if (photo)
                 {
+                    probe.resolution = 1024;   // 一度だけ撮るので高解像度に（湖やガラスに街並みがくっきり映る）
                     // 広場の真ん中から一度だけ撮る。湖の水平線まで含めるので、範囲と描画距離を大きく
                     pgo.transform.position = new Vector3(0f, 9f, -28f);   // 中央の彫刻をさけて、南の大通りの上
                     probe.timeSlicingMode = ReflectionProbeTimeSlicingMode.NoTimeSlicing;
@@ -192,7 +219,7 @@ namespace FutureCity
                 DynamicGI.UpdateEnvironment();
             }
 
-            if (postProcessing) PostFXSetup.Apply(cam, transform, renderScale, photo, temporalAA);
+            if (postProcessing) PostFXSetup.Apply(cam, transform, renderScale, photo, temporalAA, anime);
 
             // ---- 歩行プレイヤー（ミライフ庭園キャンパスの南の入口からスタート）
             var campus = City.Campus;
@@ -234,10 +261,22 @@ namespace FutureCity
 
             // ---- 参考画像の世界観（輪の彫刻・空中回廊・ガラスのドーム・パーゴラ）と、広場のにぎわい
             var park = MiraiPark.Build(Library, City, transform);
+            if (anime)
+            {
+                MiraiPlaza.Build(Library, City, park, transform);      // 中央広場（噴水・輪の彫刻・ベンチ・花壇・街灯）を作り直したモデルで
+                MiraiSkyline.Build(Library, City, transform);           // 遠景：湖の向こうの未来都市・丘・展望塔
+                AnimeProps.End(Library, transform);
+            }
             if (cards) Foliage.End(Library, transform);
             MeshBuilder.BevelSize = 0f;
             // 芝生の上だけに立体的な草を生やす（キャンパスの中は密に、まわりの公園は少しまばらに）
-            if (cards && lawnGrass) LawnGrass.Populate(Library, transform, campus.Center, campus.Half, 0.6f, City.landRadius - 1f, 0.9f, seed);
+            if (cards && lawnGrass)
+            {
+                if (anime) AnimeGrassField.Create(Library, transform, campus.Center, City.landRadius, City.landRadius - 1f, seed);
+                else LawnGrass.Populate(Library, transform, campus.Center, campus.Half, 0.6f, City.landRadius - 1f, 0.9f, seed);
+            }
+            MeshBuilder.AlwaysEmitColors = false;
+            if (Atmosphere != null) Atmosphere.player = playerGo.transform;
             if (ambientPeople) AmbientPeople.Spawn(Library, campus, park, playerGo.transform, transform);
 
             // ---- ミライフ（3D空間の上のパネル・案内・デモ人物）
@@ -245,6 +284,7 @@ namespace FutureCity
             mirai.transform.SetParent(transform, false);
             MiraiClock.Start(startTime);   // 太陽と講座の時刻を同じ時計にそろえる
             mirai.Init(Library, player, cam, campus);
+
         }
 
         void Start()

@@ -66,3 +66,5 @@ unity/**/*.unitypackage
 /docs/avatar-runtime-prototype-2026-11-02/
 /docs/avatar-v3-export-2026-11-04/
 /unity/FutureCity/docs/
+# Atomic-write scratch files; shared development JSON itself is tracked.
+data/local-demo/users/.*.tmp

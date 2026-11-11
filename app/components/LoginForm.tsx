@@ -31,7 +31,7 @@ export function LoginForm() {
           if (!response.ok) { setMessage(data.message || "ログインできませんでした。"); return; }
           setPassword("");
           notifyAuthChanged();
-          router.replace("/account");
+          router.replace("/avatar");
           router.refresh();
         } catch { setMessage("接続できませんでした。通信状態を確認してお試しください。"); }
         finally { setPending(false); }

@@ -13,7 +13,7 @@ type Applied = { authenticated: boolean; revision: number; state: string; userId
 function registration(nickname: string, avatar: string) {
   const email = `${randomUUID()}@example.invalid`;
   emails.push(email);
-  return { email, password, confirmation: password, nickname, avatar, adult: true, terms: true, privacy: true,
+  return { email, password, confirmation: password, nickname, avatar, gender: "male", age: 30, adult: true, terms: true, privacy: true,
     interests: ['写真'], teaches: ['料理', 'パン作り'], wantsToLearn: ['園芸', '野菜作り'], strengths: '', goal: '非公開の目標' };
 }
 
@@ -31,7 +31,8 @@ async function login(page: Page, data: ReturnType<typeof registration>) {
   await page.getByLabel('メールアドレス', { exact: true }).fill(data.email);
   await page.getByLabel('パスワード', { exact: true }).fill(password);
   await page.getByRole('button', { name: 'ログイン', exact: true }).click();
-  await expect(page).toHaveURL(/\/account$/);
+  await expect(page).toHaveURL(/\/avatar$/);
+  await page.goto('/account');
 }
 
 async function openProfile(page: Page, world: World) {
@@ -67,7 +68,7 @@ test('起動中のUnityに別タブのログイン・別利用者・通信復帰
   const world = page.frameLocator('iframe[title="ミライフ Unityワールド"]');
   await ready(world, 'guest');
   expect(await applied(world)).toMatchObject({ authenticated: false, nickname: 'ゲスト', userId: '', teaches: [], wantsToLearn: [] });
-  await expect(world.locator('#session-account')).toHaveText('ログインする');
+  await expect(page.locator('.world-viewer-toolbar').getByRole('link',{name:'ログインする',exact:true})).toBeVisible();
   const account = await context.newPage();
   try {
     await login(account, first);
@@ -75,8 +76,8 @@ test('起動中のUnityに別タブのログイン・別利用者・通信復帰
     const firstUser = await database.user.findUniqueOrThrow({ where: { email: first.email } });
     expect(await applied(world)).toMatchObject({ authenticated: true, userId: firstUser.id, nickname: first.nickname,
       avatarId: 'fox', avatarLabel: 'きつね', suitColor: 'FA9447', teaches: first.teaches, wantsToLearn: first.wantsToLearn });
-    await expect(world.locator('#session-status')).toHaveText(`${first.nickname}さんで参加中`);
-    await expect(world.locator('#session-avatar')).toHaveAttribute('src', '/images/icons/fox.svg');
+    await expect(page.locator('.world-session-name')).toHaveText(`${first.nickname}さんで参加中`);
+    await expect(page.locator('.world-session-name img')).toHaveAttribute('src', '/images/icons/fox.svg');
     await page.bringToFront();
     await openProfile(page, world);
     await page.screenshot({ path: testInfo.outputPath('unity-account-profile.png') });
@@ -87,11 +88,11 @@ test('起動中のUnityに別タブのログイン・別利用者・通信復帰
     await expect.poll(() => world.locator('body').evaluate(() => document.pointerLockElement === null)).toBe(true);
 
     // The native HTML toolbar remains usable while Unity is running.
-    await world.getByRole('button', { name: 'ログアウト', exact: true }).click();
+    await page.locator('.world-viewer-toolbar').getByRole('button', { name: 'ログアウト', exact: true }).click();
     await ready(world, 'guest');
     expect(await applied(world)).toMatchObject({ authenticated: false, userId: '', nickname: 'ゲスト', teaches: [], wantsToLearn: [] });
     expect(await database.authSession.count({ where: { userId: firstUser.id } })).toBe(0);
-    await expect(world.locator('#session-avatar')).toBeHidden();
+    await expect(page.locator('.world-session-name img')).toHaveCount(0);
 
     await login(account, second);
     await ready(world, 'authenticated');
@@ -104,9 +105,9 @@ test('起動中のUnityに別タブのログイン・別利用者・通信復帰
     await world.locator('body').evaluate(() => window.dispatchEvent(new Event('focus')));
     await ready(world, 'unavailable');
     expect(await applied(world)).toMatchObject({ authenticated: false, userId: '', nickname: 'ゲスト', teaches: [], wantsToLearn: [] });
-    await expect(world.getByRole('alert')).toContainText('ログイン状態を確認できません');
+    await expect(page.locator('.world-session-error [role=alert]')).toContainText('ログイン状態を確認できません');
     await page.unroute('**/api/unity/session');
-    await world.getByRole('button', { name: '再確認', exact: true }).click();
+    await page.locator('.world-session-error').getByRole('button', { name: '再確認', exact: true }).click();
     await ready(world, 'authenticated');
     expect((await applied(world))?.userId).toBe(secondUser.id);
 

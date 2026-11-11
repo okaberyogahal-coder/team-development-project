@@ -85,6 +85,8 @@ namespace FutureCity
         public static GameObject Build(MaterialLibrary lib, Transform parent, string name, float scale, Color suit,
                                        int age = 40, bool addCollider = true, Mat? halo = null)
         {
+            var imported = ImportedAvatar.TryBuild(parent, name, scale, age, addCollider);
+            if (imported != null) return imported;
             int h = Hash(name);
             var root = new GameObject(name);
             root.transform.SetParent(parent, false);
@@ -205,11 +207,13 @@ namespace FutureCity
         public bool sitting;
 
         Transform legL, legR, armL, armR, head;
+        ImportedAvatar imported;
         Vector3 lastPos;
         float speed, phase, seed;
 
         void Start()
         {
+            imported = GetComponent<ImportedAvatar>();
             legL = transform.Find("LegL");
             legR = transform.Find("LegR");
             armL = transform.Find("ArmL");
@@ -217,6 +221,12 @@ namespace FutureCity
             head = transform.Find("Head");
             lastPos = transform.position;
             seed = Random.value * 10f;
+        }
+
+        void OnEnable()
+        {
+            lastPos = transform.position;
+            speed = 0f;
         }
 
         void LateUpdate()
@@ -228,6 +238,12 @@ namespace FutureCity
             float sc = Mathf.Max(0.3f, transform.lossyScale.y);
             float raw = d.magnitude / dt / sc;
             speed = Mathf.Lerp(speed, raw, 1f - Mathf.Exp(-10f * dt));
+
+            if (imported != null)
+            {
+                imported.UpdateMotion(speed, sitting);
+                return;
+            }
 
             float amt = Mathf.Clamp01(speed / 1.3f);
             float stride = age >= 75 ? 22f : 32f;

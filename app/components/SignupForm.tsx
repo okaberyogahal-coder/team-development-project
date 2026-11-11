@@ -49,6 +49,8 @@ export function SignupForm() {
   const [terms, setTerms] = useState(false);
   const [privacy, setPrivacy] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [gender,setGender]=useState('');
+  const [age,setAge]=useState('');
   const [avatar, setAvatar] = useState(avatars[0]);
   const [interests, setInterests] = useState<string[]>([]);
   const [learn, setLearn] = useState<string[]>([]);
@@ -114,7 +116,7 @@ export function SignupForm() {
               try {
                 const response = await fetch("/api/account/signup", {
                   method: "POST", headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email, password, confirmation, adult, terms, privacy, nickname, avatar,
+                  body: JSON.stringify({ email, password, confirmation, adult, terms, privacy, nickname, avatar, gender, age:Number(age),
                     interests: withCustom(interests, interestText), wantsToLearn: withCustom(learn, learnText), teaches: withCustom(teach, teachText), strengths: strength, goal }),
                 });
                 const data = await response.json();
@@ -149,6 +151,8 @@ export function SignupForm() {
               </div>}
               {step === 1 && <div className="auth-profile-fields">
                 <div className="form-field"><label htmlFor="nickname">ニックネーム <span className="auth-required">必須</span></label><input id="nickname" aria-label="ニックネーム" required maxLength={20} value={nickname} onChange={event => setNickname(event.target.value)} placeholder="広場で呼ばれたい名前（20文字以内）" autoComplete="nickname" /></div>
+                <div className="form-field"><label htmlFor="signup-gender">性別（必須）</label><select id="signup-gender" required value={gender} onChange={event=>setGender(event.target.value)}><option value="">選択してください</option><option value="male">男性</option><option value="female">女性</option></select></div>
+                <div className="form-field"><label htmlFor="signup-age">年齢（必須・本人のみ）</label><input id="signup-age" type="number" required min={18} max={130} step={1} value={age} onChange={event=>setAge(event.target.value)}/><p className="auth-field-hint">プロフィールには年齢バッジを表示します。実年齢は公開しません。</p></div>
                 <fieldset className="auth-avatars"><legend>アバターを選ぶ <span>あなたのお気に入りは？</span></legend><div>{avatars.map((item, index) => <button key={item} type="button" aria-label={`アバター ${index + 1}`} aria-pressed={avatar === item} onClick={() => setAvatar(item)} className={`avatar-choice ${avatar === item ? "selected" : ""}`}><span aria-hidden="true"><Icon name={item} /></span>{avatar === item && <span className="avatar-check" aria-hidden="true"><Icon name="check-white" /></span>}</button>)}</div><p className="auth-field-hint">選択は保存され、ワールドのアイコンと人型アバターの服の色に反映されます。</p></fieldset>
                 <TopicPicker id="interests" label="興味のある分野" selected={interests} onChange={setInterests} custom={interestText} onCustomChange={setInterestText} />
               </div>}
