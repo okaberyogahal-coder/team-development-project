@@ -30,10 +30,8 @@ unity/**/*.unitypackage
 /public/unity/FutureCity/
 
 # Build existing V3 scenes with Tools > Miraifu > Safe WebGL; see docs/unity-safe-webgl.md
-# Large WebGL binary data (>100MB) excluded from Git
+# Legacy preview build remains local; the two V3 releases below are shared using Git LFS.
 /public/unity/AvatarPreview/Build/
-/public/unity/AvatarV3Unified20261104/Build/
-/public/unity/AvatarV3World20261104/Build/
 /public/unity/AvatarV3World20261104/TemplateData/
 
 # Obsolete / intermediate WebGL prototype builds

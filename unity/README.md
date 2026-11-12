@@ -201,3 +201,9 @@ WebとDBを含む検証記録は [認証の一連操作の検証](../docs/auth-v
 `/avatar` はログイン必須で、メンバー作成の6体選択・着せ替え画面を使用する。
 外見の保存は本人別のブラウザ内データで、ワールドとマイページが同じ完成値を使用する。
 旧外見の扱い・素材の固定元・保存形式は [AVATARS.md](AVATARS.md) のV3節を参照。
+
+## メンバー提供V3ビルドのGit LFS共有
+
+`AvatarV3Unified20261104` と `AvatarV3World20261104` は例外としてGit LFSで共有する。
+取得・更新・CIの手順は [V3 WebGL共有手順](../docs/avatar-webgl-sharing.md) を参照。
+既存の `FutureCity` は引き続きローカルでビルドする。
