@@ -1,0 +1,147 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f16d9a1696794b57af96d7d87c8e127, type: 3}
+  m_Name: V3Library
+  m_EditorClassIdentifier: Melife.AvatarV3::Melife.AvatarV3.V3AvatarLibrary
+  models:
+  - {fileID: 11400000, guid: be6d4c0c9cdec4d7eae711aabb911d72, type: 2}
+  - {fileID: 11400000, guid: 50f9d86b5848647eab2a6b314052ec51, type: 2}
+  - {fileID: 11400000, guid: 6c13bf91c313d4e9d8d1a18d37ca94c0, type: 2}
+  - {fileID: 11400000, guid: 08da4180b90054315a96c99ae4ada110, type: 2}
+  - {fileID: 11400000, guid: 33a0747ce3da34acf8b893858b4abea3, type: 2}
+  - {fileID: 11400000, guid: 06e28dab19899496391f5a4139fb8504, type: 2}
+  appearances:
+  - {fileID: 11400000, guid: 253d90f4a42bc4ad9a5590de64e366b7, type: 2}
+  - {fileID: 11400000, guid: e3d8e089556ac4f67bd9341c29324755, type: 2}
+  - {fileID: 11400000, guid: f131497423e9348ebbd08cdf880d9aef, type: 2}
+  - {fileID: 11400000, guid: b852dc3a4919b405db11675bd68a9493, type: 2}
+  - {fileID: 11400000, guid: 4b6c58cc34c3846ea89c6fc4c97e1dba, type: 2}
+  - {fileID: 11400000, guid: 861c1f391ce2441baaa610a82aa8ddf3, type: 2}
+  catalog:
+    models:
+    - id: young-man
+      defaults:
+        baseAvatarId: young-man
+        body: 0
+        face: 2
+        hair: 0
+        outerwear: 0
+        pants: 0
+        shoes: 0
+        glasses: -1
+        accessory: -1
+        costume: -1
+        hairColor: '#60412E'
+        topColor: '#8CCBE6'
+        pantsColor: '#627B99'
+        skinColor: 
+    - id: young-woman
+      defaults:
+        baseAvatarId: young-woman
+        body: 0
+        face: 2
+        hair: 1
+        outerwear: 0
+        pants: 0
+        shoes: 0
+        glasses: -1
+        accessory: -1
+        costume: -1
+        hairColor: '#60412E'
+        topColor: '#E8A6B8'
+        pantsColor: '#627B99'
+        skinColor: 
+    - id: middle-aged-man
+      defaults:
+        baseAvatarId: middle-aged-man
+        body: 0
+        face: 2
+        hair: 1
+        outerwear: 0
+        pants: 0
+        shoes: 0
+        glasses: -1
+        accessory: -1
+        costume: -1
+        hairColor: '#403B38'
+        topColor: '#8CCBE6'
+        pantsColor: '#627B99'
+        skinColor: 
+    - id: middle-aged-woman
+      defaults:
+        baseAvatarId: middle-aged-woman
+        body: 0
+        face: 2
+        hair: 1
+        outerwear: 0
+        pants: 0
+        shoes: 0
+        glasses: -1
+        accessory: -1
+        costume: -1
+        hairColor: '#654A3C'
+        topColor: '#E8A6B8'
+        pantsColor: '#627B99'
+        skinColor: 
+    - id: elderly-man
+      defaults:
+        baseAvatarId: elderly-man
+        body: 0
+        face: 2
+        hair: 1
+        outerwear: 0
+        pants: 0
+        shoes: 0
+        glasses: -1
+        accessory: -1
+        costume: -1
+        hairColor: '#E5E7EB'
+        topColor: '#8CCBE6'
+        pantsColor: '#D7C4A5'
+        skinColor: 
+    - id: elderly-woman
+      defaults:
+        baseAvatarId: elderly-woman
+        body: 0
+        face: 2
+        hair: 0
+        outerwear: 0
+        pants: 0
+        shoes: 0
+        glasses: -1
+        accessory: -1
+        costume: -1
+        hairColor: '#D4D4D8'
+        topColor: '#E8A6B8'
+        pantsColor: '#627B99'
+        skinColor: 
+    slots:
+    - key: body
+      count: 1
+    - key: face
+      count: 3
+    - key: hair
+      count: 3
+    - key: outerwear
+      count: 3
+    - key: pants
+      count: 3
+    - key: shoes
+      count: 3
+    - key: glasses
+      count: 2
+    - key: accessory
+      count: 5
+    - key: costume
+      count: 2
+    skinColorSupported: 1
+    profile: v3-unified-20261104

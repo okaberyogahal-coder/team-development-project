@@ -68,3 +68,5 @@ unity/**/*.unitypackage
 /unity/FutureCity/docs/
 # Atomic-write scratch files; shared development JSON itself is tracked.
 data/local-demo/users/.*.tmp
+
+/public/unity/AvatarV3Unified20261104/

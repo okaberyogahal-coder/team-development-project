@@ -16,12 +16,13 @@
     "start": "next start",
     "lint": "eslint .",
     "test:plaza": "tsx --test tests/plaza/*.test.ts",
-    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo && npm run test:account",
+    "test": "npm run test:plaza && npm run test:ai-navi && npm run test:local-demo && npm run test:account && npm run test:avatar-v3",
     "dev:plaza": "tsx server/plaza/index.ts",
     "load:plaza": "tsx scripts/plaza-load.ts",
     "test:browser": "playwright test",
     "test:smoke": "playwright test --config playwright.smoke.config.ts",
     "test:unity": "playwright test --config playwright.unity.config.ts",
+    "test:room-topics": "playwright test --config playwright.room-topics.config.ts",
     "test:unity:auth": "playwright test --config playwright.unity-auth.config.ts",
     "dev:lan": "node scripts/dev-lan.mjs",
     "db:generate": "prisma generate",
@@ -35,7 +36,10 @@
     "test:ai-navi": "node --import tsx --test tests/ai-navi/*.test.ts",
     "dev:ai-navi": "node scripts/dev-ai-navi.mjs",
     "test:local-demo": "node --import tsx --test tests/local-demo/*.test.ts",
-    "test:account": "node --import tsx --test tests/account/*.test.ts"
+    "test:account": "node --import tsx --test tests/account/*.test.ts",
+    "build:avatar-v3": "node scripts/build-avatar-v3.mjs",
+    "test:avatar-v3": "node --import tsx --test tests/avatar-v3/*.test.ts",
+    "test:avatar-v3:browser": "playwright test --config playwright.avatar-v3.config.ts"
   },
   "dependencies": {
     "@next/env": "16.4.2",

@@ -3,7 +3,8 @@
     "rootNamespace": "FutureCity.EditorTools",
     "references": [
         "FutureCity",
-        "ithappy.Creative_Characters_FREE.Editor"
+        "ithappy.Creative_Characters_FREE.Editor",
+        "Melife.AvatarV3"
     ],
     "includePlatforms": [
         "Editor"

@@ -12,6 +12,7 @@ namespace FutureCity
         public string nickname;
         public string gender;
         public AvatarAppearance appearance;
+        public MiraifuAvatarPrototype.MiraifuWebAvatarReceiver.WebChoice appearanceV3;
     }
 
     /// <summary>Only display data crosses the bridge. This is not authentication.</summary>
@@ -22,6 +23,7 @@ namespace FutureCity
         bool editing, readOnly;
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] static extern void MelifeAvatarEvent(string json);
+        [DllImport("__Internal")] static extern void MelifeAvatarApplied(string json);
 #endif
         public void Init(MiraiWorld target) => world = target;
 
@@ -33,6 +35,12 @@ namespace FutureCity
                 if (profile == null || (profile.mode != "avatar" && profile.mode != "world" && profile.mode != "profile") ||
                     string.IsNullOrWhiteSpace(profile.profileId) || profile.profileId.Length > 100 ||
                     string.IsNullOrWhiteSpace(profile.nickname) || profile.nickname.Trim().Length > 20) return null;
+                // JsonUtility materializes absent/null nested classes. Discard empty
+                // placeholders before deciding which appearance envelope was supplied.
+                if(profile.appearance!=null&&profile.appearance.parts==null&&profile.appearance.colors==null)profile.appearance=null;
+                if(profile.appearanceV3!=null&&string.IsNullOrEmpty(profile.appearanceV3.baseAvatarId))profile.appearanceV3=null;
+                if(profile.appearance!=null&&profile.appearanceV3!=null)return null;
+                if(profile.appearance!=null&&profile.appearance.version!=1&&profile.appearance.version!=2)return null;
                 profile.nickname = profile.nickname.Trim().Replace("<", "").Replace(">", "");
                 if (string.IsNullOrWhiteSpace(profile.nickname)) return null;
                 if (profile.mode == "profile" && profile.gender != "male" && profile.gender != "female") return null;
@@ -45,11 +53,20 @@ namespace FutureCity
         {
             var profile = Decode(json);
             if (profile == null || world == null) return;
-            profileId = profile.profileId;
-            editing = profile.mode == "avatar";
-            readOnly = profile.mode == "profile";
-            world.ApplyWebProfile(profile);
-            lastState = null;
+            bool accepted=world.TryApplyWebProfile(profile,out var error);
+            if(accepted)
+            {
+                profileId=profile.profileId;editing=profile.mode=="avatar";readOnly=profile.mode=="profile";lastState=null;
+            }
+#if UNITY_WEBGL && !UNITY_EDITOR
+            if(profile.appearanceV3!=null)MelifeAvatarApplied(JsonUtility.ToJson(new V3Receipt{accepted=accepted,error=error,profileId=profile.profileId,mode=profile.mode,choice=accepted?profile.appearanceV3:null}));
+#endif
+        }
+        [Serializable] sealed class V3Receipt
+        {
+            public bool accepted;
+            public string error,profileId,mode;
+            public MiraifuAvatarPrototype.MiraifuWebAvatarReceiver.WebChoice choice;
         }
 
         void LateUpdate()

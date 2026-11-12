@@ -17,6 +17,10 @@ import {
 
 import { getAvatarCandidates, getAllAvatarCandidates, type AvatarGenderState } from '../../shared/avatar-candidates';
 import { avatarPartThumbnail } from '../../shared/avatar-thumbnails';
+import {readDemoProfile} from '../../shared/demo-profile';
+import {isV3Appearance,v3Fingerprint} from '../../shared/avatar-v3';
+import {readV3Draft,writeV3Draft,completeV3Avatar} from '../../shared/avatar-v3-storage';
+import {previewAccepted} from '../../shared/avatar-v3-preview';
 import { readAvatarCatalog } from '../../shared/avatar-catalog';
 
 function AvatarPartThumbnail({ slot, value, baseAvatarId, headImageRoot }: { slot: string; value: number; baseAvatarId: string; headImageRoot?: string }) {
@@ -35,7 +39,9 @@ export function AvatarCustomizer({
   genderState = { status: 'unconnected' },
   assets = LEGACY_AVATAR_ASSETS,
   allCandidatesMode = false,
+  ownerId, nickname,
 }: {
+  ownerId:string; nickname:string;
   genderState?: AvatarGenderState;
   assets?: AvatarAssetProfile;
   allCandidatesMode?: boolean;
@@ -45,17 +51,14 @@ export function AvatarCustomizer({
   const initialDefaultPending = useRef(assets.id !== 'legacy');
   const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [activeTab, setActiveTab] = useState<'outerwear' | 'pants' | 'hair' | 'face' | 'shoes' | 'accessories' | 'colors' | 'costume'>('outerwear');
-  const [choice, setChoice] = useState<AvatarChoice>(() => {
-    if (assets.id === 'v3-unified-20261104') {
-      return {
-        ...DEFAULT_AVATAR_CHOICE,
-        baseAvatarId: initialCandidateId || DEFAULT_AVATAR_CHOICE.baseAvatarId,
-        face: 2,
-      };
-    }
-    return DEFAULT_AVATAR_CHOICE;
-  });
+  const [activeTab, setActiveTab] = useState<'outerwear' | 'pants' | 'hair' | 'face' | 'shoes' | 'accessories' | 'glasses' | 'colors' | 'costume'>('outerwear');
+  const [accessoryPage,setAccessoryPage]=useState(0);
+  const [{choice,revision},setSelection] = useState(() => ({
+    choice:{...DEFAULT_AVATAR_CHOICE,baseAvatarId:initialCandidateId || 'young-man',face:2},revision:0,
+  }));
+  const setChoice = (next:AvatarChoice|((previous:AvatarChoice)=>AvatarChoice)) => {
+    setSelection(previous=>({choice:typeof next==='function'?next(previous.choice):next,revision:previous.revision+1}));
+  };
   const [catalogReceived, setCatalogReceived] = useState(false);
   const [skinColorSupported, setSkinColorSupported] = useState(false);
   const [models, setModels] = useState<{ id: string; defaults: AvatarChoice }[]>([]);
@@ -66,105 +69,80 @@ export function AvatarCustomizer({
   const [hydrated, setHydrated] = useState(false);
   const [hasPreviewBuild, setHasPreviewBuild] = useState<boolean | null>(null);
 
-  // 初期化：localStorage に保存された設定があれば読み込み
+  const current = useRef({choice, revision:0});
+  const frameEpoch=useRef(0);
+  const lifecycle=useRef({active:false,generation:0,identityChanged:false});
+  const [sessionChanged,setSessionChanged]=useState(false);
+  useEffect(()=>{
+    const state=lifecycle.current;state.active=true;state.generation++;
+    const invalidate=()=>{state.generation++;};
+    const authChanged=()=>{invalidate();state.identityChanged=true;setSessionChanged(true);setNotice('ログイン状態が変わりました。再度ログインしてください。');};
+    let channel:BroadcastChannel|undefined;
+    try{channel=new BroadcastChannel('melife-auth');channel.addEventListener('message',event=>{if(event.data==='changed')authChanged();});}catch{/* The final server check remains required. */}
+    window.addEventListener('focus',invalidate);document.addEventListener('visibilitychange',invalidate);
+    return()=>{state.active=false;invalidate();channel?.close();window.removeEventListener('focus',invalidate);document.removeEventListener('visibilitychange',invalidate);};
+  },[]);
+  const [ack, setAck] = useState<{revision:number; fingerprint:string} | null>(null);
+  const [saving, setSaving] = useState(false);
+  const confirmed = !sessionChanged && ack?.revision === revision && ack.fingerprint === v3Fingerprint(choice);
+
   useEffect(() => {
-    // Restore browser storage after hydration, before enabling automatic saves.
     const restore = window.setTimeout(() => {
       try {
-        const saved = localStorage.getItem('miraifu_avatar');
-        if (saved) {
-          const restored = restoreAvatarChoice(JSON.parse(saved));
-          if (restored) {
-            const migratedLegacyModel = assets.id === 'v3-unified-20261104' &&
-              restored.choice.baseAvatarId === LEGACY_BASE_AVATAR_ID;
-            if (migratedLegacyModel) {
-              restored.choice.baseAvatarId = initialCandidateId || 'young-man';
-            }
-            initialDefaultPending.current = false;
-            setChoice(restored.choice);
-            // Old saves represent an already-created avatar. New drafts stay
-            // on selection until the user explicitly continues to editing.
-            if (localStorage.getItem('miraifu_avatar_stage') !== 'select') setStep(2);
-            if (restored.adjusted || migratedLegacyModel) setNotice('利用できないモデルやパーツを初期設定に戻しました。色など、使える設定は引き継いでいます。');
-          }
-        }
-      } catch { /* Keep defaults if saved data is malformed. */ }
+        const completed = readDemoProfile(localStorage);
+        const draft = readV3Draft(localStorage,ownerId);
+        const previous = completed?.id === ownerId ? completed.appearance : null;
+        const restored = draft ?? (isV3Appearance(previous) ? previous.choice : null);
+        if(restored){initialDefaultPending.current=false;setChoice(restored);setStep(2);}
+        else if(previous) setNotice('以前のアバターは保存されています。新しい外見は「このアバターで街へ行く」で確定します。');
+      } catch { setSaveError(true); }
       setHydrated(true);
-    }, 0);
+    },0);
+    fetch(assets.previewSrc,{method:'HEAD'}).then(res=>setHasPreviewBuild(res.ok)).catch(()=>setHasPreviewBuild(false));
+    return ()=>window.clearTimeout(restore);
+  },[ownerId,assets.previewSrc]);
 
-    // プレビュー用 WebGL が存在するか確認
-    fetch(assets.previewSrc, { method: 'HEAD' })
-      .then((res) => {
-        setHasPreviewBuild(res.ok);
-      })
-      .catch(() => {
-        setHasPreviewBuild(false);
-      });
-    return () => window.clearTimeout(restore);
-  }, [assets.id, assets.previewSrc, initialCandidateId]);
-
-  // Keep the iframe mounted; its bridge queues changes until Unity is ready.
   useEffect(() => {
-    if (!hydrated) return;
-    let warningTimer: number | undefined;
-    try {
-      localStorage.setItem('miraifu_avatar_stage', step === 1 ? 'select' : 'edit');
-      localStorage.setItem('miraifu_avatar', JSON.stringify(choice));
-    } catch { warningTimer = window.setTimeout(() => setSaveError(true), 0); }
-    const send = () => iframeRef.current?.contentWindow?.postMessage(
-      { type: 'miraifu:avatar', choice }, window.location.origin,
-    );
-    const ready = (event: MessageEvent) => {
-      if (event.origin === window.location.origin &&
-        event.source === iframeRef.current?.contentWindow &&
-        event.data?.type === 'miraifu:avatar-ready') {
-        send();
-        iframeRef.current?.contentWindow?.postMessage({ type: 'miraifu:catalog-request' }, window.location.origin);
+    current.current={choice,revision};
+    if(!hydrated)return;
+    let warningTimer:number|undefined;
+    try{if(!lifecycle.current.identityChanged)writeV3Draft(localStorage,ownerId,choice);}catch{warningTimer=window.setTimeout(()=>setSaveError(true),0);}
+    const send = () => iframeRef.current?.contentWindow?.postMessage({type:'miraifu:avatar',...current.current},window.location.origin);
+    const receive = (event:MessageEvent) => {
+      if(event.origin!==window.location.origin||event.source!==iframeRef.current?.contentWindow)return;
+      if(event.data?.type==='miraifu:avatar-ready')send();
+      if(event.data?.type==='miraifu:avatar-state'){
+        if(previewAccepted(event.data,current.current.revision,current.current.choice))setAck({revision:current.current.revision,fingerprint:v3Fingerprint(current.current.choice)});
       }
-      if (event.origin === window.location.origin && event.source === iframeRef.current?.contentWindow && event.data?.type === 'miraifu:avatar-catalog') {
-        const catalog = readAvatarCatalog(event.data.catalog);
-        if (!catalog) return;
-        setCatalogReceived(true);
-        setModels(catalog.models);
-        if (initialDefaultPending.current && assets.id !== 'legacy') {
-          const first = catalog.models.find(model => model.id === initialCandidateId) ?? catalog.models[0];
-          if (first) { setChoice(first.defaults); initialDefaultPending.current = false; }
+      if(event.data?.type==='miraifu:avatar-catalog'){
+        const catalog=readAvatarCatalog(event.data.catalog);if(!catalog)return;
+        setCatalogReceived(true);setModels(catalog.models);setPartCounts(catalog.partCounts);setSkinColorSupported(catalog.skinColorSupported);
+        if(initialDefaultPending.current){
+          const first=catalog.models.find(model=>model.id===initialCandidateId)??catalog.models[0];
+          if(first){initialDefaultPending.current=false;setChoice(first.defaults);}
         }
-        setPartCounts(catalog.partCounts);
-        setSkinColorSupported(catalog.skinColorSupported);
       }
     };
-    window.addEventListener('message', ready);
-    send();
-    // The iframe may have finished before this effect subscribed. Ask for its
-    // cached capabilities as well as listening for future readiness events.
-    iframeRef.current?.contentWindow?.postMessage({ type: 'miraifu:catalog-request' }, window.location.origin);
-    return () => {
-      window.removeEventListener('message', ready);
-      window.clearTimeout(warningTimer);
-    };
-  }, [choice, hydrated, step, assets.id, initialCandidateId]);
+    window.addEventListener('message',receive);send();
+    iframeRef.current?.contentWindow?.postMessage({type:'miraifu:catalog-request'},window.location.origin);
+    return ()=>{window.removeEventListener('message',receive);window.clearTimeout(warningTimer);};
+  },[choice,revision,hydrated,ownerId,initialCandidateId,hasPreviewBuild]);
 
-  const updateChoice = (updates: Partial<AvatarChoice>) => {
-    setChoice((prev) => ({ ...prev, ...updates }));
-  };
-
-  const changeStep = (next: 1 | 2) => {
-    setStep(next);
-    try { localStorage.setItem('miraifu_avatar_stage', next === 1 ? 'select' : 'edit'); }
-    catch { setSaveError(true); }
-    requestAnimationFrame(() => document.getElementById('avatar-step-title')?.focus());
-  };
-
-  const handleGoToCity = () => {
-    try {
-      localStorage.setItem('miraifu_avatar', JSON.stringify(choice));
-    } catch {
-      setSaveError(true);
-    }
-    const avatarParam = encodeURIComponent(JSON.stringify(choice));
-    const profileParam = assets.id === 'legacy' ? '' : `&profile=${encodeURIComponent(assets.id)}`;
-    router.push(`/plaza?avatar=${avatarParam}${profileParam}`);
+  const updateChoice = (updates:Partial<AvatarChoice>) => {setAck(null);setChoice(prev=>({...prev,...updates}));};
+  const changeStep = (next:1|2) => {setStep(next);requestAnimationFrame(()=>document.getElementById('avatar-step-title')?.focus());};
+  const handleGoToCity = async () => {
+    if(!confirmed||saving)return;
+    const submitted={...current.current,epoch:frameEpoch.current,generation:lifecycle.current.generation};setSaving(true);
+    try{
+      const response=await fetch('/api/unity/session',{cache:'no-store'});
+      const session=await response.json();
+      if(!lifecycle.current.active)return;
+      if(submitted.generation!==lifecycle.current.generation||lifecycle.current.identityChanged)throw new Error('ログイン状態が変わりました。再度ログインしてください。');
+      if(!response.ok||!session.authenticated||session.profile?.userId!==ownerId)throw new Error('ログイン状態が変わりました。再度ログインしてください。');
+      if(submitted.epoch!==frameEpoch.current||submitted.revision!==current.current.revision||v3Fingerprint(submitted.choice)!==v3Fingerprint(current.current.choice))throw new Error('変更後のプレビューを確認してから、もう一度お試しください。');
+      completeV3Avatar(localStorage,ownerId,nickname,{version:3,assetProfile:'v3-unified-20261104',choice:submitted.choice});
+      router.push('/plaza');
+    }catch(error){if(!lifecycle.current.active)return;setNotice(error instanceof Error?error.message:'保存できませんでした。もう一度お試しください。');setSaving(false);}
   };
 
   const unsupportedModel = hydrated && catalogReceived && (assets.id !== 'legacy' || choice.baseAvatarId !== LEGACY_BASE_AVATAR_ID) && !models.some(model => model.id === choice.baseAvatarId);
@@ -256,6 +234,7 @@ export function AvatarCustomizer({
           {hasPreviewBuild ? (
             <iframe
               ref={iframeRef}
+              onLoad={() => {frameEpoch.current++;setAck(null);}}
               className="avatar-preview-iframe"
               title="3Dアバタープレビュー"
               src={`${assets.previewSrc}${assets.id !== 'legacy' && genderState.status === 'ready' ? `&gender=${genderState.gender}` : ''}`}
@@ -265,7 +244,7 @@ export function AvatarCustomizer({
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>🧍</div>
               <h3>3Dプレビュー</h3>
               <div className="avatar-preview-notice" role="status">
-                {hasPreviewBuild === null ? '3Dプレビューを準備しています…' : '3Dプレビューを読み込めません。着せ替えの設定はそのまま保存できます。'}
+                {hasPreviewBuild === null ? '3Dプレビューを準備しています…' : '3Dプレビューを読み込めません。プレビューを確認できるまで確定できません。'}
               </div>
             </div>
           )}
@@ -281,7 +260,7 @@ export function AvatarCustomizer({
           {step === 2 && <button type="button" className="avatar-btn-secondary avatar-change-base" onClick={() => changeStep(1)}>基本アバターを変更</button>}
         </div>
         {settingsNotice && <p className="avatar-message" role="status">{settingsNotice}</p>}
-        {saveError && <p className="avatar-message" role="status">このブラウザでは保存できません。「街へ行く」ボタンから現在の設定を引き継げます。</p>}
+        {saveError && <p className="avatar-message" role="status">このブラウザでは保存できません。保存設定を確認してください。以前のアバターは変更されていません。</p>}
         {!hydrated ? <p role="status">保存したアバターを確認しています…</p> : step === 1 ? <>
           {process.env.NODE_ENV === 'development' && genderState.status === 'ready' && genderState.source === 'development-fixture' && (
             <details className="avatar-dev-note">
@@ -385,8 +364,9 @@ export function AvatarCustomizer({
               aria-pressed={activeTab === 'accessories'}
               onClick={() => setActiveTab('accessories')}
             >
-              小物・メガネ
+              小物
             </button>
+            <button type="button" className={`avatar-tab-btn ${activeTab === 'glasses' ? 'active' : ''}`} aria-pressed={activeTab === 'glasses'} onClick={() => setActiveTab('glasses')}>メガネ</button>
             <button
               type="button"
               className={`avatar-tab-btn ${activeTab === 'colors' ? 'active' : ''}`}
@@ -398,6 +378,7 @@ export function AvatarCustomizer({
             <button type="button" className={`avatar-tab-btn ${activeTab === 'costume' ? 'active' : ''}`} aria-pressed={activeTab === 'costume'} onClick={() => setActiveTab('costume')}>コスチューム</button>
           </div>
 
+          <div className="avatar-category-content">
           {(choice.costume >= 0 || activeTab === 'costume') && <p className="avatar-inline-hint" role="status">{choice.costume >= 0 ? '着用中は一部のパーツが隠れます。「通常の服」で戻せます。' : '衣装を選んでも、元の着せ替えは残ります。'}</p>}
           {activeTab === 'costume' && <div>
             <div className="avatar-options-grid">
@@ -571,43 +552,35 @@ export function AvatarCustomizer({
             </div>
           )}
 
-          {activeTab === 'accessories' && (
+          {activeTab === 'glasses' && (
             <div>
               <div className="avatar-color-title">メガネ</div>
               <div className="avatar-options-grid">
-                {AVATAR_OPTIONS.glasses.map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    className={`avatar-option-card ${choice.glasses === opt.value ? 'selected' : ''}`}
-                    aria-pressed={choice.glasses === opt.value}
-                    disabled={opt.value >= (partCounts.glasses ?? 0)}
-                    title={opt.value >= (partCounts.glasses ?? 0) ? 'プレビューの更新後に利用できます' : undefined}
-                    onClick={() => updateChoice({ glasses: opt.value })}
-                  >
-                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="glasses" value={opt.value} baseAvatarId={choice.baseAvatarId} />
+                {AVATAR_OPTIONS.glasses.map(opt => (
+                  <button type="button" key={opt.value} className={`avatar-option-card ${choice.glasses === opt.value ? 'selected' : ''}`} aria-pressed={choice.glasses === opt.value} disabled={opt.value >= (partCounts.glasses ?? 0)} onClick={() => updateChoice({glasses:opt.value})}>
+                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="glasses" value={opt.value} baseAvatarId={choice.baseAvatarId}/>
                     <div className="avatar-option-label">{opt.label}</div>
                   </button>
                 ))}
               </div>
-
-              <div className="avatar-color-title" style={{ marginTop: '16px' }}>アクセサリー / 小物</div>
+            </div>
+          )}
+          {activeTab === 'accessories' && (
+            <div>
+              <div className="avatar-color-title">小物</div>
               <div className="avatar-options-grid">
-                {AVATAR_OPTIONS.accessory.map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    className={`avatar-option-card ${choice.accessory === opt.value ? 'selected' : ''}`}
-                    aria-pressed={choice.accessory === opt.value}
-                    disabled={opt.value >= (partCounts.accessory ?? 0)}
-                    title={opt.value >= (partCounts.accessory ?? 0) ? 'プレビューの更新後に利用できます' : undefined}
-                    onClick={() => updateChoice({ accessory: opt.value })}
-                  >
-                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="accessory" value={opt.value} baseAvatarId={choice.baseAvatarId} />
+                {AVATAR_OPTIONS.accessory.slice(accessoryPage*3,accessoryPage*3+3).map(opt => (
+                  <button type="button" key={opt.value} className={`avatar-option-card ${choice.accessory === opt.value ? 'selected' : ''}`} aria-pressed={choice.accessory === opt.value} disabled={opt.value >= (partCounts.accessory ?? 0)} onClick={() => updateChoice({accessory:opt.value})}>
+                    <AvatarPartThumbnail headImageRoot={assets.headImageRoot} slot="accessory" value={opt.value} baseAvatarId={choice.baseAvatarId}/>
                     <div className="avatar-option-label">{opt.label}</div>
                   </button>
                 ))}
               </div>
+              <nav className="avatar-option-pages" aria-label="小物のページ">
+                <button type="button" aria-label="前の小物" disabled={accessoryPage===0} onClick={()=>setAccessoryPage(page=>page-1)}>← 前へ</button>
+                <span aria-live="polite">{accessoryPage+1} / {Math.ceil(AVATAR_OPTIONS.accessory.length/3)}</span>
+                <button type="button" aria-label="次の小物" disabled={(accessoryPage+1)*3>=AVATAR_OPTIONS.accessory.length} onClick={()=>setAccessoryPage(page=>page+1)}>次へ →</button>
+              </nav>
             </div>
           )}
 
@@ -685,15 +658,16 @@ export function AvatarCustomizer({
             </div>
           )}
 
+          </div>
           {/* アクションバー */}
           <div className="avatar-action-bar">
             <button
               type="button"
               className="avatar-go-btn"
-              disabled={!hydrated}
+              disabled={!hydrated || !confirmed || saving || unsupportedModel || unsupportedParts}
               onClick={handleGoToCity}
             >
-              <span>このアバターで街へ行く</span>
+              <span>{saving?'保存しています…':'このアバターで街へ行く'}</span>
               <span style={{ fontSize: '20px' }}>→</span>
             </button>
           </div>

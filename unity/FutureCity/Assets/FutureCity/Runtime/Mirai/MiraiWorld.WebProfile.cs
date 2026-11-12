@@ -13,6 +13,8 @@ namespace FutureCity
             public Vector3 position;
             public float yaw;
             public bool cursorVisible, freeLook;
+            public string roomId,topicId;
+            public MiraifuAvatarPrototype.MiraifuWebAvatarReceiver.WebChoice avatarChoice;
         }
 #if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] static extern void MelifeWorldInteraction(string json);
@@ -24,31 +26,40 @@ namespace FutureCity
             if (player == null) return;
             MelifeWorldInteraction(JsonUtility.ToJson(new WebInteractionSnapshot {
                 panel = panel.ToString(), position = player.transform.position, yaw = player.Yaw,
-                cursorVisible = Cursor.visible, freeLook = PlayerWalker.FreeLook
+                cursorVisible = Cursor.visible, freeLook = PlayerWalker.FreeLook, avatarChoice=player.body.GetComponent<ImportedAvatar>()?.V3Choice,
+                roomId=currentRoom?.id,topicId=currentRoom==null?null:Topics.Current(currentRoom.id)?.id
             }));
 #endif
         }
 
         bool creatingWebAvatar, previewingWebAvatar;
         WebProfileBridge webProfile;
+        string webAppearanceOwner;
         public string WebNickname => me.name;
         public AvatarAppearance WebAppearance => player.body.GetComponent<ImportedAvatar>()?.Appearance;
 
-        public void ApplyWebProfile(WebAvatarProfile profile)
+        public void ApplyWebProfile(WebAvatarProfile profile){TryApplyWebProfile(profile,out _);}
+        public bool TryApplyWebProfile(WebAvatarProfile profile,out string error)
         {
-            // Server session remains authoritative for the displayed identity.
-            if (webSession == null) me.name = profile.nickname;
-            var avatar = player.body.GetComponent<ImportedAvatar>();
-            if (profile.mode == "profile" && avatar != null) avatar.SetGender(profile.gender);
-            if (avatar != null && avatar.Wardrobe != null)
+            if(profile.mode=="world"&&webSession!=null&&webSession.status!="loading"&&(!webSession.authenticated||webSession.profile.userId!=profile.profileId))
+            {error="ログイン本人とアバターの保存先が一致しません。";return false;}
+            var avatar=player.body.GetComponent<ImportedAvatar>();
+            if(avatar==null){error="アバターを準備できませんでした。";return false;}
+            if(profile.appearanceV3!=null)
             {
-                avatar.ApplyAppearance(profile.appearance ?? AvatarAppearance.Preset(avatar.Wardrobe, 0));
-                if (profile.mode != "profile") AvatarWardrobePreferences.Save(avatar.Appearance);
+                if(!avatar.TryApplyV3(profile.appearanceV3,out error))return false;
             }
-            creatingWebAvatar = profile.mode == "avatar";
-            previewingWebAvatar = profile.mode == "profile";
-            if (creatingWebAvatar || previewingWebAvatar) SetPanel(Panel.Profile);
-            else StartPlaza();
+            else
+            {
+                if(profile.mode=="profile")avatar.SetGender(profile.gender);
+                avatar.ApplyAppearance(profile.appearance??AvatarAppearance.Preset(avatar.Wardrobe,0));
+                if(profile.mode!="profile")AvatarWardrobePreferences.Save(avatar.Appearance);
+            }
+            if(webSession==null)me.name=profile.nickname;
+            webAppearanceOwner=profile.profileId;
+            creatingWebAvatar=profile.mode=="avatar";previewingWebAvatar=profile.mode=="profile";
+            if(creatingWebAvatar||previewingWebAvatar)SetPanel(Panel.Profile);else StartPlaza();
+            error="";return true;
         }
 
         void DrawWebAccountAvatar()
