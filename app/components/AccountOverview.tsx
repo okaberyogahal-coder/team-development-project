@@ -21,7 +21,7 @@ export function AccountOverview({user,updated=false}:{user:AccountOverviewUser;u
  return <main className="account-page">
   <header className="account-header"><Logo priority/><span className="account-header-caption">世代をこえて、学び合う未来へ。</span><Link className="account-home-link" href="/" aria-label="トップページへ">← トップページへ</Link></header>
   <div className="account-page-body">
-   <div className="account-page-heading"><div><p className="account-eyebrow">マイページ</p><h1>こんにちは、{nickname}さん。</h1><p>あなたの「好き」の続きを、ここから。</p></div><Link className="primary-button account-world-link" href="/plaza">ワールドに入る <span aria-hidden="true">↗</span></Link></div>
+   <div className="account-page-heading"><div><p className="account-eyebrow">マイページ</p><h1>こんにちは、{nickname}さん。</h1><p>あなたの「好き」の続きを、ここから。</p></div><div className="account-page-actions"><Link className="secondary-button account-friends-link" href="/friends">フレンドを探す <span aria-hidden="true">→</span></Link><Link className="primary-button account-world-link" href="/plaza">ワールドに入る <span aria-hidden="true">↗</span></Link></div></div>
    {updated&&<p role="status" className="account-notice">✓ プロフィールを保存しました。</p>}
    {(!user.profile?.gender||!badge)&&<p role="status" className="account-notice account-notice-warning">性別・年齢の登録が必要です。<Link href="/account/edit">プロフィールを編集してください →</Link></p>}
    <div className="account-grid">

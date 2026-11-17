@@ -58,7 +58,7 @@ test('ordinary dev and production stay disabled, while invalid stored data is re
  for(const options of [{environment:'production',enabled:true},{environment:'development',enabled:false}]){
   const disabled=createLocalDemoHandler({repo,...options});assert.equal((await disabled(request())).status,404);
  }
- const broken={listUsers:async()=>{throw new Error('/private/secret/path')},listMaterials:()=>repo.listMaterials(),getUser:repo.getUser.bind(repo),recordEvent:repo.recordEvent.bind(repo)};
+ const broken={listUsers:async()=>{throw new Error('/private/secret/path')},listMaterials:()=>repo.listMaterials(),getUser:repo.getUser.bind(repo),recordEvent:repo.recordEvent.bind(repo),readFriendPage:repo.readFriendPage.bind(repo),requestFriend:repo.requestFriend.bind(repo),respondToFriendRequest:repo.respondToFriendRequest.bind(repo),removeFriend:repo.removeFriend.bind(repo)};
  const handler=createLocalDemoHandler({repo:broken,environment:'development',enabled:true});
  const response=await handler(request());assert.equal(response.status,500);assert.ok(!(await response.text()).includes('/private/secret'));
 });

@@ -65,6 +65,14 @@ enum BookingStatus {
   @@schema("app")
 }
 
+enum FriendConnectionStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+
+  @@schema("app")
+}
+
 model User {
   id          String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email       String?              @unique @db.VarChar(254)
@@ -86,8 +94,29 @@ model User {
   bookings    LectureBooking[]
   authAccounts AuthAccount[]
   authSessions AuthSession[]
+  friendshipsA FriendConnection[] @relation("FriendUserA")
+  friendshipsB FriendConnection[] @relation("FriendUserB")
+  friendRequests FriendConnection[] @relation("FriendRequestedBy")
 
   @@map("users")
+  @@schema("app")
+}
+
+model FriendConnection {
+  userAId      String                 @map("user_a_id") @db.Uuid
+  userBId      String                 @map("user_b_id") @db.Uuid
+  requestedById String                @map("requested_by_id") @db.Uuid
+  status       FriendConnectionStatus @default(PENDING)
+  createdAt    DateTime               @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime               @updatedAt @map("updated_at") @db.Timestamptz(3)
+  userA        User                   @relation("FriendUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB        User                   @relation("FriendUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  requestedBy  User                   @relation("FriendRequestedBy", fields: [requestedById], references: [id], onDelete: Cascade)
+
+  @@id([userAId, userBId])
+  @@index([userAId, status, createdAt])
+  @@index([userBId, status, createdAt])
+  @@map("friend_connections")
   @@schema("app")
 }
 

@@ -9,6 +9,7 @@ export async function resetSharedFixture(page:Page){
  const expected=createHash('sha256').update(resolve(root)).digest('hex');
  if(!response.ok()||response.headers()['x-melife-local-store']!==expected)throw new Error('試験サーバーの保存先が一致しません。');
  for(const id of ['photography','food-photo','newcomer']) await copyFile(join('tests/fixtures/local-demo/users',`${id}.json`),join(root,'users',`${id}.json`));
+ await copyFile('tests/fixtures/local-demo/friends.json',join(root,'friends.json'));
 }
 export async function selectUser(page:Page,id:string,baseURL:string){
  const root=process.env.MILIFE_LOCAL_DEMO_TEST_DIR;

@@ -17,6 +17,7 @@ export class LocalSessionStore{
 }
 const processState=globalThis as typeof globalThis&{__melifeLocalSessions?:LocalSessionStore};
 export function getLocalSessionStore():LocalSessionStore{return processState.__melifeLocalSessions??=new LocalSessionStore();}
+export function resolveCurrentLocalSession(token:string|null):LocalUserId|null{return getLocalSessionStore().resolve(token,Date.now());}
 export function getSessionToken(request:Request):string|null{
  const matches=(request.headers.get('cookie')??'').split(';').map(value=>value.trim()).filter(value=>value.startsWith(`${LOCAL_SESSION_COOKIE}=`));
  if(matches.length!==1)return null;
