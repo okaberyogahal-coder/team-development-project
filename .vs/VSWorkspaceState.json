@@ -1,6 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\app",
+    "\\app\\account",
+    "\\unity\\FutureCity",
+    "\\unity\\FutureCity\\Assets"
   ],
   "PreviewInSolutionExplorer": false
 }
