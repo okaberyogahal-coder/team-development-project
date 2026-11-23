@@ -205,6 +205,8 @@ model UserProfile {
   nickname       String          @db.VarChar(20)
   bio            String          @default("") @db.VarChar(2000)
   avatarId       String?         @map("avatar_id") @db.VarChar(64)
+  avatarAppearance Json?         @map("avatar_appearance") @db.JsonB
+  avatarVersion  Int             @default(0) @map("avatar_version")
   gender         String?         @db.VarChar(6)
   age            Int?            @db.SmallInt
   ageUpdatedAt   DateTime?       @map("age_updated_at") @db.Timestamptz(3)
