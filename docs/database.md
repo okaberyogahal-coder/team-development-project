@@ -18,6 +18,7 @@ erDiagram
     User ||--o{ AuthIdentity : identities
     User ||--o| UserProfile : public_profile
     User ||--o| LearningPreferences : private_preferences
+    User ||--o{ FriendConnection : requests_or_connects
     UserProfile ||--o{ Qualification : self_reported
     User ||--o{ PolicyConsent : policy_versions
     User ||--o{ MediaAsset : owns
@@ -36,6 +37,7 @@ erDiagram
 | User / AuthIdentity | 永続 userId と認証事業者の subject を分離。広場の participantId は保存しない。パスワード・認証トークンは保存しない |
 | UserProfile | 表示名・任意の自己申告年齢・教えたいこと・学びたいこと。表示名の重複は許可。年齢入力を本人確認・保護者確認に流用しない |
 | LearningPreferences | 非公開の興味・目標・得意なことと AI 年齢利用許可。プロフィール公開と AI 年齢利用を独立させる |
+| FriendConnection | 2人の利用者間の申請・承認状態。利用者IDを正規順で一意に保存し、ニックネーム検索は完全一致のみ。停止・削除済み利用者は検索対象外。公開 API ではなく認証済みサーバー API から扱う |
 | Qualification / PolicyConsent | 自己申告の資格、同意した規約の識別子と版。資格は運営認定を意味しない |
 | MediaAsset / LearningMaterial | ファイル本体はオブジェクトストレージ。DB には保存キー・種別・状態・サイズと教材情報を保持。署名付き URL は永続保存しない |
 | MaterialProgress | 本人による受講完了と時刻・参照版・題名スナップショット。教材の論理削除後も履歴を残し、完了を自動判定しない |
@@ -43,7 +45,7 @@ erDiagram
 
 日時は `timestamptz` で保持し、表示時に日本時間などへ変換する。メールは空白を除いて小文字化した値だけを保存できる。ユーザーは既定で `PENDING`。開発版のログイン・マイページ利用と、予約等の `ACTIVE` を要する権限は分け、自動で `ACTIVE` にしない。保護者確認の採否は再検討中。
 
-認証追加で `User` に認証用項目を追加し、`AuthAccount` / `AuthSession` / `AuthVerification` / `AuthRateLimit` を加えた全16テーブル構成になった。資格情報のハッシュとセッショントークンは専用テーブルでサーバー側だけが扱う。`User` / `AuthIdentity` に平文パスワードを保存しない。
+認証追加で `User` に認証用項目を追加し、`AuthAccount` / `AuthSession` / `AuthVerification` / `AuthRateLimit` を加えた。フレンド機能は `FriendConnection` を追加し、全17テーブル構成になった。資格情報のハッシュとセッショントークンは専用テーブルでサーバー側だけが扱う。`User` / `AuthIdentity` に平文パスワードを保存しない。
 
 ## ローカルの初回起動
 
@@ -132,3 +134,7 @@ DB 基盤追加時に確認した Next.js 14.2.35 の脆弱性は、Issue #4 対
 `202610300001_profile_demographics`は`app.user_profiles.gender`と性別・成年年齢のCHECK制約を追加する。既存利用者の性別・年齢は推定補完しない。NULLは移行互換として保持し、登録・編集保存とワールド入場時に必須入力を求める。既存の18歳未満データは書き換えず、次の更新前に本人が訂正する。年齢は本人の編集APIだけに返し、Unityセッションには年齢バッジだけを返す。
 
 コードを起動するDBには`npm run db:deploy`で移行を適用する。DBテストは開発DBと分離したローカル`DATABASE_TEST_URL`（DB名は`_test`で終わる）を指定し`npm run test:db`で実行する。
+
+## 2026-11-17 フレンド機能の移行
+
+`202611170001_friends`は`app.friend_connections`と申請状態 enum を追加する。フレンド申請は承認・見送り・取り消しに対応し、接続中の利用者を削除すると関連レコードも削除する。適用前に`npm run db:deploy`を実行する。

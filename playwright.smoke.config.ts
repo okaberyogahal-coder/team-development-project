@@ -6,7 +6,7 @@ const databaseUrl = authTestDatabaseUrl();
 
 export default defineConfig({
   testDir: './tests/browser',
-  testMatch: ['auth.spec.ts', 'auth-flow.spec.ts', 'home-header.spec.ts', 'home-scroll-reveal.spec.ts', 'logo-image.spec.ts', 'unity-entry.spec.ts'],
+  testMatch: ['auth.spec.ts', 'auth-flow.spec.ts', 'friends-auth.spec.ts', 'home-header.spec.ts', 'home-scroll-reveal.spec.ts', 'logo-image.spec.ts', 'unity-entry.spec.ts'],
   // Unity's generated Web build is not required for the Next.js regression suite.
   grepInvert: /Unityワールド本体がブラウザー内で起動する/,
   workers: 1,

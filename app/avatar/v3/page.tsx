@@ -27,6 +27,7 @@ export default async function AvatarV3VerificationPage({
   const allCandidatesMode = !genderState;
 
   const user = await getCurrentUser();
+  const ownerId = user?.id ?? 'avatar-v3-preview';
 
   const currentModeLabel = isMale
     ? '男性用モード（若者男性・大人男性・シニア男性）'
@@ -90,6 +91,9 @@ export default async function AvatarV3VerificationPage({
       </div>
 
       <AvatarCustomizer
+        key={ownerId}
+        ownerId={ownerId}
+        nickname={user?.profile?.nickname || '利用者'}
         assets={V3_UNIFIED_ASSETS}
         genderState={genderState}
         allCandidatesMode={allCandidatesMode}

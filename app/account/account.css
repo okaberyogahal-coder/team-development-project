@@ -18,6 +18,9 @@
 .account-page .secondary-button { min-height: 38px; justify-content: space-between; border: 1.5px solid #b59c35; border-radius: 11px; padding: 8px 14px; background: #fff2ab; color: #4f471e; box-shadow: 0 3px 0 #e9d781; font-size: 12px; }
 .account-page .secondary-button:hover { background: #ffe985; }
 .account-world-link { flex-shrink: 0; }
+.account-page-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 12px; }
+.account-page .account-friends-link { min-height: 44px; border-color: #adcfe4; border-radius: 13px; padding: 10px 16px; background: #fffef9; color: #153b78; box-shadow: 0 3px 0 #d9eaf2; font-size: 13px; }
+.account-page .account-friends-link:hover { background: #fff3ae; }
 .account-grid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 7fr); gap: 22px; flex: 1; min-height: 0; align-items: stretch; }
 .account-avatar-card { display: flex; flex-direction: column; position: relative; min-width: 0; min-height: 0; padding: 18px 18px 12px; border: 2px solid #214e8a; border-radius: 24px; background: #fffef9; box-shadow: 5px 5px 0 #bbdfe8; text-align: center; }
 .account-avatar-card::before { content: ''; position: absolute; top: -8px; right: 25px; width: 62px; height: 16px; background: #ffe785df; border-left: 2px dashed #f5c955; border-right: 2px dashed #f5c955; transform: rotate(5deg); }

@@ -68,6 +68,30 @@ test('viewing and explicit completion are persisted to the selected JSON and nev
  expect(other.events).toHaveLength(2);
 });
 
+test('mock friends can be requested and accepted between fictional accounts',async({page,baseURL})=>{
+ await selectUser(page,'photography',baseURL!);
+ await page.goto('/ai-navi');
+ await page.getByRole('link',{name:'フレンド機能を試す'}).click();
+ await expect(page).toHaveURL(/\/friends\/demo$/);
+ await page.getByLabel('相手のニックネーム').fill('あおい（架空）');
+ await page.getByRole('button',{name:'検索する'}).click();
+ await page.getByRole('button',{name:'申請する'}).click();
+ await expect(page.getByRole('status')).toContainText('フレンド申請を送りました');
+ await expect(page.getByText('申請中',{exact:true})).toBeVisible();
+
+ await selectUser(page,'food-photo',baseURL!);
+ await page.goto('/friends/demo');
+ await expect(page.getByRole('heading',{name:'届いている申請'})).toBeVisible();
+ await page.getByRole('button',{name:'承認'}).click();
+ await expect(page.getByRole('status')).toContainText('フレンドになりました');
+ await expect(page.getByRole('heading',{name:'フレンド',exact:true})).toBeVisible();
+ await expect(page.getByText('そら（架空）',{exact:true})).toBeVisible();
+
+ const saved=JSON.parse(await readFile(join(process.env.MILIFE_LOCAL_DEMO_TEST_DIR!,'friends.json'),'utf8'));
+ expect(saved.connections).toHaveLength(1);
+ expect(saved.connections[0]).toMatchObject({status:'ACCEPTED',requestedById:'photography'});
+});
+
 test('fixture setup refuses a server using a different store before any writes',async()=>{
  const {resetSharedFixture}=await import('./local-demo-fixture');
  const wrongServer={request:{get:async()=>({ok:()=>true,headers:()=>({'x-melife-local-store':'shared'})})}};

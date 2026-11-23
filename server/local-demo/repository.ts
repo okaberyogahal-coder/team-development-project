@@ -10,6 +10,20 @@ export interface LocalDemoRepository {
   getUser(id:LocalUserId):Promise<LocalUser>;
   recordEvent(id:LocalUserId,materialId:string,kind:LocalEvent['kind'],now:Date):Promise<LocalUser>;
 }
+export interface LocalDemoFriendsRepository extends LocalDemoRepository {
+  readFriendPage(id:LocalUserId,nickname?:string):Promise<LocalFriendPage>;
+  requestFriend(id:LocalUserId,targetId:LocalUserId,now:Date):Promise<void>;
+  respondToFriendRequest(id:LocalUserId,requesterId:LocalUserId,response:'accept'|'decline',now:Date):Promise<void>;
+  removeFriend(id:LocalUserId,targetId:LocalUserId):Promise<void>;
+}
+export interface LocalFriendProfile {id:LocalUserId;nickname:string}
+export interface LocalFriendPage {
+  friends:LocalFriendProfile[];
+  incoming:Array<LocalFriendProfile&{createdAt:string}>;
+  outgoing:Array<LocalFriendProfile&{createdAt:string}>;
+  matches:Array<LocalFriendProfile&{connectionStatus:'none'|'friend'|'incoming'|'outgoing'}>;
+}
+type LocalFriendConnection={userAId:LocalUserId;userBId:LocalUserId;requestedById:LocalUserId;status:'PENDING'|'ACCEPTED'|'DECLINED';createdAt:string;updatedAt:string};
 export class LocalStoreError extends Error {
   constructor(public readonly code:'INVALID_DATA'|'INVALID_INPUT'|'SAVE_FAILED'){super(code);this.name='LocalStoreError';}
 }
@@ -23,6 +37,11 @@ async function serialize<T>(key:string,action:()=>Promise<T>):Promise<T>{
 function validText(value:unknown,max=500):value is string {return typeof value==='string'&&value.trim().length>0&&value.length<=max;}
 const validId=(value:unknown):value is string=>typeof value==='string'&&/^[a-z][a-z0-9-]{0,63}$/.test(value);
 function invalid():never{throw new LocalStoreError('INVALID_DATA');}
+function orderedPair(id:LocalUserId,targetId:LocalUserId){
+  if(id===targetId)throw new LocalStoreError('INVALID_INPUT');
+  return id<targetId?{userAId:id,userBId:targetId}:{userAId:targetId,userBId:id};
+}
+function connectionKey(connection:Pick<LocalFriendConnection,'userAId'|'userBId'>){return `${connection.userAId}:${connection.userBId}`;}
 async function readJSON(file:string):Promise<any>{
   try{
     const stat=await lstat(file);
@@ -32,9 +51,33 @@ async function readJSON(file:string):Promise<any>{
     return JSON.parse(bytes.toString('utf8'));
   }catch{ return invalid(); }
 }
-export class FileLocalDemoRepository implements LocalDemoRepository {
+export class FileLocalDemoRepository implements LocalDemoFriendsRepository {
   private readonly root:string;
   constructor(root:string){this.root=resolve(root);}
+  private friendPath(){return join(this.root,'friends.json');}
+  private async readConnections():Promise<LocalFriendConnection[]>{
+    const data=await readJSON(this.friendPath());
+    if(data?.schemaVersion!==1||!Array.isArray(data.connections)||data.connections.length>10000)return invalid();
+    const ids=new Set<string>();
+    return data.connections.map((item:any)=>{
+      if(!item||!isLocalUserId(item.userAId)||!isLocalUserId(item.userBId)||!isLocalUserId(item.requestedById)||
+        item.userAId>=item.userBId||![item.userAId,item.userBId].includes(item.requestedById)||
+        !['PENDING','ACCEPTED','DECLINED'].includes(item.status)||
+        typeof item.createdAt!=='string'||!Number.isFinite(Date.parse(item.createdAt))||new Date(item.createdAt).toISOString()!==item.createdAt||
+        typeof item.updatedAt!=='string'||!Number.isFinite(Date.parse(item.updatedAt))||new Date(item.updatedAt).toISOString()!==item.updatedAt||
+        ids.has(connectionKey(item)))return invalid();
+      ids.add(connectionKey(item));
+      return {userAId:item.userAId,userBId:item.userBId,requestedById:item.requestedById,status:item.status,createdAt:item.createdAt,updatedAt:item.updatedAt};
+    });
+  }
+  private async saveConnections(connections:LocalFriendConnection[]):Promise<void>{
+    const temporary=join(this.root,`.friends-${randomUUID()}.tmp`);
+    try{
+      await writeFile(temporary,JSON.stringify({schemaVersion:1,connections},null,2)+'\n',{flag:'wx',mode:0o600});
+      await rename(temporary,this.friendPath());
+    }catch{throw new LocalStoreError('SAVE_FAILED');}
+    finally{await rm(temporary,{force:true}).catch(()=>{});}
+  }
   private userPath(id:LocalUserId):string{
     if(!isLocalUserId(id)) throw new LocalStoreError('INVALID_INPUT');
     return join(this.root,'users',`${id}.json`);
@@ -83,9 +126,69 @@ export class FileLocalDemoRepository implements LocalDemoRepository {
       return user;
     });
   }
+  async readFriendPage(id:LocalUserId,nickname?:string):Promise<LocalFriendPage>{
+    const [connections,users]=await Promise.all([this.readConnections(),this.listUsers()]);
+    const userById=new Map(users.map(user=>[user.id,user]));
+    const toProfile=(targetId:LocalUserId):LocalFriendProfile=>{
+      const user=userById.get(targetId);
+      if(!user)throw new LocalStoreError('INVALID_DATA');
+      return {id:targetId,nickname:user.nickname};
+    };
+    const mine=connections.filter(connection=>connection.userAId===id||connection.userBId===id);
+    const related=(connection:LocalFriendConnection)=>toProfile(connection.userAId===id?connection.userBId:connection.userAId);
+    const active=mine.filter(connection=>connection.status==='PENDING'||connection.status==='ACCEPTED');
+    const search=nickname?.toLocaleLowerCase('ja-JP');
+    const matches=search?users.filter(user=>user.id!==id&&user.nickname.toLocaleLowerCase('ja-JP')===search).map(user=>{
+      const connection=mine.find(item=>item.userAId===user.id||item.userBId===user.id);
+      const connectionStatus=connection?.status==='ACCEPTED'?'friend':
+        connection?.status==='PENDING'?connection.requestedById===id?'outgoing':'incoming':'none';
+      return {id:user.id,nickname:user.nickname,connectionStatus} as LocalFriendPage['matches'][number];
+    }):[];
+    return {
+      friends:active.filter(connection=>connection.status==='ACCEPTED').map(related),
+      incoming:active.filter(connection=>connection.status==='PENDING'&&connection.requestedById!==id).map(connection=>({...related(connection),createdAt:connection.createdAt})),
+      outgoing:active.filter(connection=>connection.status==='PENDING'&&connection.requestedById===id).map(connection=>({...related(connection),createdAt:connection.createdAt})),
+      matches,
+    };
+  }
+  async requestFriend(id:LocalUserId,targetId:LocalUserId,now:Date):Promise<void>{
+    const pair=orderedPair(id,targetId);
+    if(!Number.isFinite(now.getTime()))throw new LocalStoreError('INVALID_INPUT');
+    await serialize(this.friendPath(),async()=>{
+      const connections=await this.readConnections();
+      const index=connections.findIndex(connection=>connection.userAId===pair.userAId&&connection.userBId===pair.userBId);
+      if(index>=0&&connections[index].status!=='DECLINED')throw new LocalStoreError('INVALID_INPUT');
+      const timestamp=now.toISOString();
+      const connection:LocalFriendConnection={...pair,requestedById:id,status:'PENDING',createdAt:timestamp,updatedAt:timestamp};
+      if(index>=0)connections[index]=connection;else connections.push(connection);
+      await this.saveConnections(connections);
+    });
+  }
+  async respondToFriendRequest(id:LocalUserId,requesterId:LocalUserId,response:'accept'|'decline',now:Date):Promise<void>{
+    const pair=orderedPair(id,requesterId);
+    if(!Number.isFinite(now.getTime()))throw new LocalStoreError('INVALID_INPUT');
+    await serialize(this.friendPath(),async()=>{
+      const connections=await this.readConnections();
+      const connection=connections.find(item=>item.userAId===pair.userAId&&item.userBId===pair.userBId&&item.status==='PENDING'&&item.requestedById===requesterId);
+      if(!connection)throw new LocalStoreError('INVALID_INPUT');
+      connection.status=response==='accept'?'ACCEPTED':'DECLINED';
+      connection.updatedAt=now.toISOString();
+      await this.saveConnections(connections);
+    });
+  }
+  async removeFriend(id:LocalUserId,targetId:LocalUserId):Promise<void>{
+    const pair=orderedPair(id,targetId);
+    await serialize(this.friendPath(),async()=>{
+      const connections=await this.readConnections();
+      const next=connections.filter(connection=>!(connection.userAId===pair.userAId&&connection.userBId===pair.userBId&&
+        (connection.status==='ACCEPTED'||(connection.status==='PENDING'&&connection.requestedById===id))));
+      if(next.length===connections.length)throw new LocalStoreError('INVALID_INPUT');
+      await this.saveConnections(next);
+    });
+  }
 }
-const repositories=new Map<string,LocalDemoRepository>();
-export function getLocalDemoRepository():LocalDemoRepository{
+const repositories=new Map<string,LocalDemoFriendsRepository>();
+export function getLocalDemoRepository():LocalDemoFriendsRepository{
   const root=resolve(process.env.MILIFE_LOCAL_DEMO_DIR??join(process.cwd(),'data','local-demo'));
   if(!repositories.has(root))repositories.set(root,new FileLocalDemoRepository(root));
   return repositories.get(root)!;

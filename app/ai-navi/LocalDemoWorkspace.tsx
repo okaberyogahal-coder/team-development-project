@@ -31,6 +31,7 @@ export function LocalDemoWorkspace(){
     <section className="local-demo-toolbar">
       <p><strong>JSON共有・開発用ログイン</strong><span>登録済みテストアカウントの体験版です。</span></p>
       {user&&state&&<div className="local-demo-account"><span data-testid="local-current-user">{user.nickname}で体験中</span>
+        <a href="/friends/demo">フレンド機能を試す</a>
         <button type="button" disabled={busy} onClick={()=>mutate({action:'logout'})}>ログアウト</button>
       </div>}
       {error&&<p role="alert" className="navi-demo-error">{error}</p>}
@@ -43,7 +44,7 @@ export function LocalDemoWorkspace(){
       <ul>{state.materials.map(item=><li key={item.id}><button type="button" disabled={busy} onClick={()=>mutate({action:'record',materialId:item.id,kind:'view'},item.id)}>{item.title}を開く</button></li>)}</ul>
     </details>
     {material&&<article className="navi-demo-panel local-demo-material" aria-label="サンプル教材の詳細"><h2>{material.title}</h2><p>{material.description}</p><p>実際の教材配信ではなく、履歴保存を試すためのサンプルです。</p><button type="button" className="navi-demo-submit" disabled={busy} onClick={()=>mutate({action:'record',materialId:material.id,kind:'complete'})}>受講完了を記録</button></article>}
-    <details className="local-demo-storage"><summary>保存ファイルとGitでの共有</summary><p>架空ユーザーと履歴は data/local-demo/users/*.json、教材は data/local-demo/materials.json に保存します。変更をコミット・プッシュし、他のメンバーがプルすると同じデータを使えます。Git操作・手編集の前はサーバーを停止してください。</p><p>セッションはこのブラウザと起動中のサーバーだけで管理し、Gitへは保存しません。本物の個人情報をJSONに記入しないでください。</p></details>
+    <details className="local-demo-storage"><summary>保存ファイルとGitでの共有</summary><p>架空ユーザーと履歴は data/local-demo/users/*.json、フレンド申請・承認状態は data/local-demo/friends.json、教材は data/local-demo/materials.json に保存します。変更をコミット・プッシュし、他のメンバーがプルすると同じデータを使えます。Git操作・手編集の前はサーバーを停止してください。</p><p>セッションはこのブラウザと起動中のサーバーだけで管理し、Gitへは保存しません。本物の個人情報をJSONに記入しないでください。</p></details>
     </section>}
   </>;
 }

@@ -21,7 +21,8 @@ type Props = {
 export default async function AvatarPage({ searchParams }: Props) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
-  if (!user.profile?.gender || !ageBadge(user.profile.age)) redirect('/account/edit');
+  const { profile } = user;
+  if (!profile || (profile.gender !== 'male' && profile.gender !== 'female') || !ageBadge(profile.age)) redirect('/account/edit');
 
   const query = await searchParams;
   const fixture = query.avatarGenderFixture;
@@ -31,7 +32,7 @@ export default async function AvatarPage({ searchParams }: Props) {
     ? { status: 'ready', gender: selectedGender, source: 'selection' }
     : registered.status === 'ready'
       ? registered
-      : { status: 'ready', gender: user.profile.gender, source: 'profile' };
+      : { status: 'ready', gender: profile.gender, source: 'profile' };
   const currentModeLabel = selectedGender === 'male'
     ? '男性用（若者・大人・シニア）'
     : selectedGender === 'female'
@@ -46,7 +47,7 @@ export default async function AvatarPage({ searchParams }: Props) {
           <h1 className="avatar-header-title">アバター編集</h1>
         </div>
         <div className="avatar-header-actions">
-          <span>{user.profile.nickname || '利用者'}さんでログイン中</span>
+          <span>{profile.nickname || '利用者'}さんでログイン中</span>
           <Link href="/account" className="avatar-btn-secondary">マイページ</Link>
           <Link href="/" className="avatar-btn-secondary">TOPへ戻る</Link>
         </div>
@@ -62,7 +63,7 @@ export default async function AvatarPage({ searchParams }: Props) {
       <AvatarCustomizer
         key={user.id}
         ownerId={user.id}
-        nickname={user.profile.nickname || '利用者'}
+        nickname={profile.nickname || '利用者'}
         genderState={genderState}
         assets={V3_UNIFIED_ASSETS}
         allCandidatesMode={!selectedGender}
