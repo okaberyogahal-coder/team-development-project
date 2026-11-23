@@ -3,8 +3,8 @@ import { test } from "node:test";
 import { createFriendHandlers } from "../../server/friends/handler";
 import { FriendActionError } from "../../server/friends/errors";
 
-const userId = "11111111-1111-4111-8111-111111111111";
-const targetId = "22222222-2222-4222-8222-222222222222";
+const userId = "a1111111-1111-4111-8111-111111111111";
+const targetId = "b2222222-2222-4222-8222-222222222222";
 const request = (method: string, body?: unknown, origin = "http://localhost:3002", path = "/api/friends") =>
   new Request(`http://localhost:3002${path}`, {
     method,
@@ -32,7 +32,8 @@ test("friend list and exact nickname search require authentication and disable c
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.deepEqual((await response.json() as { matches: unknown[] }).matches, [{ id: userId, nickname: "みらい" }]);
   assert.equal((await createFriendHandlers(dependencies({ getUser: async () => null })).GET(request("GET"))).status, 401);
-  assert.equal((await handlers.GET(request("GET", undefined, "http://localhost:3002", "/api/friends?nickname=x"))).status, 400);
+  assert.equal((await handlers.GET(request("GET", undefined, "http://localhost:3002", "/api/friends?nickname=x"))).status, 200);
+  assert.equal((await handlers.GET(request("GET", undefined, "http://localhost:3002", "/api/friends?nickname=" + "x".repeat(21)))).status, 400);
 });
 
 test("friend search is rate limited and storage failures are reported without details", async () => {
@@ -50,8 +51,9 @@ test("friend requests validate origin and identity and pass only the session use
   const handlers = createFriendHandlers(dependencies({ request: async (id, target) => { received = [id, target]; } }));
   assert.equal((await handlers.POST(request("POST", { targetId }, "https://attacker.invalid"))).status, 403);
   assert.equal((await handlers.POST(request("POST", { targetId: userId }))).status, 400);
+  assert.equal((await handlers.POST(request("POST", { targetId: userId.toUpperCase() }))).status, 400);
   assert.equal((await handlers.POST(request("POST", { targetId: "not-an-id" }))).status, 400);
-  const response = await handlers.POST(request("POST", { targetId }));
+  const response = await handlers.POST(request("POST", { targetId: targetId.toUpperCase() }));
   assert.equal(response.status, 200);
   assert.deepEqual(received, [userId, targetId]);
 });
@@ -61,7 +63,7 @@ test("incoming requests can be accepted or declined and existing states return c
   const handlers = createFriendHandlers(dependencies({
     respond: async (id, requester, action) => { received = [id, requester, action]; },
   }));
-  assert.equal((await handlers.PATCH(request("PATCH", { targetId, action: "accept" }))).status, 200);
+  assert.equal((await handlers.PATCH(request("PATCH", { targetId: targetId.toUpperCase(), action: "accept" }))).status, 200);
   assert.deepEqual(received, [userId, targetId, "accept"]);
   assert.equal((await handlers.PATCH(request("PATCH", { targetId, action: "ignore" }))).status, 400);
 
@@ -74,7 +76,7 @@ test("incoming requests can be accepted or declined and existing states return c
 test("users can cancel outgoing requests or remove friends", async () => {
   let removed: unknown;
   const handlers = createFriendHandlers(dependencies({ remove: async (id, target) => { removed = [id, target]; } }));
-  assert.equal((await handlers.DELETE(request("DELETE", { targetId }))).status, 200);
+  assert.equal((await handlers.DELETE(request("DELETE", { targetId: targetId.toUpperCase() }))).status, 200);
   assert.deepEqual(removed, [userId, targetId]);
   assert.equal((await createFriendHandlers(dependencies({
     remove: async () => { throw new FriendActionError("NOT_FRIENDS"); },

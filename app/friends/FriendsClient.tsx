@@ -28,9 +28,12 @@ export function FriendsClient({
   const [searchText, setSearchText] = useState("");
   const [searchNickname, setSearchNickname] = useState("");
   const [loading, setLoading] = useState(false);
-  const [busyAction, setBusyAction] = useState("");
+  const [mutating, setMutating] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const busy = loading || mutating;
+  const minLength = demoMode ? 2 : 1;
+  const maxLength = demoMode ? 40 : 20;
 
   async function loadData(query = "") {
     setLoading(true);
@@ -51,10 +54,10 @@ export function FriendsClient({
 
   async function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     const query = searchText.trim();
-    const maxLength = demoMode ? 40 : 20;
-    if (query.length < 2 || query.length > maxLength) {
-      setError(`ニックネームは2〜${maxLength}文字で入力してください。`);
+    if (query.length < minLength || query.length > maxLength) {
+      setError(`ニックネームは${minLength}〜${maxLength}文字で入力してください。`);
       setNotice("");
       return;
     }
@@ -62,8 +65,9 @@ export function FriendsClient({
     await loadData(query);
   }
 
-  async function mutate(key: string, method: "POST" | "PATCH" | "DELETE", body: object, refreshQuery = searchNickname) {
-    setBusyAction(key);
+  async function mutate(method: "POST" | "PATCH" | "DELETE", body: object) {
+    if (busy) return;
+    setMutating(true);
     setError("");
     setNotice("");
     try {
@@ -75,11 +79,11 @@ export function FriendsClient({
       const result = await response.json() as { message?: string };
       if (!response.ok) throw new Error(result.message || "処理できませんでした。");
       setNotice(result.message || "更新しました。");
-      await loadData(refreshQuery);
+      await loadData(searchNickname);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "処理できませんでした。");
     } finally {
-      setBusyAction("");
+      setMutating(false);
     }
   }
 
@@ -106,7 +110,7 @@ export function FriendsClient({
         <section className="friends-search-card" aria-labelledby="friends-search-title">
           <div className="friends-section-heading">
             <span className="friends-section-number">01</span>
-            <div><h2 id="friends-search-title">フレンドを探す</h2><p>ニックネームを完全一致で検索できます。</p></div>
+            <div><h2 id="friends-search-title">フレンドを探す</h2><p id="friends-search-hint">ニックネームを完全一致で検索できます。</p></div>
           </div>
           <form className="friends-search-form" onSubmit={search}>
             <label htmlFor="friend-nickname">相手のニックネーム</label>
@@ -116,11 +120,13 @@ export function FriendsClient({
                 name="nickname"
                 value={searchText}
                 onChange={event => setSearchText(event.target.value)}
-                maxLength={demoMode ? 40 : 20}
+                type="search"
+                enterKeyHint="search"
                 autoComplete="off"
+                aria-describedby="friends-search-hint"
                 placeholder="ニックネームを入力"
               />
-              <button type="submit" disabled={loading}>検索する</button>
+              <button type="submit" disabled={busy}>検索する</button>
             </div>
           </form>
           {searchNickname && (
@@ -132,7 +138,7 @@ export function FriendsClient({
                   <li className="friends-person" key={candidate.id}>
                     <span className="friends-avatar" aria-hidden="true">{candidate.nickname.slice(0, 1)}</span>
                     <strong>{candidate.nickname}</strong>
-                    {candidate.connectionStatus === "none" && <button type="button" onClick={() => void mutate(candidate.id, "POST", { targetId: candidate.id })} disabled={Boolean(busyAction)}>申請する</button>}
+                    {candidate.connectionStatus === "none" && <button type="button" onClick={() => void mutate("POST", { targetId: candidate.id })} disabled={busy}>申請する</button>}
                     {candidate.connectionStatus === "friend" && <span className="friends-state">フレンド</span>}
                     {candidate.connectionStatus === "incoming" && <span className="friends-state">申請が届いています</span>}
                     {candidate.connectionStatus === "outgoing" && <span className="friends-state">申請中</span>}
@@ -156,8 +162,8 @@ export function FriendsClient({
                   <span className="friends-avatar friends-avatar-pink" aria-hidden="true">{person.nickname.slice(0, 1)}</span>
                   <strong>{person.nickname}</strong>
                   <div className="friends-person-actions">
-                    <button type="button" className="friends-accept" onClick={() => void mutate(person.id, "PATCH", { action: "accept", targetId: person.id })} disabled={Boolean(busyAction)}>承認</button>
-                    <button type="button" className="friends-text-button" onClick={() => void mutate(person.id, "PATCH", { action: "decline", targetId: person.id })} disabled={Boolean(busyAction)}>見送る</button>
+                    <button type="button" className="friends-accept" onClick={() => void mutate("PATCH", { action: "accept", targetId: person.id })} disabled={busy}>承認</button>
+                    <button type="button" className="friends-text-button" onClick={() => void mutate("PATCH", { action: "decline", targetId: person.id })} disabled={busy}>見送る</button>
                   </div>
                 </li>
               ))}</ul>}
@@ -174,7 +180,7 @@ export function FriendsClient({
                 <li className="friends-person" key={person.id}>
                   <span className="friends-avatar friends-avatar-green" aria-hidden="true">{person.nickname.slice(0, 1)}</span>
                   <strong>{person.nickname}</strong>
-                  <button type="button" className="friends-text-button" onClick={() => void mutate(person.id, "DELETE", { targetId: person.id })} disabled={Boolean(busyAction)}>取り消す</button>
+                  <button type="button" className="friends-text-button" onClick={() => void mutate("DELETE", { targetId: person.id })} disabled={busy}>取り消す</button>
                 </li>
               ))}</ul>}
           </section>
@@ -193,9 +199,9 @@ export function FriendsClient({
                   <strong>{person.nickname}</strong>
                   <button type="button" className="friends-text-button" onClick={() => {
                     if (window.confirm(`${person.nickname}さんとのフレンドを解除しますか？`)) {
-                      void mutate(person.id, "DELETE", { targetId: person.id });
+                      void mutate("DELETE", { targetId: person.id });
                     }
-                  }} disabled={Boolean(busyAction)}>フレンド解除</button>
+                  }} disabled={busy}>フレンド解除</button>
                 </li>
               ))}</ul>}
           </section>

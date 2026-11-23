@@ -3,7 +3,7 @@ import type { PrismaClient, Prisma } from "../../generated/prisma/client";
 import type { FriendConnectionStatus } from "../../generated/prisma/client";
 import { FriendActionError } from "./errors";
 
-type Database = Pick<PrismaClient, "friendConnection" | "user" | "$transaction">;
+type Database = Pick<PrismaClient, "friendConnection" | "user">;
 type FriendProfile = { id: string; nickname: string };
 type ConnectionUser = { id: string; name: string; profile: { nickname: string } | null };
 type ConnectionRecord = {
@@ -62,12 +62,14 @@ export async function readFriendPage(database: Database, userId: string) {
 }
 
 export async function searchFriendCandidates(database: Database, userId: string, nickname: string) {
+  // Prisma uses PostgreSQL ILIKE for case-insensitive equality.
+  const exactNickname = nickname.replace(/[\\%_]/g, "\\$&");
   const users = await database.user.findMany({
     where: {
       id: { not: userId },
       status: { not: "SUSPENDED" },
       deletedAt: null,
-      profile: { is: { nickname: { equals: nickname, mode: "insensitive" } } },
+      profile: { is: { nickname: { equals: exactNickname, mode: "insensitive" } } },
     },
     select: { id: true, name: true, profile: { select: { nickname: true } } },
     orderBy: { createdAt: "asc" },
@@ -99,22 +101,22 @@ export async function requestFriend(database: Database, userId: string, targetId
   if (!target) throw new FriendActionError("TARGET_UNAVAILABLE");
 
   const users = pair(userId, targetId);
-  await database.$transaction(async tx => {
-    const existing = await tx.friendConnection.findUnique({ where: { userAId_userBId: users }, select: { status: true } });
-    if (existing?.status === "ACCEPTED" || existing?.status === "PENDING") {
+  const renewed = await database.friendConnection.updateMany({
+    where: { ...users, status: "DECLINED" },
+    data: { status: "PENDING", requestedById: userId, createdAt: new Date() },
+  });
+  if (renewed.count === 1) return;
+
+  try {
+    await database.friendConnection.create({
+      data: { ...users, requestedById: userId, status: "PENDING" },
+    });
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       throw new FriendActionError("CONNECTION_EXISTS");
     }
-    if (existing) {
-      await tx.friendConnection.update({
-        where: { userAId_userBId: users },
-        data: { status: "PENDING", requestedById: userId },
-      });
-    } else {
-      await tx.friendConnection.create({
-        data: { ...users, requestedById: userId, status: "PENDING" },
-      });
-    }
-  });
+    throw error;
+  }
 }
 
 export async function respondToFriendRequest(

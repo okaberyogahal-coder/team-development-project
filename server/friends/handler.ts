@@ -20,7 +20,7 @@ async function readTargetId(request: Request) {
   if (!body || typeof body !== "object" || !("targetId" in body) || typeof body.targetId !== "string" || !uuid.test(body.targetId)) {
     throw new Error("INVALID_INPUT");
   }
-  return body.targetId;
+  return body.targetId.toLowerCase();
 }
 
 function actionResponse(error: unknown) {
@@ -29,9 +29,6 @@ function actionResponse(error: unknown) {
     if (error.code === "CONNECTION_EXISTS") return authJson({ message: "すでにフレンド、または申請中です。" }, 409);
     if (error.code === "REQUEST_NOT_FOUND") return authJson({ message: "受信した申請が見つかりません。画面を更新してください。" }, 409);
     if (error.code === "NOT_FRIENDS") return authJson({ message: "対象のフレンドまたは申請が見つかりません。" }, 409);
-  }
-  if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
-    return authJson({ message: "申請の状態が更新されています。画面を更新してください。" }, 409);
   }
   return authJson({ message: "処理できませんでした。時間をおいてもう一度お試しください。" }, 503);
 }
@@ -43,8 +40,8 @@ export function createFriendHandlers(deps: Dependencies) {
         const user = await deps.getUser();
         if (!user) return authJson({ message: "ログインしてください。" }, 401);
         const nickname = new URL(request.url).searchParams.get("nickname")?.trim() ?? "";
-        if (nickname && (nickname.length < 2 || nickname.length > 20 || /[\u0000-\u001f\u007f]/.test(nickname))) {
-          return authJson({ message: "ニックネームは2〜20文字で入力してください。" }, 400);
+        if (nickname.length > 20 || /[\u0000-\u001f\u007f]/.test(nickname)) {
+          return authJson({ message: "ニックネームは1〜20文字で入力してください。" }, 400);
         }
         if (nickname && !await deps.allow(user.id, "search")) {
           return authJson({ message: "検索回数が上限に達しました。少し待ってからお試しください。" }, 429, { "Retry-After": "60" });
@@ -92,8 +89,9 @@ export function createFriendHandlers(deps: Dependencies) {
             !("action" in body) || (body.action !== "accept" && body.action !== "decline")) {
           return authJson({ message: "申請内容を確認してください。" }, 400);
         }
-        if (body.targetId === user.id) return authJson({ message: "申請内容を確認してください。" }, 400);
-        await deps.respond(user.id, body.targetId, body.action);
+        const targetId = body.targetId.toLowerCase();
+        if (targetId === user.id) return authJson({ message: "申請内容を確認してください。" }, 400);
+        await deps.respond(user.id, targetId, body.action);
         return authJson({ message: body.action === "accept" ? "フレンドになりました。" : "申請を見送りました。" });
       } catch (error) {
         return actionResponse(error);
