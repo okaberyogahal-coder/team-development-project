@@ -65,6 +65,8 @@ namespace FutureCity
         bool mic, camOn;
         MiraiGate nearGate;
         Citizen focus;
+        BenchSeat nearSeat;
+        readonly System.Collections.Generic.List<BenchSeat> benchSeats = new System.Collections.Generic.List<BenchSeat>();
 
         NaviResult naviResult;
         float naviReadyAt = -1f;
@@ -102,6 +104,7 @@ namespace FutureCity
             player = walker;
             cam = camera;
             campus = c;
+            RegisterCampusBenchSeats();
             me = MiraiData.Player();
             courses = MiraiData.Courses();
             courses.Add(MiraiData.MyDraft(me));
@@ -305,7 +308,19 @@ namespace FutureCity
                 float d = FlatDist(c.transform.position, pp);
                 if (d < best) { best = d; focus = c; }
             }
-            PromptVisible = focus != null || pendingRoom != null || nearGate != null;
+
+            nearSeat = null;
+            if (!player.IsSitting && currentRoom == null)
+            {
+                float seatBest = 1.8f;
+                foreach (var s in benchSeats)
+                {
+                    if (s == null || s.occupied) continue;
+                    float d = FlatDist(s.seatPoint, pp);
+                    if (d < seatBest) { seatBest = d; nearSeat = s; }
+                }
+            }
+            PromptVisible = player.IsSitting || focus != null || pendingRoom != null || nearGate != null || nearSeat != null;
 
             if (InputBridge.Down(FKey.E) || InputBridge.Down(FKey.Enter)) ActivatePrompt();
             else if (MenuKeys()) { }
@@ -372,9 +387,19 @@ namespace FutureCity
 
         void ActivatePrompt()
         {
-            if (focus != null) { personView = focus.profile; SetPanel(Panel.Person); }
+            if (player.IsSitting) { player.StandUp(); }
+            else if (focus != null) { personView = focus.profile; SetPanel(Panel.Person); }
             else if (pendingRoom != null) EnterRoom(pendingRoom);
             else if (nearGate != null) OpenFeature(nearGate.feature);
+            else if (nearSeat != null)
+            {
+                Vector3 sitPos = nearSeat.seatPoint;
+                Vector3 approach = sitPos + Quaternion.Euler(0f, nearSeat.yaw, 0f) * Vector3.back * 0.65f;
+                player.MoveTo(approach, () =>
+                {
+                    player.Sit(sitPos, nearSeat.yaw, approach);
+                });
+            }
         }
 
         /// <summary>下のメニューを数字キーで開く：1 学ぶ／2 教える／3 つながる／4 未来ナビ／5 プロフィール／6 ヘルプ</summary>
@@ -445,6 +470,7 @@ namespace FutureCity
         // ---- 交流室
         void EnterRoom(MiraiRoom r)
         {
+            if (player != null && player.IsSitting) player.StandUp();
             currentRoom = r;
             pendingRoom = null;
             mic = false;
@@ -849,7 +875,14 @@ namespace FutureCity
         {
             string title = null, sub = null, button = null;
             Color col = new Color(0.25f, 0.55f, 0.35f);
-            if (focus != null)
+            if (player.IsSitting)
+            {
+                title = "ベンチに座っています";
+                sub = "その場で休めます。モーションは後から実装できます。";
+                button = "立ち上がる（E）";
+                col = new Color(0.35f, 0.58f, 0.78f);
+            }
+            else if (focus != null)
             {
                 title = $"{focus.profile.name}さん（{focus.profile.age}歳）";
                 sub = "プロフィールを見ることができます（デモ人物）";
@@ -869,6 +902,13 @@ namespace FutureCity
                 button = "ひらく（E）";
                 col = MiraiData.FeatureColor(nearGate.feature);
             }
+            else if (nearSeat != null)
+            {
+                title = "ベンチ";
+                sub = "近くのベンチに座ることができます。";
+                button = "座る（E）";
+                col = new Color(0.35f, 0.58f, 0.78f);
+            }
             if (title == null) return;
             float w = Mathf.Min(900f, W - 40f);
             var r = new Rect((W - w) * 0.5f, H - 120f - 118f, w, 104f);
@@ -877,7 +917,6 @@ namespace FutureCity
             GUI.Label(new Rect(r.x + 24f, r.y + 52f, w - 300f, 50f), sub, sSmall);
             if (Btn(new Rect(r.xMax - 264f, r.y + 22f, 240f, 60f), button, col)) ActivatePrompt();
         }
-
         void DrawBottomBar()
         {
             var items = new[] { "<b>1</b>  学ぶ", "<b>2</b>  教える", "<b>3</b>  つながる", "<b>4</b>  未来ナビ", "<b>5</b>  プロフィール", "<b>6</b>  ヘルプ" };
@@ -1594,6 +1633,37 @@ namespace FutureCity
                 if (currentRoom != null) LeaveRoom(false);
                 player.Teleport(campus.Spawn, campus.SpawnYaw);
                 SetPanel(Panel.None);
+            }
+        }
+    }
+
+        void RegisterCampusBenchSeats()
+        {
+            if (campus == null) return;
+            for (int i = 0; i < campus.BenchSeats.Count; i++)
+            {
+                var go = new GameObject("BenchSeat_" + i);
+                go.transform.SetParent(transform, false);
+                var seat = go.AddComponent<BenchSeat>();
+                Vector3 pos = campus.BenchSeats[i] + Vector3.up * 0.45f;
+                float yaw = i < campus.BenchYaw.Count ? campus.BenchYaw[i] : 0f;
+                seat.Init(pos, yaw);
+                benchSeats.Add(seat);
+            }
+        }
+
+        /// <summary>パーク等の追加ベンチ/カフェ席をプレイヤーが座れる対象として登録する。</summary>
+        public void RegisterParkSeats(MiraiPark.Result park)
+        {
+            if (park == null) return;
+            for (int i = 0; i < park.cafeSeats.Count; i++)
+            {
+                var go = new GameObject("CafeSeat_" + i);
+                go.transform.SetParent(transform, false);
+                var seat = go.AddComponent<BenchSeat>();
+                float yaw = i < park.cafeYaw.Count ? park.cafeYaw[i] : 0f;
+                seat.Init(park.cafeSeats[i], yaw);
+                benchSeats.Add(seat);
             }
         }
     }

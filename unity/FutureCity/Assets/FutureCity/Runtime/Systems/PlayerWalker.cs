@@ -46,8 +46,12 @@ namespace FutureCity
         Vector3 planarVel, smoothPivot;
         bool pivotInit;
         Animator bodyAnimator;
-        bool hasVertParam, hasIsJumpParam;
+        bool hasVertParam, hasIsJumpParam, hasSittingParam;
         Transform cachedBody;
+        PersonAnimator bodyPersonAnimator;
+        bool isSitting;
+        Vector3 sitStandPos;
+        float sitStandYaw;
 
         // ドラッグで見回す
         bool pressing, dragging;
@@ -66,6 +70,8 @@ namespace FutureCity
 
         public bool AutoMoving => autoTarget.HasValue;
         public float Yaw => yaw;
+        /// <summary>ベンチなどに座っているか</summary>
+        public bool IsSitting => isSitting;
 
         void Awake()
         {
@@ -89,6 +95,11 @@ namespace FutureCity
 
         public void Teleport(Vector3 pos, float yawDeg)
         {
+            if (isSitting)
+            {
+                isSitting = false;
+                ApplySittingState(false);
+            }
             if (cc == null) cc = GetComponent<CharacterController>();
             cc.enabled = false;
             transform.position = pos;
@@ -104,6 +115,7 @@ namespace FutureCity
         /// <summary>指定した場所まで歩く。着いたら onArrived を呼ぶ。</summary>
         public void MoveTo(Vector3 target, System.Action onArrived = null)
         {
+            if (isSitting) StandUp();
             autoTarget = target;
             onArrive = onArrived;
             autoStuck = 0f;
@@ -114,6 +126,49 @@ namespace FutureCity
         {
             autoTarget = null;
             onArrive = null;
+        }
+
+        /// <summary>ベンチに座る。seatWorldPos は座る基準位置、seatYaw は座ったときに向く方向（度）。</summary>
+        public void Sit(Vector3 seatWorldPos, float seatYaw, Vector3? standWorldPos = null)
+        {
+            if (isSitting) StandUp();
+            StopAuto();
+            if (cc == null) cc = GetComponent<CharacterController>();
+            cc.enabled = false;
+            transform.position = seatWorldPos;
+            cc.enabled = true;
+
+            isSitting = true;
+            sitStandPos = standWorldPos ?? (seatWorldPos + Quaternion.Euler(0f, seatYaw, 0f) * Vector3.forward * 0.75f);
+            sitStandYaw = seatYaw;
+            planarVel = Vector3.zero;
+            vy = 0f;
+            bodyYaw = yaw = camYaw = seatYaw;
+            strideAmount = 0f;
+            ApplySittingState(true);
+        }
+
+        /// <summary>ベンチから立ち上がる。</summary>
+        public void StandUp()
+        {
+            if (!isSitting) return;
+            isSitting = false;
+            ApplySittingState(false);
+            if (cc == null) cc = GetComponent<CharacterController>();
+            cc.enabled = false;
+            transform.position = sitStandPos + Vector3.up * 0.05f;
+            cc.enabled = true;
+            planarVel = Vector3.zero;
+            vy = -2f;
+            yaw = camYaw = bodyYaw = sitStandYaw;
+            pivotInit = false;
+        }
+
+        void ApplySittingState(bool sitting)
+        {
+            SyncBodyAnimator();
+            if (bodyPersonAnimator != null) bodyPersonAnimator.sitting = sitting;
+            if (bodyAnimator != null && hasSittingParam) bodyAnimator.SetBool("Sitting", sitting);
         }
 
         /// <summary>視点をもとに戻す（自分の後ろから少し見下ろす）</summary>
@@ -195,64 +250,85 @@ namespace FutureCity
                 cameraDistance = Mathf.Clamp(cameraDistance - sc * 0.7f, minDistance, maxDistance);
             if (InputBridge.Down(FKey.R)) ResetView();
 
-            // ---- 移動：キー（カメラの向き基準）
-            var flatRot = Quaternion.Euler(0f, camYaw, 0f);
-            Vector3 fwd = flatRot * Vector3.forward, right = flatRot * Vector3.right;
-            Vector3 input = Vector3.zero;
-            if (InputBridge.Held(FKey.W) || InputBridge.Held(FKey.Up)) input += fwd;
-            if (InputBridge.Held(FKey.S) || InputBridge.Held(FKey.Down)) input -= fwd;
-            if (InputBridge.Held(FKey.D) || InputBridge.Held(FKey.Right)) input += right;
-            if (InputBridge.Held(FKey.A) || InputBridge.Held(FKey.Left)) input -= right;
-
-            if (input.sqrMagnitude > 0.01f) StopAuto();
-            else if (autoTarget.HasValue)
+            if (isSitting)
             {
-                Vector3 to = autoTarget.Value - transform.position;
-                to.y = 0f;
-                if (to.magnitude < 0.6f)
+                bool standIntent = InputBridge.Held(FKey.W) || InputBridge.Held(FKey.Up) ||
+                                   InputBridge.Held(FKey.S) || InputBridge.Held(FKey.Down) ||
+                                   InputBridge.Held(FKey.A) || InputBridge.Held(FKey.Left) ||
+                                   InputBridge.Held(FKey.D) || InputBridge.Held(FKey.Right) ||
+                                   InputBridge.Down(FKey.Space);
+                if (standIntent) StandUp();
+            }
+
+            if (!isSitting)
+            {
+                // ---- 移動：キー（カメラの向き基準）
+                var flatRot = Quaternion.Euler(0f, camYaw, 0f);
+                Vector3 fwd = flatRot * Vector3.forward, right = flatRot * Vector3.right;
+                Vector3 input = Vector3.zero;
+                if (InputBridge.Held(FKey.W) || InputBridge.Held(FKey.Up)) input += fwd;
+                if (InputBridge.Held(FKey.S) || InputBridge.Held(FKey.Down)) input -= fwd;
+                if (InputBridge.Held(FKey.D) || InputBridge.Held(FKey.Right)) input += right;
+                if (InputBridge.Held(FKey.A) || InputBridge.Held(FKey.Left)) input -= right;
+
+                if (input.sqrMagnitude > 0.01f) StopAuto();
+                else if (autoTarget.HasValue)
                 {
-                    var cb = onArrive;
-                    StopAuto();
-                    cb?.Invoke();
+                    Vector3 to = autoTarget.Value - transform.position;
+                    to.y = 0f;
+                    if (to.magnitude < 0.6f)
+                    {
+                        var cb = onArrive;
+                        StopAuto();
+                        cb?.Invoke();
+                    }
+                    else
+                    {
+                        input = to.normalized;
+                        // 近づいたら減速して、ぴたっと止まる
+                        if (to.magnitude < 1.5f) input *= Mathf.Clamp01(to.magnitude / 1.5f) + 0.25f;
+                        if ((transform.position - lastPos).sqrMagnitude < 0.0004f) autoStuck += dt; else autoStuck = 0f;
+                        lastPos = transform.position;
+                        if (autoStuck > 1.5f) StopAuto();
+                    }
                 }
-                else
+
+                float speed = InputBridge.Held(FKey.Shift) ? runSpeed : walkSpeed;
+                Vector3 target = input.sqrMagnitude > 0.0001f ? Vector3.ClampMagnitude(input, 1f) * speed : Vector3.zero;
+                if (input.sqrMagnitude > 1.01f) target = input.normalized * speed;
+                // 加速・減速をなめらかに（指数補間）
+                float k = 1f - Mathf.Exp(-(cc.isGrounded ? 10f : 2.5f) * dt);
+                planarVel = Vector3.Lerp(planarVel, target, k);
+
+                if (cc.isGrounded)
                 {
-                    input = to.normalized;
-                    // 近づいたら減速して、ぴたっと止まる
-                    if (to.magnitude < 1.5f) input *= Mathf.Clamp01(to.magnitude / 1.5f) + 0.25f;
-                    if ((transform.position - lastPos).sqrMagnitude < 0.0004f) autoStuck += dt; else autoStuck = 0f;
-                    lastPos = transform.position;
-                    if (autoStuck > 1.5f) StopAuto();
+                    if (vy < 0f) vy = -2f;
+                    if (InputBridge.Down(FKey.Space)) vy = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 }
+                vy += gravity * dt;
+                cc.Move((planarVel + Vector3.up * vy) * dt);
+
+                // 体を進む方向へ（なめらかに回す）
+                float sp = planarVel.magnitude;
+                if (sp > 0.3f)
+                {
+                    float want = Mathf.Atan2(planarVel.x, planarVel.z) * Mathf.Rad2Deg;
+                    bodyYaw = Mathf.LerpAngle(bodyYaw, want, 1f - Mathf.Exp(-10f * dt));
+                }
+                bool moving = cc.isGrounded && sp > 0.4f;
+                strideAmount = Mathf.Lerp(strideAmount, moving ? 1f : 0f, 1f - Mathf.Exp(-6f * dt));
+                if (moving) stride += dt * sp * 2.4f;
+
+                if (transform.position.y < -20f) Teleport(spawnPos, spawnYaw);
             }
-
-            float speed = InputBridge.Held(FKey.Shift) ? runSpeed : walkSpeed;
-            Vector3 target = input.sqrMagnitude > 0.0001f ? Vector3.ClampMagnitude(input, 1f) * speed : Vector3.zero;
-            if (input.sqrMagnitude > 1.01f) target = input.normalized * speed;
-            // 加速・減速をなめらかに（指数補間）
-            float k = 1f - Mathf.Exp(-(cc.isGrounded ? 10f : 2.5f) * dt);
-            planarVel = Vector3.Lerp(planarVel, target, k);
-
-            if (cc.isGrounded)
+            else
             {
-                if (vy < 0f) vy = -2f;
-                if (InputBridge.Down(FKey.Space)) vy = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                planarVel = Vector3.zero;
+                strideAmount = 0f;
+                if (cc.isGrounded && vy < 0f) vy = -2f;
+                vy += gravity * dt;
+                cc.Move(Vector3.up * vy * dt);
             }
-            vy += gravity * dt;
-            cc.Move((planarVel + Vector3.up * vy) * dt);
-
-            // 体を進む方向へ（なめらかに回す）
-            float sp = planarVel.magnitude;
-            if (sp > 0.3f)
-            {
-                float want = Mathf.Atan2(planarVel.x, planarVel.z) * Mathf.Rad2Deg;
-                bodyYaw = Mathf.LerpAngle(bodyYaw, want, 1f - Mathf.Exp(-10f * dt));
-            }
-            bool moving = cc.isGrounded && sp > 0.4f;
-            strideAmount = Mathf.Lerp(strideAmount, moving ? 1f : 0f, 1f - Mathf.Exp(-6f * dt));
-            if (moving) stride += dt * sp * 2.4f;
-
-            if (transform.position.y < -20f) Teleport(spawnPos, spawnYaw);
         }
 
         void Look(Vector2 md)
@@ -266,8 +342,10 @@ namespace FutureCity
             if (body == cachedBody) return;
             cachedBody = body;
             bodyAnimator = body != null ? body.GetComponentInChildren<Animator>(true) : null;
+            bodyPersonAnimator = body != null ? body.GetComponentInChildren<PersonAnimator>(true) : null;
             hasVertParam = false;
             hasIsJumpParam = false;
+            hasSittingParam = false;
             if (bodyAnimator != null)
             {
                 bodyAnimator.applyRootMotion = false;
@@ -275,8 +353,10 @@ namespace FutureCity
                 {
                     if (p.name == "Vert" && p.type == AnimatorControllerParameterType.Float) hasVertParam = true;
                     if (p.name == "IsJump" && p.type == AnimatorControllerParameterType.Bool) hasIsJumpParam = true;
+                    if (p.name == "Sitting" && p.type == AnimatorControllerParameterType.Bool) hasSittingParam = true;
                 }
             }
+            ApplySittingState(isSitting);
         }
 
         void LateUpdate()
@@ -298,18 +378,31 @@ namespace FutureCity
                     if (hasVertParam)
                     {
                         float normSpeed = walkSpeed > 0.01f ? sp / walkSpeed : sp / 3.2f;
-                        bodyAnimator.SetFloat("Vert", sp > 0.05f ? Mathf.Clamp01(normSpeed) : 0f, 0.12f, dt);
+                        bodyAnimator.SetFloat("Vert", sp > 0.05f && !isSitting ? Mathf.Clamp01(normSpeed) : 0f, 0.12f, dt);
                     }
                     if (hasIsJumpParam)
                     {
-                        bodyAnimator.SetBool("IsJump", !cc.isGrounded);
+                        bodyAnimator.SetBool("IsJump", !cc.isGrounded && !isSitting);
                     }
+                    if (hasSittingParam)
+                    {
+                        bodyAnimator.SetBool("Sitting", isSitting);
+                    }
+                    if (bodyPersonAnimator != null) bodyPersonAnimator.sitting = isSitting;
                 }
                 else
                 {
-                    float lean = Mathf.Clamp(planarVel.magnitude * 1.2f, 0f, 8f);
-                    body.localPosition = Vector3.up * (Mathf.Abs(Mathf.Sin(stride)) * 0.05f * strideAmount);
-                    body.rotation = Quaternion.Euler(lean, bodyYaw, Mathf.Sin(stride) * 2f * strideAmount);
+                    if (isSitting)
+                    {
+                        body.localPosition = Vector3.zero;
+                        body.rotation = Quaternion.Euler(0f, bodyYaw, 0f);
+                    }
+                    else
+                    {
+                        float lean = Mathf.Clamp(planarVel.magnitude * 1.2f, 0f, 8f);
+                        body.localPosition = Vector3.up * (Mathf.Abs(Mathf.Sin(stride)) * 0.05f * strideAmount);
+                        body.rotation = Quaternion.Euler(lean, bodyYaw, Mathf.Sin(stride) * 2f * strideAmount);
+                    }
                 }
             }
 

@@ -284,6 +284,7 @@ namespace FutureCity
             mirai.transform.SetParent(transform, false);
             MiraiClock.Start(startTime);   // 太陽と講座の時刻を同じ時計にそろえる
             mirai.Init(Library, player, cam, campus);
+            mirai.RegisterParkSeats(park);
 
         }
 
