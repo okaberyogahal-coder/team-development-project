@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 
 namespace FutureCity
 {
-    public enum FKey { W, A, S, D, Q, E, Shift, Space, H, T, One, Two, Three, Four, Five, Six, N, P, Enter, Up, Down, Left, Right, R, V, LeftBracket, RightBracket, Escape }
+    public enum FKey { W, A, S, D, Q, E, Shift, Space, H, T, One, Two, Three, Four, Five, Six, N, P, Enter, Up, Down, Left, Right, R, V, LeftBracket, RightBracket, Escape, F }
 
     /// <summary>新 Input System / 旧 Input Manager のどちらの設定でも動く入力ラッパー。</summary>
     public static class InputBridge
@@ -42,6 +42,7 @@ namespace FutureCity
                 case FKey.V: return Key.V;
                 case FKey.LeftBracket: return Key.LeftBracket;
                 case FKey.RightBracket: return Key.RightBracket;
+                case FKey.F: return Key.F;
                 default: return Key.Escape;
             }
         }
@@ -108,6 +109,7 @@ namespace FutureCity
                 case FKey.V: return KeyCode.V;
                 case FKey.LeftBracket: return KeyCode.LeftBracket;
                 case FKey.RightBracket: return KeyCode.RightBracket;
+                case FKey.F: return KeyCode.F;
                 default: return KeyCode.Escape;
             }
         }

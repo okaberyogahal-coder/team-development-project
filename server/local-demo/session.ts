@@ -4,16 +4,18 @@ export const LOCAL_SESSION_COOKIE='melife.local-demo.session.v2';
 const SESSION_TTL=8*60*60*1000;
 export class LocalSessionStore{
  private readonly sessions=new Map<string,{userId:LocalUserId;expires:number}>();
+ private readonly revocationListeners=new Set<(token:string)=>void>();
+ onRevoke(listener:(token:string)=>void):()=>void{this.revocationListeners.add(listener);return ()=>{this.revocationListeners.delete(listener);};}
  issue(userId:LocalUserId,now:number):string{
-  for(const [key,value] of this.sessions)if(value.expires<=now)this.sessions.delete(key);
-  while(this.sessions.size>=1000)this.sessions.delete(this.sessions.keys().next().value!);
+  for(const [key,value] of this.sessions)if(value.expires<=now)this.revoke(key);
+  while(this.sessions.size>=1000)this.revoke(this.sessions.keys().next().value!);
   const token=randomBytes(32).toString('hex');this.sessions.set(token,{userId,expires:now+SESSION_TTL});return token;
  }
  resolve(token:string|null,now:number):LocalUserId|null{
   if(!token)return null;const session=this.sessions.get(token);
-  if(!session)return null;if(session.expires<=now){this.sessions.delete(token);return null;}return session.userId;
+  if(!session)return null;if(session.expires<=now){this.revoke(token);return null;}return session.userId;
  }
- revoke(token:string|null):void{if(token)this.sessions.delete(token);}
+ revoke(token:string|null):void{if(token&&this.sessions.delete(token))for(const listener of this.revocationListeners)listener(token);}
 }
 const processState=globalThis as typeof globalThis&{__melifeLocalSessions?:LocalSessionStore};
 export function getLocalSessionStore():LocalSessionStore{return processState.__melifeLocalSessions??=new LocalSessionStore();}

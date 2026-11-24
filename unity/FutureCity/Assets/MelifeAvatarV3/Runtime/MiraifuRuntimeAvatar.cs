@@ -23,6 +23,8 @@ namespace MiraifuAvatarPrototype
             animator.enabled=true;animator.applyRootMotion=false;animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;animator.Rebind();Apply(settings);GroundNeutral();SetMotion(motion);
         }
         void Start(){if(current==null&&model!=null)Initialize(model.defaults);}
+        // The close camera can hide the actor. Recreate playback when it becomes visible again.
+        void OnEnable(){if(current!=null&&model!=null&&!graph.IsValid())SetMotion(Motion);}
         void GroundNeutral()
         {
             float floor=transform.parent==null?0:transform.parent.position.y,min=float.PositiveInfinity;var mesh=new Mesh();

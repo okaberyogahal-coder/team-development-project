@@ -13,6 +13,8 @@ namespace FutureCity
             public Vector3 position;
             public float yaw;
             public bool cursorVisible, freeLook;
+            public bool combatAvailable,combatActive,combatAiming;
+            public int combatShots;
             public string roomId,topicId;
             public MiraifuAvatarPrototype.MiraifuWebAvatarReceiver.WebChoice avatarChoice;
         }
@@ -27,7 +29,8 @@ namespace FutureCity
             MelifeWorldInteraction(JsonUtility.ToJson(new WebInteractionSnapshot {
                 panel = panel.ToString(), position = player.transform.position, yaw = player.Yaw,
                 cursorVisible = Cursor.visible, freeLook = PlayerWalker.FreeLook, avatarChoice=player.body.GetComponent<ImportedAvatar>()?.V3Choice,
-                roomId=currentRoom?.id,topicId=currentRoom==null?null:Topics.Current(currentRoom.id)?.id
+                roomId=currentRoom?.id,topicId=currentRoom==null?null:Topics.Current(currentRoom.id)?.id,
+                combatAvailable=CombatSystem.Instance!=null,combatActive=CombatSystem.Active,combatAiming=CombatSystem.Aiming,combatShots=CombatSystem.Instance==null?0:CombatSystem.Instance.Shots
             }));
 #endif
         }

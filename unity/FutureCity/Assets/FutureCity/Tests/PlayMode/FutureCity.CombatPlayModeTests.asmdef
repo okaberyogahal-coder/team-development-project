@@ -1,0 +1,5 @@
+{
+  "name": "FutureCity.CombatPlayModeTests",
+  "references": ["FutureCity", "Melife.AvatarV3"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
