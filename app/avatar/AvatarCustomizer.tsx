@@ -17,9 +17,10 @@ import {
 
 import { getAvatarCandidates, getAllAvatarCandidates, type AvatarGenderState } from '../../shared/avatar-candidates';
 import { avatarPartThumbnail } from '../../shared/avatar-thumbnails';
-import {readDemoProfile} from '../../shared/demo-profile';
+import {resolveAccountAvatar} from '../../shared/account-avatar';
 import {isV3Appearance,v3Fingerprint} from '../../shared/avatar-v3';
-import {readV3Draft,writeV3Draft,completeV3Avatar} from '../../shared/avatar-v3-storage';
+import {readV3Draft,writeV3Draft} from '../../shared/avatar-v3-storage';
+import {saveAvatar,type AccountAvatar} from '../../shared/account-avatar-save';
 import {previewAccepted} from '../../shared/avatar-v3-preview';
 import { readAvatarCatalog } from '../../shared/avatar-catalog';
 
@@ -39,9 +40,10 @@ export function AvatarCustomizer({
   genderState = { status: 'unconnected' },
   assets = LEGACY_AVATAR_ASSETS,
   allCandidatesMode = false,
-  ownerId, nickname,
+  ownerId, accountAvatar = null,
 }: {
-  ownerId:string; nickname:string;
+  ownerId:string;
+  accountAvatar?:AccountAvatar|null;
   genderState?: AvatarGenderState;
   assets?: AvatarAssetProfile;
   allCandidatesMode?: boolean;
@@ -84,29 +86,33 @@ export function AvatarCustomizer({
   },[]);
   const [ack, setAck] = useState<{revision:number; fingerprint:string} | null>(null);
   const [saving, setSaving] = useState(false);
+  const savingRef=useRef(false);
+  const [accountVersion,setAccountVersion]=useState(accountAvatar?.version??0);
   const confirmed = !sessionChanged && ack?.revision === revision && ack.fingerprint === v3Fingerprint(choice);
 
   useEffect(() => {
     const restore = window.setTimeout(() => {
+      setAccountVersion(accountAvatar?.version??0);
+      let previous = accountAvatar?.appearance ?? null;
+      let draft: AvatarChoice | null = null;
       try {
-        const completed = readDemoProfile(localStorage);
-        const draft = readV3Draft(localStorage,ownerId);
-        const previous = completed?.id === ownerId ? completed.appearance : null;
-        const restored = draft ?? (isV3Appearance(previous) ? previous.choice : null);
-        if(restored){initialDefaultPending.current=false;setChoice(restored);setStep(2);}
-        else if(previous) setNotice('以前のアバターは保存されています。新しい外見は「このアバターで街へ行く」で確定します。');
+        previous = resolveAccountAvatar({getItem:key=>localStorage.getItem(key)},ownerId,undefined,accountAvatar)?.appearance ?? null;
+        draft = readV3Draft(localStorage,ownerId,accountAvatar?.version);
       } catch { setSaveError(true); }
+      const restored = draft ?? (isV3Appearance(previous) ? previous.choice : null);
+      if(restored){initialDefaultPending.current=false;setChoice(restored);setStep(2);}
+      else if(previous) setNotice('以前のアバターは保存されています。新しい外見は「このアバターで街へ行く」で確定します。');
       setHydrated(true);
     },0);
     fetch(assets.previewSrc,{method:'HEAD'}).then(res=>setHasPreviewBuild(res.ok)).catch(()=>setHasPreviewBuild(false));
     return ()=>window.clearTimeout(restore);
-  },[ownerId,assets.previewSrc]);
+  },[ownerId,assets.previewSrc,accountAvatar]);
 
   useEffect(() => {
     current.current={choice,revision};
     if(!hydrated)return;
     let warningTimer:number|undefined;
-    try{if(!lifecycle.current.identityChanged)writeV3Draft(localStorage,ownerId,choice);}catch{warningTimer=window.setTimeout(()=>setSaveError(true),0);}
+    try{if(!lifecycle.current.identityChanged)writeV3Draft(localStorage,ownerId,choice,accountAvatar?accountVersion:undefined);}catch{warningTimer=window.setTimeout(()=>setSaveError(true),0);}
     const send = () => iframeRef.current?.contentWindow?.postMessage({type:'miraifu:avatar',...current.current},window.location.origin);
     const receive = (event:MessageEvent) => {
       if(event.origin!==window.location.origin||event.source!==iframeRef.current?.contentWindow)return;
@@ -126,13 +132,13 @@ export function AvatarCustomizer({
     window.addEventListener('message',receive);send();
     iframeRef.current?.contentWindow?.postMessage({type:'miraifu:catalog-request'},window.location.origin);
     return ()=>{window.removeEventListener('message',receive);window.clearTimeout(warningTimer);};
-  },[choice,revision,hydrated,ownerId,initialCandidateId,hasPreviewBuild]);
+  },[choice,revision,hydrated,ownerId,initialCandidateId,hasPreviewBuild,accountAvatar,accountVersion]);
 
   const updateChoice = (updates:Partial<AvatarChoice>) => {setAck(null);setChoice(prev=>({...prev,...updates}));};
   const changeStep = (next:1|2) => {setStep(next);requestAnimationFrame(()=>document.getElementById('avatar-step-title')?.focus());};
   const handleGoToCity = async () => {
-    if(!confirmed||saving)return;
-    const submitted={...current.current,epoch:frameEpoch.current,generation:lifecycle.current.generation};setSaving(true);
+    if(!confirmed||savingRef.current)return;
+    const submitted={...current.current,epoch:frameEpoch.current,generation:lifecycle.current.generation};savingRef.current=true;setSaving(true);
     try{
       const response=await fetch('/api/unity/session',{cache:'no-store'});
       const session=await response.json();
@@ -140,9 +146,14 @@ export function AvatarCustomizer({
       if(submitted.generation!==lifecycle.current.generation||lifecycle.current.identityChanged)throw new Error('ログイン状態が変わりました。再度ログインしてください。');
       if(!response.ok||!session.authenticated||session.profile?.userId!==ownerId)throw new Error('ログイン状態が変わりました。再度ログインしてください。');
       if(submitted.epoch!==frameEpoch.current||submitted.revision!==current.current.revision||v3Fingerprint(submitted.choice)!==v3Fingerprint(current.current.choice))throw new Error('変更後のプレビューを確認してから、もう一度お試しください。');
-      completeV3Avatar(localStorage,ownerId,nickname,{version:3,assetProfile:'v3-unified-20261104',choice:submitted.choice});
+      const saved=await saveAvatar(ownerId,{version:3,assetProfile:'v3-unified-20261104',choice:submitted.choice},accountVersion);
+      if(!lifecycle.current.active)return;
+      setAccountVersion(saved.version);
+      if(submitted.generation!==lifecycle.current.generation||lifecycle.current.identityChanged)throw new Error('外見は保存されました。ログイン状態を確認してから、もう一度開いてください。');
       router.push('/plaza');
-    }catch(error){if(!lifecycle.current.active)return;setNotice(error instanceof Error?error.message:'保存できませんでした。もう一度お試しください。');setSaving(false);}
+      router.refresh();
+    }catch(error){if(lifecycle.current.active){setNotice(error instanceof Error?error.message:'保存できませんでした。もう一度お試しください。');setSaving(false);}}
+    finally{savingRef.current=false;}
   };
 
   const unsupportedModel = hydrated && catalogReceived && (assets.id !== 'legacy' || choice.baseAvatarId !== LEGACY_BASE_AVATAR_ID) && !models.some(model => model.id === choice.baseAvatarId);
@@ -260,7 +271,7 @@ export function AvatarCustomizer({
           {step === 2 && <button type="button" className="avatar-btn-secondary avatar-change-base" onClick={() => changeStep(1)}>基本アバターを変更</button>}
         </div>
         {settingsNotice && <p className="avatar-message" role="status">{settingsNotice}</p>}
-        {saveError && <p className="avatar-message" role="status">このブラウザでは保存できません。保存設定を確認してください。以前のアバターは変更されていません。</p>}
+        {saveError && <p className="avatar-message" role="status">このブラウザでは編集中の下書きを保存できません。</p>}
         {!hydrated ? <p role="status">保存したアバターを確認しています…</p> : step === 1 ? <>
           {process.env.NODE_ENV === 'development' && genderState.status === 'ready' && genderState.source === 'development-fixture' && (
             <details className="avatar-dev-note">

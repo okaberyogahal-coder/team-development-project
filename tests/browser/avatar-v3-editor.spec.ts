@@ -29,12 +29,15 @@ test('missing preview never permits completion',async({page})=>{
  await avatarUser(page);await page.route('**/unity/AvatarV3Unified20261104/index.html*',route=>route.fulfill({status:404}));await page.goto('/avatar');
  await expect(page.getByText(/プレビューを確認できるまで確定できません/)).toBeVisible();await page.getByRole('button',{name:'このアバターで編集へ →'}).click();await expect(page.getByRole('button',{name:'このアバターで街へ行く'})).toBeDisabled();
 });
-test('blocked final storage preserves legacy outfit and remains in the member editor',async({page})=>{
+test('account save succeeds with browser storage writes blocked and preserves the legacy outfit',async({page})=>{
  const owner=await avatarUser(page);await legacySave(page,owner);await mockPreview(page);await page.goto('/avatar');
  await expect(page.locator('.avatar-base-card').first()).toBeEnabled();await page.getByRole('button',{name:'このアバターで編集へ →'}).click();
  const submit=page.getByRole('button',{name:'このアバターで街へ行く'});await expect(submit).toBeEnabled();
- await page.evaluate(key=>{const original=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){if(k===key)throw new Error('保存できませんでした。');return original.call(this,k,v);};},DEMO_PROFILE_KEY);
- await submit.click();await expect(page.getByText('保存できませんでした。',{exact:true})).toBeVisible();await expect(page).toHaveURL(/\/avatar$/);
+ await page.route('**/unity/FutureCity/index.html',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><title>World host</title>'}));
+ await page.evaluate(()=>{Storage.prototype.setItem=function(){throw new Error('ブラウザへの保存がブロックされました。');};});
+ await submit.click();await expect(page).toHaveURL(/\/plaza$/);
+ const saved=await (await page.request.get('/api/account/avatar')).json();
+ expect(saved).toMatchObject({ownerId:owner,version:1,appearance:{version:3}});
  expect(await page.evaluate(key=>JSON.parse(localStorage.getItem(key)!).appearance,DEMO_PROFILE_KEY)).toEqual(DEFAULT_AVATAR);
 });
 for(const viewport of [{width:1024,height:600},{width:390,height:844}])test(`member wardrobe controls remain usable at ${viewport.width}x${viewport.height}`,async({page})=>{

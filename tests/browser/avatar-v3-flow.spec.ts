@@ -1,6 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {avatarUser} from '../support/avatar-v3';
 import {DEMO_PROFILE_KEY} from '../../shared/demo-profile';
+import {DEFAULT_AVATAR_CHOICE} from '../../shared/avatar-types';
 test('real six-model wardrobe applies the same appearance in existing city and read-only My Page',async({page})=>{
  test.setTimeout(300000);await avatarUser(page);
  const errors:string[]=[];page.on('pageerror',error=>errors.push(error.message));
@@ -9,21 +10,22 @@ test('real six-model wardrobe applies the same appearance in existing city and r
  await expect(preview.locator('body')).toHaveAttribute('data-unity-state','ready',{timeout:150000});
  for(let index=0;index<6;index++){
   const card=page.locator('.avatar-base-card').nth(index);await expect(card).toBeEnabled();await card.click();
-  await expect.poll(()=>preview.locator('body').evaluate(()=>{const state=(window as unknown as {miraifuAppliedAvatar?:{choice:{baseAvatarId:string};pairMatched:boolean}}).miraifuAppliedAvatar;return state?.pairMatched&&state.choice.baseAvatarId;})).toBe(['young-man','young-woman','middle-aged-man','middle-aged-woman','elderly-man','elderly-woman'][index]);
+  await expect.poll(()=>preview.locator('body').evaluate(()=>{const state=(window as unknown as {miraifuFaceSeedState?:{choice:{baseAvatarId:string};pairMatched:boolean}}).miraifuFaceSeedState;return state?.pairMatched&&state.choice.baseAvatarId;})).toBe(['young-man','young-woman','middle-aged-man','middle-aged-woman','elderly-man','elderly-woman'][index]);
  }
  await page.getByRole('button',{name:'このアバターで編集へ →'}).click();
  await page.getByRole('button',{name:'シック',exact:true}).click();
  await page.locator('.avatar-tabs').getByRole('button',{name:'小物',exact:true}).click();await page.getByRole('button',{name:'次の小物'}).click();await page.locator('.avatar-option-card').last().click();
  await page.locator('.avatar-tabs').getByRole('button',{name:'メガネ',exact:true}).click();await page.locator('.avatar-option-card').last().click();
  const complete=page.getByRole('button',{name:'このアバターで街へ行く'});await expect(complete).toBeEnabled();
- const applied=await preview.locator('body').evaluate(()=>(window as unknown as {miraifuAppliedAvatar:{choice:unknown}}).miraifuAppliedAvatar.choice);
+ const applied=await preview.locator('body').evaluate(()=>(window as unknown as {miraifuFaceSeedState:{choice:unknown}}).miraifuFaceSeedState.choice);
  await page.screenshot({path:test.info().outputPath('real-member-wardrobe.png')});
  await complete.click();await expect(page).toHaveURL(/\/plaza$/);
+ const saved=await (await page.request.get('/api/account/avatar')).json();
+ expect(saved).toMatchObject({version:1,appearance:{choice:applied}});
  const world=page.frameLocator('iframe[title="ミライフ Unityワールド"]');
  await expect(world.locator('body')).toHaveAttribute('data-unity-state','ready',{timeout:150000});
  await page.waitForTimeout(1000);
  await expect.poll(()=>world.locator('body').evaluate(()=>(window as unknown as {melifeAppliedAvatar?:{choice:unknown}}).melifeAppliedAvatar?.choice),{timeout:25000}).toEqual(applied);
- const saved=await page.evaluate(key=>localStorage.getItem(key),DEMO_PROFILE_KEY);
  const snapshot=()=>world.locator('body').evaluate(async()=>{
   const w=window as unknown as {unityInstance:{SendMessage:(object:string,method:string)=>void};melifeWorldInteraction?:{position:{x:number;z:number};yaw:number;panel:string;avatarChoice:unknown}};
   delete w.melifeWorldInteraction;w.unityInstance.SendMessage('MiraiLife','ReportWebInteraction');
@@ -44,7 +46,7 @@ test('real six-model wardrobe applies the same appearance in existing city and r
  const account=page.frameLocator('iframe[title="現在の3Dアバター"]');
  await expect(page.locator('.account-avatar-stage')).toHaveAttribute('aria-busy','false',{timeout:150000});
  expect(await account.locator('body').evaluate(()=>(window as unknown as {melifeAppliedAvatar:{choice:unknown}}).melifeAppliedAvatar.choice)).toEqual(applied);
- expect(await page.evaluate(key=>localStorage.getItem(key),DEMO_PROFILE_KEY)).toBe(saved);
+ expect(await (await page.request.get('/api/account/avatar')).json()).toEqual(saved);
  await expect.poll(()=>account.locator('canvas').evaluate(canvas=>new Promise<number>(resolve=>requestAnimationFrame(()=>{
   const c=canvas as HTMLCanvasElement,gl=c.getContext('webgl2')!;const pixels=new Uint8Array(c.width*c.height*4);gl.readPixels(0,0,c.width,c.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
   let dark=0,sky=0;for(let i=0;i<pixels.length;i+=4){if(pixels[i]<100&&pixels[i+1]<120&&pixels[i+2]<150)dark++;if(pixels[i]>220&&pixels[i+1]>235&&pixels[i+2]>245)sky++;}
@@ -55,7 +57,6 @@ test('real six-model wardrobe applies the same appearance in existing city and r
 });
 test('real world clears V3 on logout and never applies the previous owners outfit to a new user',async({page})=>{
  const owner=await avatarUser(page);
- const {DEFAULT_AVATAR_CHOICE}=await import('../../shared/avatar-types');
  await page.addInitScript(({owner,key,choice})=>{if(top===window)localStorage.setItem(key,JSON.stringify({version:1,id:owner,nickname:'着せ替え確認',appearance:{version:3,assetProfile:'v3-unified-20261104',choice}}));},{owner,key:DEMO_PROFILE_KEY,choice:{...DEFAULT_AVATAR_CHOICE,baseAvatarId:'young-woman'}});
  await page.goto('/plaza');const world=page.frameLocator('iframe[title="ミライフ Unityワールド"]');
  await expect.poll(()=>world.locator('body').evaluate(()=>(window as unknown as {melifeAppliedAvatar?:{choice:{baseAvatarId:string}}}).melifeAppliedAvatar?.choice.baseAvatarId),{timeout:150000}).toBe('young-woman');

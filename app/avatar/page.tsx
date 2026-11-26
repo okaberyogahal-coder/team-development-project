@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ageBadge } from '../../shared/profile-demographics';
 import { getCurrentUser } from '../../server/auth/server';
+import { accountAvatarForProfile } from '../../server/account/avatar-store';
 import { getRegisteredAvatarGender, type AvatarGenderState } from '../../shared/avatar-candidates';
 import { V3_UNIFIED_ASSETS } from '../../shared/avatar-development-assets';
 import { Logo } from '../components/Logo';
@@ -63,7 +64,7 @@ export default async function AvatarPage({ searchParams }: Props) {
       <AvatarCustomizer
         key={user.id}
         ownerId={user.id}
-        nickname={profile.nickname || '利用者'}
+        accountAvatar={accountAvatarForProfile(user.id, profile)}
         genderState={genderState}
         assets={V3_UNIFIED_ASSETS}
         allCandidatesMode={!selectedGender}

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Logo } from '../../components/Logo';
 import { getCurrentUser } from '../../../server/auth/server';
+import { accountAvatarForProfile } from '../../../server/account/avatar-store';
 import { AvatarCustomizer } from '../AvatarCustomizer';
 import '../avatar.css';
 import { V3_UNIFIED_ASSETS } from '../../../shared/avatar-development-assets';
@@ -93,7 +94,7 @@ export default async function AvatarV3VerificationPage({
       <AvatarCustomizer
         key={ownerId}
         ownerId={ownerId}
-        nickname={user?.profile?.nickname || '利用者'}
+        accountAvatar={user ? accountAvatarForProfile(user.id, user.profile) : null}
         assets={V3_UNIFIED_ASSETS}
         genderState={genderState}
         allCandidatesMode={allCandidatesMode}

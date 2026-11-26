@@ -18,7 +18,7 @@ test('logo and equally sized controls form one row with frequent actions at the 
  for(const r of rects){expect(r).not.toBeNull();expect(r!.y).toBeCloseTo(rects[0]!.y,0);expect(r!.width).toBeCloseTo(rects[0]!.width,0);expect(r!.height).toBeCloseTo(rects[0]!.height,0);}
  for(let i=1;i<rects.length;i++)expect(rects[i]!.x).toBeGreaterThan(rects[i-1]!.x);
  await expect(page.frameLocator('iframe').locator('#session-bar')).toBeHidden();
- await page.screenshot({path:'/private/tmp/melife-world-header.png'});
+ await page.screenshot({path:test.info().outputPath('melife-world-header.png')});
  await controls[0].click();await expect(toolbar.getByRole('link',{name:'ログインする',exact:true})).toBeVisible();expect(logouts).toBe(1);
 });
 test('untrusted host messages do not change the displayed identity',async({page})=>{

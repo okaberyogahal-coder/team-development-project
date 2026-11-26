@@ -17,9 +17,10 @@ namespace FutureCity
     /// 点滅なし・マウスだけで操作できる（クリック移動と画面下のボタン）。
     /// </summary>
     [DefaultExecutionOrder(100)]
-    public class MiraiWorld : MonoBehaviour
+    public partial class MiraiWorld : MonoBehaviour
     {
         public static bool UIOpen { get; private set; }
+        public static string AgeBadgeLabel(int age) => age < 18 || age > 130 ? "未設定" : age < 30 ? "ユース" : age < 50 ? "ミドル" : age < 60 ? "ミドルシニア" : "シニア";
         public static bool IntroShowing => instance != null && instance.panel == Panel.Intro;
         public static bool PointerOverUI { get; private set; }
         public static bool PromptVisible { get; private set; }
@@ -130,6 +131,9 @@ namespace FutureCity
             clickMarker.SetActive(false);
             ApplyAvatarColor();
             SetPanel(Panel.Intro);
+            defaultWebBody = player.body;
+            webProfile = gameObject.AddComponent<WebProfileBridge>();
+            webProfile.Init(this);
             WebSessionBridge.Attach(this);
         }
 
@@ -153,7 +157,7 @@ namespace FutureCity
             };
             if (changed)
             {
-                if(webAppearanceOwner!=userId)player?.body?.GetComponent<ImportedAvatar>()?.ClearV3();
+                if (webAppearanceOwner != userId) ResetWebAppearance();
                 completed.Clear();
                 later.Clear();
                 webProfileScroll = Vector2.zero;
@@ -268,6 +272,7 @@ namespace FutureCity
             bool over = false;
             foreach (var r in uiRectsLast) if (r.Contains(gp)) { over = true; break; }
             PointerOverUI = UIOpen || over;
+            if (creatingWebAvatar || previewingWebAvatar) return;
 
             // 擬似アップロード（未送信 → 送信中 → 検証中 → 利用可能）
             if (uploadStart > 0f)
@@ -700,7 +705,7 @@ namespace FutureCity
 
         static string Hex(Color c) => "#" + ColorUtility.ToHtmlStringRGB(c);
 
-        float UiScale() => Mathf.Max(0.6f, Screen.height / 1080f) * userScale;
+        float UiScale() => creatingWebAvatar ? AvatarWardrobeLayout.ScaleForViewport(Screen.width, Screen.height) : Mathf.Max(0.6f, Screen.height / 1080f) * userScale;
 
         // ================================================================== GUI：描画
         float W, H;
@@ -708,6 +713,7 @@ namespace FutureCity
         void OnGUI()
         {
             if (cam == null || campus == null) return;
+            if (previewingWebAvatar) { DrawWebAccountAvatar(); return; }
             Styles();
             if (Event.current.type == EventType.Repaint) uiRects.Clear();
             if (clearFocus) { GUI.FocusControl(null); clearFocus = false; }
@@ -717,6 +723,7 @@ namespace FutureCity
             W = Screen.width / s;
             H = Screen.height / s;
 
+            if (creatingWebAvatar) { DrawWebAvatarCreation(); FinishFrame(); return; }
             if (panel == Panel.Intro) { DrawIntro(); FinishFrame(); return; }
 
             if(panel!=Panel.RoomTopics)

@@ -1,6 +1,7 @@
 import { getCurrentUser } from "../../../../server/auth/server";
 import { authJson } from "../../../../server/auth/http";
 import { AUTH_AVATARS } from "../../../../shared/auth/validation";
+import { accountAvatarForProfile } from "../../../../server/account/avatar-store";
 
 import {ageBadge,worldProfileReady} from '../../../../shared/profile-demographics';
 
@@ -16,12 +17,15 @@ export async function GET() {
     const profile = user.profile;
     if (!worldProfileReady(profile)) return authJson({authenticated:false,profile:null,requiresProfileCompletion:true},200,headers);
     const avatarId = AUTH_AVATARS.find(avatar => avatar === profile?.avatarId) || "sprout";
+    const accountAvatar = accountAvatarForProfile(user.id, profile);
     return authJson({
       authenticated: true,
       profile: {
         userId: user.id,
         nickname: profile?.nickname || "利用者",
         avatarId,
+        appearance: accountAvatar.appearance,
+        avatarVersion: accountAvatar.version,
         gender: profile?.gender || null,
         ageBadge: ageBadge(profile?.age),
         teaches: profile?.teaches || [],

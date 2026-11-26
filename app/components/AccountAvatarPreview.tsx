@@ -3,23 +3,23 @@
 import {useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import {resolveAccountAvatar} from '../../shared/account-avatar';
+import type {AccountAvatar} from '../../shared/account-avatar-save';
 import type {DemoProfile} from '../../shared/demo-profile';
 
 type PreviewState = 'loading' | 'ready' | 'missing' | 'incomplete' | 'error';
 
-export function AccountAvatarPreview({ownerId,nickname,gender}:{ownerId:string;nickname:string;gender:string|null}) {
+export function AccountAvatarPreview({ownerId,nickname,gender,accountAvatar}:{ownerId:string;nickname:string;gender:string|null;accountAvatar:AccountAvatar}) {
  const frame = useRef<HTMLIFrameElement>(null);
  const [state,setState] = useState<PreviewState>('loading');
  const [displayProfile,setDisplayProfile] = useState<DemoProfile|null>(null);
  const [attempt,setAttempt] = useState(0);
- // The saved avatar is browser-only. Resolve it after hydration, before mounting
- // the iframe, so its first ready message cannot precede the event listener.
+ // Resolve the browser fallback after hydration and mount the iframe after the listener is ready.
  /* eslint-disable react-hooks/set-state-in-effect */
  useEffect(()=>{
   let timer: ReturnType<typeof setTimeout>;
   if(gender!=='male'&&gender!=='female'){setDisplayProfile(null);setState('incomplete');return;}
   let profile: DemoProfile | null;
-  try { profile = resolveAccountAvatar(window.localStorage,ownerId,nickname); }
+  try { profile = resolveAccountAvatar({getItem:key=>window.localStorage.getItem(key)},ownerId,nickname,accountAvatar); }
   catch { setDisplayProfile(null); setState('error'); return; }
   if (!profile) { setDisplayProfile(null); setState('missing'); return; }
   setDisplayProfile(profile);
@@ -37,7 +37,7 @@ export function AccountAvatarPreview({ownerId,nickname,gender}:{ownerId:string;n
   }
   window.addEventListener('message',receive);
   return ()=>{clearTimeout(timer);window.removeEventListener('message',receive);};
- },[ownerId,nickname,gender,attempt]);
+ },[ownerId,nickname,gender,attempt,accountAvatar]);
  /* eslint-enable react-hooks/set-state-in-effect */
  return <div className="account-avatar-stage" aria-busy={state==='loading'}>
   {displayProfile?.id===ownerId&&(state==='loading'||state==='ready')&&<iframe key={`${ownerId}-${attempt}`} ref={frame} title="現在の3Dアバター" src="/unity/FutureCity/index.html?experience=profile" onError={()=>setState('error')} />}

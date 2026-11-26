@@ -1,6 +1,8 @@
 import {test,expect,type Page} from '@playwright/test';
 import {randomUUID} from 'node:crypto';
 import {DEFAULT_AVATAR,DEMO_PROFILE_KEY} from '../../shared/demo-profile';
+import {createDatabase} from '../../server/db/connection';
+import {authTestDatabaseUrl} from '../support/auth-database';
 
 const fixturePath=process.env.ACCOUNT_OVERVIEW_FIXTURE;
 const emails:string[]=[];
@@ -10,7 +12,6 @@ const appearance={...DEFAULT_AVATAR,parts:[1,0,2,1,1,0,2,0,0],colors:[1,2,5,7,2,
 async function open(page:Page,options:{saved?:boolean;foreign?:boolean;gender?:string}={saved:true}){
  let ownerId='account-preview-fixture';
  if(!fixturePath){
-  const {authTestDatabaseUrl}=await import('../support/auth-database');
   authTestDatabaseUrl(); // Never run write tests on the shared development database.
   const email=`account-overview-${randomUUID()}@example.invalid`;emails.push(email);
   const password='account-overview-password-123';
@@ -25,8 +26,6 @@ async function open(page:Page,options:{saved?:boolean;foreign?:boolean;gender?:s
 
 test.afterAll(async()=>{
  if(!emails.length)return;
- const {createDatabase}=await import('../../server/db/connection');
- const {authTestDatabaseUrl}=await import('../support/auth-database');
  const db=createDatabase(authTestDatabaseUrl());
  try{await db.user.deleteMany({where:{email:{in:emails}}});}finally{await db.$disconnect();}
 });

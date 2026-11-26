@@ -46,6 +46,7 @@ namespace FutureCity
         Vector3 planarVel, smoothPivot;
         bool pivotInit;
         Animator bodyAnimator;
+        ImportedAvatar importedBody;
         bool hasVertParam, hasIsJumpParam;
         Transform cachedBody;
 
@@ -276,6 +277,7 @@ namespace FutureCity
         {
             if (body == cachedBody) return;
             cachedBody = body;
+            importedBody = body != null ? body.GetComponent<ImportedAvatar>() : null;
             bodyAnimator = body != null ? body.GetComponentInChildren<Animator>(true) : null;
             hasVertParam = false;
             hasIsJumpParam = false;
@@ -298,7 +300,13 @@ namespace FutureCity
 
             if (body != null)
             {
-                if (bodyAnimator != null)
+                if (importedBody != null)
+                {
+                    body.localPosition = Vector3.zero;
+                    body.rotation = Quaternion.Euler(0f, bodyYaw, 0f);
+                    importedBody.UpdateMotion(planarVel.magnitude, false, !cc.isGrounded);
+                }
+                else if (bodyAnimator != null)
                 {
                     // ボーンアニメーション（着せ替えアバター等）がある場合：
                     // 足元位置を原点に固定し、進行方向への向き（bodyYaw）のみ適用する

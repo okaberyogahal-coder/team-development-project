@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace FutureCity
 {
@@ -49,6 +50,7 @@ namespace FutureCity
             catch (ArgumentException) { return null; }
         }
 
+        [Preserve]
         public void Initialize(string json)
         {
             var profile = Decode(json);

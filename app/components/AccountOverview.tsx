@@ -2,12 +2,13 @@ import Link from 'next/link';
 import {Logo} from './Logo';
 import {LogoutButton} from './LogoutButton';
 import {AccountAvatarPreview} from './AccountAvatarPreview';
+import {accountAvatarForProfile} from '../../server/account/avatar-store';
 import {ageBadge} from '../../shared/profile-demographics';
 import '../account/account.css';
 
 export type AccountOverviewUser = {
  id:string; email:string|null;
- profile:{nickname:string;gender:string|null;age:number|null;wantsToLearn:string[];teaches:string[]}|null;
+ profile:{nickname:string;gender:string|null;age:number|null;wantsToLearn:string[];teaches:string[];avatarAppearance:unknown;avatarVersion:number}|null;
  preferences:{interests:string[];strengths:string|null;goal:string|null}|null;
 };
 
@@ -18,6 +19,7 @@ function Topics({items,tone}:{items:string[];tone:string}) {
 export function AccountOverview({user,updated=false}:{user:AccountOverviewUser;updated?:boolean}) {
  const nickname = user.profile?.nickname || '利用者';
  const badge = ageBadge(user.profile?.age);
+ const accountAvatar = accountAvatarForProfile(user.id,user.profile);
  return <main className="account-page">
   <header className="account-header"><Logo priority/><span className="account-header-caption">世代をこえて、学び合う未来へ。</span><Link className="account-home-link" href="/" aria-label="トップページへ">← トップページへ</Link></header>
   <div className="account-page-body">
@@ -27,10 +29,10 @@ export function AccountOverview({user,updated=false}:{user:AccountOverviewUser;u
    <div className="account-grid">
     <aside className="account-avatar-card" aria-label="あなたのアバター">
      <div className="account-avatar-heading"><span className="account-eyebrow">MY AVATAR</span><span className="account-avatar-dot" aria-hidden="true"/></div>
-     <AccountAvatarPreview key={user.id} ownerId={user.id} nickname={nickname} gender={user.profile?.gender || null}/>
+     <AccountAvatarPreview key={`${user.id}-${accountAvatar.version}`} ownerId={user.id} nickname={nickname} gender={user.profile?.gender || null} accountAvatar={accountAvatar}/>
      <div className="account-avatar-identity"><span className="account-age-badge">{badge || '年齢バッジ未設定'}</span><h2>{nickname}</h2><p>いまのあなたのアバター</p></div>
      <Link className="secondary-button account-avatar-edit" href="/avatar">アバターを変更 <span aria-hidden="true">↗</span></Link>
-     <p className="account-avatar-note">外見はこのブラウザに保存されています。</p>
+     <p className="account-avatar-note">{accountAvatar.appearance ? '外見はアカウントに保存されています。' : '編集画面で保存すると、別の端末でも同じ外見を使えます。'}</p>
     </aside>
     <section className="account-profile" aria-label="あなたのプロフィール">
      <div className="account-profile-heading"><div><p className="account-eyebrow">MY PROFILE</p><h2>あなたのプロフィール</h2></div><div className="account-profile-actions"><Link className="secondary-button account-profile-edit" href="/account/edit">プロフィールを編集 <span aria-hidden="true">↗</span></Link><LogoutButton/></div></div>

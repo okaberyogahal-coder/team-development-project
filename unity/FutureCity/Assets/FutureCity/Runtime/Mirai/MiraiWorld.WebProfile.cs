@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine.Scripting;
 
 namespace FutureCity
 {
@@ -22,6 +23,7 @@ namespace FutureCity
         [DllImport("__Internal")] static extern void MelifeWorldInteraction(string json);
 #endif
         // Read-only display receipt for browser diagnostics; never authentication authority.
+        [Preserve]
         public void ReportWebInteraction()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -38,6 +40,8 @@ namespace FutureCity
         bool creatingWebAvatar, previewingWebAvatar;
         WebProfileBridge webProfile;
         string webAppearanceOwner;
+        Transform defaultWebBody;
+        ImportedAvatar webAvatar;
         public string WebNickname => me.name;
         public AvatarAppearance WebAppearance => player.body.GetComponent<ImportedAvatar>()?.Appearance;
 
@@ -46,23 +50,65 @@ namespace FutureCity
         {
             if(profile.mode=="world"&&webSession!=null&&webSession.status!="loading"&&(!webSession.authenticated||webSession.profile.userId!=profile.profileId))
             {error="ログイン本人とアバターの保存先が一致しません。";return false;}
-            var avatar=player.body.GetComponent<ImportedAvatar>();
+            var avatar = player.body.GetComponent<ImportedAvatar>();
+            if (avatar == null)
+            {
+                if (webAvatar == null)
+                {
+                    var model = ImportedAvatar.TryBuild(defaultWebBody.parent, "PlayerAvatar", 1f, 78, false);
+                    if (model != null) webAvatar = model.GetComponent<ImportedAvatar>();
+                }
+                avatar = webAvatar;
+            }
             if(avatar==null){error="アバターを準備できませんでした。";return false;}
+            var oldBody = player.body;
+            if (avatar.transform != oldBody) avatar.gameObject.SetActive(true);
             if(profile.appearanceV3!=null)
             {
-                if(!avatar.TryApplyV3(profile.appearanceV3,out error))return false;
+                if (!avatar.TryApplyV3(profile.appearanceV3,out error))
+                {
+                    if (avatar.transform != oldBody) avatar.gameObject.SetActive(false);
+                    return false;
+                }
             }
             else
             {
-                if(profile.mode=="profile")avatar.SetGender(profile.gender);
+                avatar.ClearV3();
+                avatar.SetGender(profile.gender ?? webSession?.profile?.gender);
                 avatar.ApplyAppearance(profile.appearance??AvatarAppearance.Preset(avatar.Wardrobe,0));
-                if(profile.mode!="profile")AvatarWardrobePreferences.Save(avatar.Appearance);
+            }
+            if (avatar.transform != oldBody)
+            {
+                oldBody.gameObject.SetActive(false);
+                avatar.transform.SetLocalPositionAndRotation(oldBody.localPosition, oldBody.localRotation);
+                player.body = avatar.transform;
             }
             if(webSession==null)me.name=profile.nickname;
             webAppearanceOwner=profile.profileId;
             creatingWebAvatar=profile.mode=="avatar";previewingWebAvatar=profile.mode=="profile";
-            if(creatingWebAvatar||previewingWebAvatar)SetPanel(Panel.Profile);else StartPlaza();
+            if (creatingWebAvatar || previewingWebAvatar) SetPanel(Panel.Profile);
+            else if (panel == Panel.Intro) StartPlaza();
             error="";return true;
+        }
+
+        void ResetWebAppearance()
+        {
+            if (webAppearanceOwner == null) return;
+            var avatar = player.body.GetComponent<ImportedAvatar>();
+            if (avatar != null) avatar.ClearV3();
+            if (player.body != defaultWebBody)
+            {
+                player.body.gameObject.SetActive(false);
+                defaultWebBody.SetLocalPositionAndRotation(player.body.localPosition, player.body.localRotation);
+                defaultWebBody.gameObject.SetActive(true);
+                player.body = defaultWebBody;
+            }
+            else if (avatar != null)
+            {
+                avatar.SetGender(null);
+                avatar.ApplyAppearance(AvatarAppearance.Preset(avatar.Wardrobe, 0));
+            }
+            webAppearanceOwner = null;
         }
 
         void DrawWebAccountAvatar()
