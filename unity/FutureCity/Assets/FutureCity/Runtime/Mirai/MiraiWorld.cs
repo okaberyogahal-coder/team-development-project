@@ -105,6 +105,7 @@ namespace FutureCity
             cam = camera;
             campus = c;
             RegisterCampusBenchSeats();
+            RegisterCampusChairSeats();
             me = MiraiData.Player();
             courses = MiraiData.Courses();
             courses.Add(MiraiData.MyDraft(me));
@@ -310,7 +311,7 @@ namespace FutureCity
             }
 
             nearSeat = null;
-            if (!player.IsSitting && currentRoom == null)
+            if (!player.IsSitting)
             {
                 float seatBest = 1.8f;
                 foreach (var s in benchSeats)
@@ -394,10 +395,11 @@ namespace FutureCity
             else if (nearSeat != null)
             {
                 Vector3 sitPos = nearSeat.seatPoint;
-                Vector3 approach = sitPos + Quaternion.Euler(0f, nearSeat.yaw, 0f) * Vector3.back * 0.65f;
+                float sitYaw = nearSeat.yaw;
+                Vector3 approach = sitPos + Quaternion.Euler(0f, sitYaw, 0f) * Vector3.back * 0.65f;
                 player.MoveTo(approach, () =>
                 {
-                    player.Sit(sitPos, nearSeat.yaw, approach);
+                    player.Sit(sitPos, sitYaw, approach);
                 });
             }
         }
@@ -877,8 +879,8 @@ namespace FutureCity
             Color col = new Color(0.25f, 0.55f, 0.35f);
             if (player.IsSitting)
             {
-                title = "ベンチに座っています";
-                sub = "その場で休めます。モーションは後から実装できます。";
+                title = "座っています";
+                sub = "その場で休めます。";
                 button = "立ち上がる（E）";
                 col = new Color(0.35f, 0.58f, 0.78f);
             }
@@ -904,8 +906,8 @@ namespace FutureCity
             }
             else if (nearSeat != null)
             {
-                title = "ベンチ";
-                sub = "近くのベンチに座ることができます。";
+                title = "椅子・ベンチ";
+                sub = "近くの椅子やベンチに座ることができます。";
                 button = "座る（E）";
                 col = new Color(0.35f, 0.58f, 0.78f);
             }
@@ -1648,6 +1650,20 @@ namespace FutureCity
                 Vector3 pos = campus.BenchSeats[i] + Vector3.up * 0.45f;
                 float yaw = i < campus.BenchYaw.Count ? campus.BenchYaw[i] : 0f;
                 seat.Init(pos, yaw);
+                benchSeats.Add(seat);
+            }
+        }
+
+        void RegisterCampusChairSeats()
+        {
+            if (campus == null) return;
+            for (int i = 0; i < campus.ChairSeats.Count; i++)
+            {
+                var go = new GameObject("ChairSeat_" + i);
+                go.transform.SetParent(transform, false);
+                var seat = go.AddComponent<BenchSeat>();
+                float yaw = i < campus.ChairYaw.Count ? campus.ChairYaw[i] : 0f;
+                seat.Init(campus.ChairSeats[i], yaw);
                 benchSeats.Add(seat);
             }
         }

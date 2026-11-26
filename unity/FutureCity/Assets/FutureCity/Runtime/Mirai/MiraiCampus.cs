@@ -45,6 +45,9 @@ namespace FutureCity
         /// <summary>ベンチの座面の位置と向き（座っている人を置くため）</summary>
         public readonly List<Vector3> BenchSeats = new List<Vector3>();
         public readonly List<float> BenchYaw = new List<float>();
+        /// <summary>室内の椅子・ソファなど、プレイヤーが座れる場所</summary>
+        public readonly List<Vector3> ChairSeats = new List<Vector3>();
+        public readonly List<float> ChairYaw = new List<float>();
 
         static readonly Vector3 Up = Vector3.up;
         static readonly Vector2 T = new Vector2(4f, 4f);
@@ -281,7 +284,10 @@ namespace FutureCity
                     {
                         float ang = k * 60f + 30f;
                         var dir = Quaternion.Euler(0f, ang, 0f) * Vector3.forward;
-                        Sofa(s, F + dir * 3.4f, ang + 180f);
+                        Vector3 sofa = F + dir * 3.4f;
+                        float sofaYaw = ang + 180f;
+                        Sofa(s, sofa, sofaYaw);
+                        RegisterChairSeat(sofa + Up * 0.45f, sofaYaw);
                     }
                     s.AddExtrusion(F, MeshBuilder.Circle(1f, 24), MeshBuilder.Circle(1f, 24), 0.45f, 0f, S(Mat.Wood), S(Mat.Wood), T, true, true);
                     PropFactory.Shrub(s, F + new Vector3(-7.5f, 0f, zBack - sz * 1.2f), 1.3f, Mat.FlowerPurple);
@@ -290,7 +296,9 @@ namespace FutureCity
                 default: // Hobby
                     for (int k = -1; k <= 1; k += 2)
                     {
-                        s.AddBox(F + new Vector3(k * 3.5f, 0f, 0.5f * sz), new Vector3(4f, 0.8f, 1.6f), 0f, S(Mat.Wood), S(Mat.Plaster), T);
+                        Vector3 table = F + new Vector3(k * 3.5f, 0f, 0.5f * sz);
+                        s.AddBox(table, new Vector3(4f, 0.8f, 1.6f), 0f, S(Mat.Wood), S(Mat.Plaster), T);
+                        AddHobbyChairs(s, table);
                         PropFactory.Shrub(s, F + new Vector3(k * 3.5f - 1.2f, 0.8f, 0.5f * sz), 0.35f, Mat.FlowerYellow);
                     }
                     // 棚とカラフルな箱（手芸材料・本）
@@ -344,7 +352,12 @@ namespace FutureCity
                 case RoomKind.Cafe:
                     int ti = 0;
                     foreach (var t in new[] { new Vector2(-4.5f, 2.5f), new Vector2(0f, 3.5f), new Vector2(4.5f, 2.5f), new Vector2(-3f, -2.5f), new Vector2(3f, -2.5f) })
-                        AnimeProps.Add("CafeSet", F + new Vector3(t.x, 0f, t.y * sz), 25f * (ti++), 1f, 1);
+                    {
+                        Vector3 table = F + new Vector3(t.x, 0f, t.y * sz);
+                        float tableYaw = 25f * ti++;
+                        AnimeProps.Add("CafeSet", table, tableYaw, 1f, 1);
+                        RegisterCafeSetSeats(table, tableYaw);
+                    }
                     AnimeProps.Add("CafeCounter", F + new Vector3(0f, 0f, zBack - sz * 1.2f), yaw, 1f, 1);
                     PropFactory.Shrub(s, F + new Vector3(-7.5f, 0f, zBack - sz * 1.2f), 1.2f, Mat.Greenery);
                     PropFactory.Shrub(s, F + new Vector3(7.5f, 0f, zBack - sz * 1.2f), 1.2f, Mat.FlowerPink);
@@ -353,7 +366,13 @@ namespace FutureCity
                     AnimeProps.Add("StudyBoard", F + new Vector3(0f, 0f, zBack - sz * 0.45f), yaw, 1f, 1);
                     for (int r = 0; r < 2; r++)
                     for (int col = -1; col <= 1; col++)
-                        AnimeProps.Add("StudyDesk", F + new Vector3(col * 4f, 0f, zBack - sz * (3.6f + r * 2.8f)), yaw, 1f, 1);
+                    {
+                        Vector3 desk = F + new Vector3(col * 4f, 0f, zBack - sz * (3.6f + r * 2.8f));
+                        AnimeProps.Add("StudyDesk", desk, yaw, 1f, 1);
+                        var rot = Quaternion.Euler(0f, yaw, 0f);
+                        foreach (float side in new[] { -1f, 1f })
+                            RegisterChairSeat(desk + rot * new Vector3(side * 0.6f, 0.46f, -0.85f), yaw);
+                    }
                     PropFactory.Shrub(s, F + new Vector3(-7.6f, 0f, zBack - sz * 1.0f), 1.1f, Mat.Greenery);
                     PropFactory.Shrub(s, F + new Vector3(7.6f, 0f, zBack - sz * 1.0f), 1.1f, Mat.FlowerYellow);
                     break;
@@ -363,7 +382,10 @@ namespace FutureCity
                     {
                         float ang = k * 60f + 30f;
                         var dir = Quaternion.Euler(0f, ang, 0f) * Vector3.forward;
-                        AnimeProps.Add("LoungeSofa", F + dir * 3.4f, ang + 180f, 1f, 1);
+                        Vector3 sofa = F + dir * 3.4f;
+                        float sofaYaw = ang + 180f;
+                        AnimeProps.Add("LoungeSofa", sofa, sofaYaw, 1f, 1);
+                        RegisterChairSeat(sofa + Up * 0.45f, sofaYaw);
                     }
                     AnimeProps.Add("CoffeeTable", F, 0f, 1f, 1);
                     PropFactory.Shrub(s, F + new Vector3(-7.5f, 0f, zBack - sz * 1.2f), 1.3f, Mat.FlowerPurple);
@@ -372,7 +394,9 @@ namespace FutureCity
                 default: // Hobby
                     for (int k = -1; k <= 1; k += 2)
                     {
-                        AnimeProps.Add("HobbyTable", F + new Vector3(k * 3.5f, 0f, 0.5f * sz), 0f, 1f, 1);
+                        Vector3 table = F + new Vector3(k * 3.5f, 0f, 0.5f * sz);
+                        AnimeProps.Add("HobbyTable", table, 0f, 1f, 1);
+                        AddHobbyChairs(s, table);
                         PropFactory.Shrub(s, F + new Vector3(k * 3.5f - 1.3f, 0.82f, 0.5f * sz), 0.35f, Mat.FlowerYellow);
                     }
                     AnimeProps.Add("CraftShelf", F + new Vector3(0f, 0f, zBack - sz * 0.6f), yaw, 1f, 1);
@@ -404,17 +428,68 @@ namespace FutureCity
                 var cp = p + dir * 1.15f;
                 s.AddBox(cp, new Vector3(0.5f, 0.46f, 0.5f), k * 120f, S(Mat.Wood), S(Mat.Canvas), T);
                 s.AddBox(cp + dir * 0.22f + Up * 0.46f, new Vector3(0.5f, 0.5f, 0.06f), k * 120f, S(Mat.Wood), S(Mat.Wood), T);
+                RegisterChairSeat(cp + Up * 0.46f, Mathf.Atan2(-dir.x, -dir.z) * Mathf.Rad2Deg);
             }
+        }
+
+        void RegisterCafeSetSeats(Vector3 table, float yaw)
+        {
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            foreach (var localSeat in new[]
+                     {
+                         new Vector3(-0.97f, 0.45f, -0.56f),
+                         new Vector3(0.97f, 0.45f, -0.56f),
+                         new Vector3(0f, 0.45f, 1.12f)
+                     })
+            {
+                Vector3 seat = table + rot * localSeat;
+                Vector3 towardTable = table - seat;
+                RegisterChairSeat(seat, Mathf.Atan2(towardTable.x, towardTable.z) * Mathf.Rad2Deg);
+            }
+        }
+
+        void AddHobbyChairs(MeshBuilder s, Vector3 table)
+        {
+            for (int side = -1; side <= 1; side += 2)
+            for (int along = -1; along <= 1; along += 2)
+            {
+                Vector3 seatBase = table + new Vector3(along * 1.1f, 0f, side * 1.25f);
+                float yaw = side < 0 ? 0f : 180f;
+                AddChair(s, seatBase, yaw);
+                RegisterChairSeat(seatBase + Up * 0.5f, yaw);
+            }
+        }
+
+        void AddChair(MeshBuilder s, Vector3 p, float yaw)
+        {
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            for (int x = -1; x <= 1; x += 2)
+            for (int z = -1; z <= 1; z += 2)
+                s.AddBox(p + rot * new Vector3(x * 0.22f, 0f, z * 0.22f), new Vector3(0.07f, 0.42f, 0.07f),
+                         yaw, S(Mat.Wood), S(Mat.Wood), T);
+            s.AddBox(p + Up * 0.42f, new Vector3(0.56f, 0.08f, 0.56f), yaw, S(Mat.Wood), S(Mat.Canvas), T);
+            s.AddBox(p + rot * new Vector3(0f, 0.5f, -0.24f), new Vector3(0.56f, 0.52f, 0.08f),
+                     yaw, S(Mat.Wood), S(Mat.Wood), T);
+        }
+
+        void RegisterChairSeat(Vector3 point, float yaw)
+        {
+            ChairSeats.Add(point);
+            ChairYaw.Add(yaw);
         }
 
         void Desk(MeshBuilder s, Vector3 p, float yaw)
         {
             s.AddBox(p, new Vector3(2.4f, 0.74f, 0.8f), yaw, S(Mat.Wood), S(Mat.Plaster), T);
-            var back = Quaternion.Euler(0f, yaw, 0f) * Vector3.back;
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            var back = rot * Vector3.back;
             for (int sg = -1; sg <= 1; sg += 2)
             {
-                var cp = p + back * 0.85f + Quaternion.Euler(0f, yaw, 0f) * Vector3.right * (sg * 0.6f);
+                var cp = p + back * 0.85f + rot * Vector3.right * (sg * 0.6f);
                 s.AddBox(cp, new Vector3(0.5f, 0.46f, 0.5f), yaw, S(Mat.Wood), S(Mat.Canvas), T);
+                s.AddBox(cp + back * 0.22f + Up * 0.46f, new Vector3(0.5f, 0.5f, 0.08f),
+                         yaw, S(Mat.Wood), S(Mat.Wood), T);
+                RegisterChairSeat(cp + Up * 0.46f, yaw);
             }
         }
 
