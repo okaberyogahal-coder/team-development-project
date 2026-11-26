@@ -58,6 +58,10 @@ export function createFriendHandlers(deps: Dependencies) {
       try {
         const user = await deps.getUser();
         if (!user) return authJson({ message: "ログインしてください。" }, 401);
+        const ownerId = request.headers.get("x-profile-owner");
+        if (ownerId !== null && ownerId !== user.id) {
+          return authJson({ message: "ログイン中のアカウントが切り替わりました。画面を開き直してください。" }, 409);
+        }
         let targetId: string;
         try {
           targetId = await readTargetId(request);

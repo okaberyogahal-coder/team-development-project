@@ -2,10 +2,11 @@
 import Link from "next/link";
 import Image from "next/image";
 import {Logo} from "./Logo";
+import {PlazaPeople} from "./PlazaPeople";
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 
-type SessionHeader={authenticated:boolean;state:string;status:string;avatarId:string|null;busy:boolean;canRetry:boolean;error:string};
-const initialHeader:SessionHeader={authenticated:false,state:'loading',status:'ログイン状態を確認中…',avatarId:null,busy:false,canRetry:false,error:''};
+type SessionHeader={authenticated:boolean;ownerId:string|null;state:string;status:string;avatarId:string|null;busy:boolean;canRetry:boolean;error:string};
+const initialHeader:SessionHeader={authenticated:false,ownerId:null,state:'loading',status:'ログイン状態を確認中…',avatarId:null,busy:false,canRetry:false,error:''};
 const avatars=['sprout','cat','bear','rabbit','penguin','fox'];
 
 export function WorldFullscreen({children}:{children:ReactNode}) {
@@ -30,7 +31,8 @@ export function WorldFullscreen({children}:{children:ReactNode}) {
    const data=event.data;
    if(data?.type==='melife:ready'){connect();return;}
    if(data?.type!=='melife:session-header'||typeof data.authenticated!=='boolean'||typeof data.status!=='string'||data.status.length>80||typeof data.busy!=='boolean'||typeof data.canRetry!=='boolean'||typeof data.error!=='string'||data.error.length>200||!['loading','authenticated','guest','unavailable'].includes(data.state))return;
-   setSession({authenticated:data.authenticated,state:data.state,status:data.status,avatarId:avatars.includes(data.avatarId)?data.avatarId:null,busy:data.busy,canRetry:data.canRetry,error:data.error});
+   const ownerId=data.authenticated&&typeof data.ownerId==='string' ? data.ownerId : null;
+   setSession({authenticated:data.authenticated,ownerId,state:data.state,status:data.status,avatarId:avatars.includes(data.avatarId)?data.avatarId:null,busy:data.busy,canRetry:data.canRetry,error:data.error});
   }
   function loaded(event:Event){if(event.target===root?.querySelector('iframe')){setSession(initialHeader);connect();}}
   window.addEventListener('message',receive);
@@ -83,5 +85,6 @@ export function WorldFullscreen({children}:{children:ReactNode}) {
   {session.error&&<div className="world-session-error"><p role="alert">{session.error}</p>{session.canRetry&&<button type="button" onClick={()=>sessionCommand('retry')}>再確認</button>}</div>}
   {error&&<p className="unity-error" role="alert">{error}</p>}
   {children}
+  {session.ownerId&&<PlazaPeople key={session.ownerId} ownerId={session.ownerId}/>}
  </div>;
 }

@@ -5,7 +5,7 @@ import { createAuth } from "./config";
 
 export function getAuth() { return createAuth(getDatabase()); }
 
-export async function getCurrentUser() {
+export async function getCurrentUserWithSession() {
   const requestHeaders = await headers();
   // Public pages remain available before the local database/auth environment is set up.
   if (!/(?:^|;\s*)(?:__Secure-)?melife\.session_token=/.test(requestHeaders.get("cookie") || "")) return null;
@@ -16,5 +16,9 @@ export async function getCurrentUser() {
     select: { id: true, email: true, status: true, deletedAt: true, profile: true, preferences: true },
   });
   if (!user || user.deletedAt || user.status === "SUSPENDED") return null;
-  return user;
+  return {user, sessionId: session.session.id};
+}
+
+export async function getCurrentUser() {
+  return (await getCurrentUserWithSession())?.user ?? null;
 }

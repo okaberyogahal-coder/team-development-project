@@ -2,6 +2,7 @@ import "server-only";
 import type { PrismaClient, Prisma } from "../../generated/prisma/client";
 import type { FriendConnectionStatus } from "../../generated/prisma/client";
 import { FriendActionError } from "./errors";
+import type { FriendConnectionState } from "../../shared/plaza-people";
 
 type Database = Pick<PrismaClient, "friendConnection" | "user">;
 type FriendProfile = { id: string; nickname: string };
@@ -75,11 +76,26 @@ export async function searchFriendCandidates(database: Database, userId: string,
     orderBy: { createdAt: "asc" },
     take: 10,
   });
+  const stateByUser = await readFriendConnectionStates(database, userId, users.map(user => user.id));
+  return users.map(user => ({
+    ...profile(user),
+    connectionStatus: stateByUser.get(user.id) ?? "none",
+  }));
+}
+
+export async function readFriendConnectionStates(database: Pick<Database, "friendConnection">, userId: string, targetIds: string[]) {
+  const stateByUser = new Map<string, FriendConnectionState>();
+  if (!targetIds.length) return stateByUser;
   const connections = await database.friendConnection.findMany({
-    where: { OR: [{ userAId: userId }, { userBId: userId }] },
+    where: {
+      status: { in: ["PENDING", "ACCEPTED"] },
+      OR: [
+        { userAId: userId, userBId: { in: targetIds } },
+        { userBId: userId, userAId: { in: targetIds } },
+      ],
+    },
     select: { userAId: true, userBId: true, requestedById: true, status: true },
   });
-  const stateByUser = new Map<string, "friend" | "incoming" | "outgoing">();
   for (const connection of connections) {
     const targetId = connection.userAId === userId ? connection.userBId : connection.userAId;
     if (connection.status === "ACCEPTED") stateByUser.set(targetId, "friend");
@@ -87,10 +103,7 @@ export async function searchFriendCandidates(database: Database, userId: string,
       stateByUser.set(targetId, connection.requestedById === userId ? "outgoing" : "incoming");
     }
   }
-  return users.map(user => ({
-    ...profile(user),
-    connectionStatus: stateByUser.get(user.id) ?? "none",
-  }));
+  return stateByUser;
 }
 
 export async function requestFriend(database: Database, userId: string, targetId: string) {
